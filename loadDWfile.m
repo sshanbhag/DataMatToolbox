@@ -79,10 +79,9 @@ else
 		tmp = textscan(line_n, '%s', dwinfo.ndata1, 'Delimiter', '\t');
 		% check if the number of data cols read in matches with expected #
 		ntmp = length(tmp{1});
-		if ntmp ~= dwinfo.ndata1
-			fclose(fp);
-			error('%s: data number mismatch in file line %d', mfilename, n)
-		end
+% 		if ntmp ~= dwinfo.ndata1
+% 				warning('%s: data number mismatch in file line %d', mfilename, n)
+% 		end
 		% loop through the line fields and pull out data strings, store in data
 		% cell array for later processing
 		for m = 1:ntmp
