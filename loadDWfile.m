@@ -27,49 +27,77 @@
 % TO DO:
 %------------------------------------------------------------------------
 
+%-----------------------------------------------------------
+% default # of header lines
+%-----------------------------------------------------------
+N_HEADER_LINES = 2;
+
 fname = 'test.txt';
 %-----------------------------------------------------------
-% count the number of lines in the file
+% get file info, read header
 %-----------------------------------------------------------
-Nlines = countTextFileLines(fname);
-disp(['Found ' num2str(Nlines) ' in file ' fname]);
+[dwinfo, errFlg] = readDWfileinfo(fname);
 
-fp = fopen('test.txt', 'r');
-
-header.line1 = fgetl(fp);
-header.line2 = fgetl(fp);
-
-l1fields = textscan(header.line1, '%s', 'Delimiter', '\t');
-
-% scan the second header line for strings (tab delimited)
-% these strings indicate the data in successive rows
-l2fields = textscan(header.line2, '%s', 'Delimiter', '\t')
-nfields = length(l2fields{1});
-
-if ~nfields
-	warning('DWFILE:empty-data', ...
-				'%s: no fields found in header line 2 of data file', mfilename);
+%-----------------------------------------------------------
+% perform some checks on file information, if okay, read in
+% data from DW text file
+%-----------------------------------------------------------
+if ~dwinfo.header.nfields(2)
+	error('%s: no fields found in header line 2 of data file', mfilename);
+elseif ~dwinfo.ndata1
+	error('%s: no fields found in data line 1 of data file', mfilename);
 else
-	data = cell(Nlines - 2, nfields);
-	size(data)
+	%-----------------------------------------------------------
+	% allocate data cell array
+	%-----------------------------------------------------------
+	data = cell(dwinfo.Nlines - 2, dwinfo.ndata1);
+
+	%-----------------------------------------------------------
+	% open file for text reading
+	%-----------------------------------------------------------
+	fp = fopen(dwinfo.filename, 'rt');
+
+	%-----------------------------------------------------------
+	% loop through first 2 header lines
+	%-----------------------------------------------------------
+	for n = 1:N_HEADER_LINES
+		fgetl(fp);
+	end
 	
+	%-----------------------------------------------------------
+	% now, read in data
+	%-----------------------------------------------------------
+	% set data line counter to 1
 	dcount = 1;
-	for n = 2:Nlines-1
+	
+	% loop through data lines, starting line after header lines
+	% (first data line)
+	for n = (N_HEADER_LINES + 1):dwinfo.Nlines
+		% read in text line from file
 		line_n = fgetl(fp);
-		tmp = textscan(line_n, '%s', nfields, 'Delimiter', '\t');
-		for m = 1:length(tmp{1})
+		% scan in fields 
+		tmp = textscan(line_n, '%s', dwinfo.ndata1, 'Delimiter', '\t');
+		% check if the number of data cols read in matches with expected #
+		ntmp = length(tmp{1});
+		if ntmp ~= dwinfo.ndata1
+			fclose(fp);
+			error('%s: data number mismatch in file line %d', mfilename, n)
+		end
+		% loop through the line fields and pull out data strings, store in data
+		% cell array for later processing
+		for m = 1:ntmp
 			data{dcount, m} = tmp{1}(m);
 		end
+		% increment line counter
 		dcount = dcount+1;
-
 	end
-end
 	
+	%-----------------------------------------------------------
+	% close file
+	%-----------------------------------------------------------
+	fclose(fp);
+end
 
-%a = textscan(fp, '%s', 'Delimiter', '\t');
-
-
-fclose(fp);
 
 % need to post-process the data a bit to place into suitable vectors
 

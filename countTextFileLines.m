@@ -1,4 +1,4 @@
-function nLines = countTextFileLines(filename)
+function [nLines, nCols] = countTextFileLines(filename)
 %------------------------------------------------------------------------
 % nLines = countTextFileLines(filename)
 %------------------------------------------------------------------------
@@ -31,28 +31,53 @@ function nLines = countTextFileLines(filename)
 %------------------------------------------------------------------------
 
 
+%----------------------------------------------------------------
+% check that file exists; warn, and return 0 if file not found
+%----------------------------------------------------------------
 if ~exist(filename, 'file')
 	warning('MATLAB:file', 'mfilename: file %s not found', mfilename, filename);
 	nLines = 0;
 	return
 end
 
-
+%----------------------------------------------------------------
+% open file, throw error if not opened successfully
+%----------------------------------------------------------------
 [fp, msg] = fopen(filename, 'rt');
-
 if fp == -1
 	error('%s: error opening file <%s> (%s)', mfilename, filename, msg);
 end
 
+%----------------------------------------------------------------
+% get file information
+%----------------------------------------------------------------
 [FILENAME,PERMISSION,MACHINEFORMAT,ENCODING] = fopen(fp);
 
+%----------------------------------------------------------------
+% Count lines by looping through the file
+%----------------------------------------------------------------
 nLines = 0;
-
 while ~feof(fp)
 	tmp = fgetl(fp);
 	nLines = nLines+1;
 end
 
+if nargout == 2
+	%----------------------------------------------------------------
+	% count columns for each line
+	%----------------------------------------------------------------
+	% preallocate nCols to hold column counts per line
+	nCols = zeros(nLines, 1);
+	% rewind file pointer to beginning of file
+	frewind(fp);
+	% loop through lines, scan each line of text, save # of elements
+	for n = 1:nLines
+		tmpln = fgetl(fp);
+		tmp = textscan(tmpln, '%s', 'Delimiter', '\t');
+		nCols(n) = length(tmp{1});
+	end
+end
+%----------------------------------------------------------------
+% close file
+%----------------------------------------------------------------
 fclose(fp);
-
-
