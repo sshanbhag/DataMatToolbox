@@ -27,7 +27,12 @@
 % TO DO:
 %------------------------------------------------------------------------
 
-
+fname = 'test.txt';
+%-----------------------------------------------------------
+% count the number of lines in the file
+%-----------------------------------------------------------
+Nlines = countTextFileLines(fname);
+disp(['Found ' num2str(Nlines) ' in file ' fname]);
 
 fp = fopen('test.txt', 'r');
 
@@ -45,17 +50,18 @@ if ~nfields
 	warning('DWFILE:empty-data', ...
 				'%s: no fields found in header line 2 of data file', mfilename);
 else
-	n = 1;
-	STOP_SCAN = 0;
+	data = cell(Nlines - 2, nfields);
+	size(data)
 	
-	while ~feof(fp) && ~STOP_SCAN
+	dcount = 1;
+	for n = 2:Nlines-1
 		line_n = fgetl(fp);
 		tmp = textscan(line_n, '%s', nfields, 'Delimiter', '\t');
-		if feof(fp)
-			STOP_SCAN = 1;
-		else
-			n = n+1;
+		for m = 1:length(tmp{1})
+			data{dcount, m} = tmp{1}(m);
 		end
+		dcount = dcount+1;
+
 	end
 end
 	
@@ -64,6 +70,8 @@ end
 
 
 fclose(fp);
+
+% need to post-process the data a bit to place into suitable vectors
 
 
 
