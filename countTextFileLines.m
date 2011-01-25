@@ -44,18 +44,12 @@ if fp == -1
 	error('%s: error opening file <%s> (%s)', mfilename, filename, msg);
 end
 
-
-
 [FILENAME,PERMISSION,MACHINEFORMAT,ENCODING] = fopen(fp);
 
 nLines = 0;
-STOP_FLAG = 0;
 
-while ~feof(fp) && ~STOP_FLAG
+while ~feof(fp)
 	tmp = fgetl(fp);
-	if feof(fp)
-		STOP_FLAG = 1;
-	end
 	nLines = nLines+1;
 end
 
