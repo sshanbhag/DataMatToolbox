@@ -85,7 +85,7 @@ else
 		% loop through the line fields and pull out data strings, store in data
 		% cell array for later processing
 		for m = 1:ntmp
-			data{dcount, m} = tmp{1}(m);
+			data{dcount, m} = tmp{1}{m};
 		end
 		% increment line counter
 		dcount = dcount+1;
@@ -97,6 +97,7 @@ else
 	fclose(fp);
 end
 
+save test.mat data dcount dwinfo
 
 % need to post-process the data a bit to place into suitable vectors
 
