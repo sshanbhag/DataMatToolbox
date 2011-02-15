@@ -1,6 +1,6 @@
-% function Output = function_template(Input)
+% function [D, errFlg] = loadDWfile(fname, path)
 %------------------------------------------------------------------------
-% Output = function_template(Input)
+% [D, errFlg] = loadDWfile(fname, path)
 %------------------------------------------------------------------------
 % 
 % Description
@@ -32,11 +32,16 @@
 %-----------------------------------------------------------
 N_HEADER_LINES = 2;
 
-fname = 'test.txt';
+fname = 'Spreadsheet_11Feb11_Format.txt';
 %-----------------------------------------------------------
 % get file info, read header
 %-----------------------------------------------------------
 [dwinfo, errFlg] = readDWfileinfo(fname);
+% check if errFlg ~= 0 (error detected)
+if errFlg
+	warning('DWFILE:ReadError', '%s readDWfileinfo returned error flag %d', ...
+												mfilename, errFlg);
+end
 
 %-----------------------------------------------------------
 % perform some checks on file information, if okay, read in

@@ -7,11 +7,12 @@ function [out, errFlg] = readDWfileinfo(varargin)
 % 
 %------------------------------------------------------------------------
 % Input Arguments:
-% 	fname		name of DataWave exported text file
+% 	fname		name of DataWave exported text file (usually with .dat file
+% 				extension.
+%				If fname is not provided, a GUI window will open to select file.
+% 
 % 	pname		path to DataWave file
-%
-% 	If fname is not provided, a GUI window will open to select file.
-% 	If pname is not provided, current directory will be assumed
+%				If pname is not provided, current directory will be assumed
 % 
 % Output Arguments:
 % 	out	DataWave file information structure:
@@ -29,6 +30,7 @@ function [out, errFlg] = readDWfileinfo(varargin)
 % 					0		no error
 % 					1		user cancelled file opening
 % 					2		no fields found in header lines
+% 					3		file not found
 %
 %------------------------------------------------------------------------
 % See also: 
@@ -41,6 +43,9 @@ function [out, errFlg] = readDWfileinfo(varargin)
 % Created: 25 January, 2011 (SJS)
 %
 % Revisions:
+%	14 Feb 2011 (SJS):
+% 		-	adjustments made for new file format with n probes, no
+% 			"spacing" columns between probes and markers
 %------------------------------------------------------------------------
 % TO DO:
 %------------------------------------------------------------------------
@@ -50,16 +55,21 @@ function [out, errFlg] = readDWfileinfo(varargin)
 %-----------------------------------------------------------
 N_HEADER_LINES = 2;
 
+N_COLS_PER_PROBE = 5;
+
 %-----------------------------------------------------------
 % check input arguments, act depending on inputs
 %-----------------------------------------------------------
 if nargin == 1
+	% only filename was provided, use current directory as path
 	fname = varargin{1};
 	pname = pwd;
 elseif nargin == 2
+	% filename and path provided as input
 	fname = varargin{1};
 	pname = varargin{2};
 elseif nargin == 0
+	% no filename or path provided
 	% open ui panel to get filename and path from user
 	[fname, pname] = uigetfile('*.txt', 'Select Datawave Exported Text File');
 	% return if user pressed cancel button
@@ -77,7 +87,13 @@ end
 % initialize filename (full path) and errFlg
 %-----------------------------------------------------------
 filename = fullfile(pname, fname);
-errFlg = 0;
+if ~exist(filename, 'file')
+	errFlg = 3;
+	out = [];
+	return
+else
+	errFlg = 0;
+end
 
 %-----------------------------------------------------------
 % count the number of lines in the file
@@ -124,6 +140,50 @@ ndata1 = length(data1);
 %-----------------------------------------------------------
 fclose(fp);
 
+
+%-----------------------------------------------------------
+% parse header information
+%-----------------------------------------------------------
+
+% find probe header tags
+tmp = strncmp(header.fields{1}, 'Probe', 5);
+ProbeCols = find(tmp);
+% make sure something was found
+if isempty(ProbeCols)
+	% if empty, return error
+	errFlg = 2;
+	out = [];
+	return
+end
+
+% find Marker header tags
+tmp = strncmp(header.fields{1}, 'Marker', 6);
+MarkerCols = find(tmp);
+% make sure something was found
+if isempty(MarkerCols)
+	% if empty, warn user
+	warning('DWFILE:MARKER', '%s: no Marker fields found in file %s header', ...
+									mfilename, filename);
+elseif length(MarkerCols) > 1
+	% if unpredicted length, warn user
+	warning('DWFILE:MARKER', '%s: %d Marker fields found in file %s header', ...
+									mfilename, length(MarkerCols), filename);
+else
+	NMarkerCols = header.nfields(2) - MarkerCols(1);
+end
+
+% find timestamp header tags
+tmp = strncmp(header.fields{2}, 'timestamp', 1);
+tmp_probecols = find(tmp);
+% make sure something was found
+if isempty(tmp_probecols)
+	% if empty, warn user
+	warning('DWFILE:TSTAMP', '%s: no probe timestamp fields found in file %s header', ...
+									mfilename, filename);
+end
+
+Nprobes = length(tmp_probecols) / N_COLS_PER_PROBE;
+
 %-----------------------------------------------------------
 % assign values to output structure
 %-----------------------------------------------------------
@@ -134,6 +194,9 @@ out.Nlines = Nlines;
 out.header = header;
 out.data1 = data1;
 out.ndata1 = ndata1;
-
+out.ProbeCols = ProbeCols;
+out.MarkerCols = MarkerCols;
+out.NMarkerCols = NMarkerCols;
+out.NProbes = length(ProbeCols);
 
 
