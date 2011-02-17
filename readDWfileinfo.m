@@ -55,8 +55,6 @@ function [out, errFlg] = readDWfileinfo(varargin)
 %-----------------------------------------------------------
 N_HEADER_LINES = 2;
 
-N_COLS_PER_PROBE = 5;
-
 %-----------------------------------------------------------
 % check input arguments, act depending on inputs
 %-----------------------------------------------------------
@@ -140,7 +138,6 @@ ndata1 = length(data1);
 %-----------------------------------------------------------
 fclose(fp);
 
-
 %-----------------------------------------------------------
 % parse header information
 %-----------------------------------------------------------
@@ -155,6 +152,7 @@ if isempty(ProbeCols)
 	out = [];
 	return
 end
+Nprobes = length(ProbeCols);
 
 % find Marker header tags
 tmp = strncmp(header.fields{1}, 'Marker', 6);
@@ -174,15 +172,13 @@ end
 
 % find timestamp header tags
 tmp = strncmp(header.fields{2}, 'timestamp', 1);
-tmp_probecols = find(tmp);
+TScols = find(tmp);
 % make sure something was found
-if isempty(tmp_probecols)
+if isempty(TScols)
 	% if empty, warn user
 	warning('DWFILE:TSTAMP', '%s: no probe timestamp fields found in file %s header', ...
 									mfilename, filename);
 end
-
-Nprobes = length(tmp_probecols) / N_COLS_PER_PROBE;
 
 %-----------------------------------------------------------
 % assign values to output structure
@@ -193,10 +189,11 @@ out.filename = filename;
 out.Nlines = Nlines;
 out.header = header;
 out.data1 = data1;
-out.ndata1 = ndata1;
+out.Ncols = ndata1;
 out.ProbeCols = ProbeCols;
 out.MarkerCols = MarkerCols;
 out.NMarkerCols = NMarkerCols;
-out.NProbes = length(ProbeCols);
+out.TScols = TScols;
+out.Nprobes = Nprobes;
 
 
