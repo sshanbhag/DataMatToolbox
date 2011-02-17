@@ -172,9 +172,9 @@ end
 
 % find timestamp header tags
 tmp = strncmp(header.fields{2}, 'timestamp', 1);
-TScols = find(tmp);
+TimestampCols = find(tmp);
 % make sure something was found
-if isempty(TScols)
+if isempty(TimestampCols)
 	% if empty, warn user
 	warning('DWFILE:TSTAMP', '%s: no probe timestamp fields found in file %s header', ...
 									mfilename, filename);
@@ -193,7 +193,8 @@ out.Ncols = ndata1;
 out.ProbeCols = ProbeCols;
 out.MarkerCols = MarkerCols;
 out.NMarkerCols = NMarkerCols;
-out.TScols = TScols;
+out.TimestampCols = TimestampCols;
 out.Nprobes = Nprobes;
+out.Ndatalines = Nlines - N_HEADER_LINES;
 
 
