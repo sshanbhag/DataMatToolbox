@@ -58,7 +58,7 @@ mStartCol = dwinfo.MarkerCols(1);
 mEndCol = mStartCol + dwinfo.NMarkerCols;
 
 markerCount = 0;
-for L = 1:Drows
+for L = 1:dwinfo.Ndatalines
 	if isempty(data{L}{mStartCol})
 		break;
 	else
