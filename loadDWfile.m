@@ -1,19 +1,48 @@
-% function [D, errFlg] = loadDWfile(fname, path)
+function varargout = loadDWfile(varargin)
 %------------------------------------------------------------------------
-% [D, errFlg] = loadDWfile(fname, path)
+% [D, errFlg, data] = loadDWfile(fname, pname)
 %------------------------------------------------------------------------
 % 
 % Description
 % 
 %------------------------------------------------------------------------
 % Input Arguments:
-% 	Input		input info
+% 	fname		name of DataWave exported text file (usually with .dat file
+% 				extension.
+%				If fname is not provided, a GUI window will open to select file.
+% 
+% 	pname		path to DataWave file
+%				If pname is not provided, current directory will be assumed
 % 
 % Output Arguments:
-% 	Output	output info
+% 	D			output structure
 %
+% 		info		DataWave file information structure:
+%			file		filename
+%			path		path to file = pname;
+%			Nlines	# of lines (including header) in file
+%			header	header structure
+%							line			cell vector of header line text
+%							fields		cell vector of field names
+%							nfields		# of tab-delimited fields in each header line
+%			data1		text from data line 1
+%			ndata1	# of fields in data line 1
+% 
+% 		Marker
+% 		
+%		MarkerTimes
+% 		
+% 		Probe
+% 
+% 	errFlg	Error flag
+% 					0		no error
+% 					1		user cancelled file opening
+% 					2		no fields found in header lines
+% 					3		file not found
+%
+%	data	"raw" data cell array
 %------------------------------------------------------------------------
-% See also: 
+% See also: readDWfileinfo 
 %------------------------------------------------------------------------
 
 %------------------------------------------------------------------------
@@ -23,6 +52,10 @@
 % Created: 24 January, 2011 (SJS)
 %
 % Revisions:
+%	17 Feb 2011 (SJS)
+% 	 - finished parsing of data{} into Probe and Marker structs
+% 	 -	converted to function
+% 	 -	documentation
 %------------------------------------------------------------------------
 % TO DO:
 %------------------------------------------------------------------------
@@ -33,11 +66,38 @@
 N_HEADER_LINES = 2;
 N_CHANNELS_PER_PROBE = 5;
 
-fname = 'Spreadsheet_17Feb11_Format.txt';
+%-----------------------------------------------------------
+% check input arguments, act depending on inputs
+%-----------------------------------------------------------
+if nargin == 1
+	% only filename was provided, use current directory as path
+	fname = varargin{1};
+	pname = pwd;
+elseif nargin == 2
+	% filename and path provided as input
+	fname = varargin{1};
+	pname = varargin{2};
+elseif nargin == 0
+	% no filename or path provided
+	% open ui panel to get filename and path from user
+	[fname, pname] = uigetfile('*.txt', 'Select Datawave Exported Text File');
+	% return if user pressed cancel button
+	if isequal(fname, 0) || isequal(pname,0)
+		disp('Cancelled...')
+		for n = 1:nargout
+			varargout{n} = [];
+		end
+		varargout{2} = 1;
+		return
+	end
+else
+	error('%s: input argument or file error', mfilename);
+end
+
 %-----------------------------------------------------------
 % get file info, read header
 %-----------------------------------------------------------
-[dwinfo, errFlg] = readDWfileinfo(fname);
+[dwinfo, errFlg] = readDWfileinfo(fname, pname);
 % check if errFlg ~= 0 (error detected)
 if errFlg
 	warning('DWFILE:ReadError', '%s readDWfileinfo returned error flag %d', ...
@@ -101,23 +161,32 @@ if ~dwinfo.NMarkerCols
 end
 
 % Pull in Marker data
-disp('Reading Probe Data...')
+disp('Reading Marker Data...')
 
 mStartCol = dwinfo.MarkerCols(1);
 mEndCol = mStartCol + dwinfo.NMarkerCols;
 markerCount = 0;
 for L = 1:dwinfo.Ndatalines
+	% check if marker information is present
 	if isempty(data{L}{mStartCol})
+		% if not, break
+		disp(['found end of Marker Data, line ' num2str(L)])
 		break;
 	else
+		% store marker information
+		
+		% increment marker index
 		markerCount = markerCount + 1;
 
 		% save time stamp as number
 		Marker(markerCount).t = str2double(data{L}{mStartCol});
 		% save times in stand-alone vector
-		MarkerTimes = Marker(markerCount).t;
+		MarkerTimes(markerCount) = Marker(markerCount).t;
 		
-		% initialize fields
+		% initialize fields for marker data
+		% I am assuming two potential types of data
+		%	text		some sort of string, e.g. .wav file name
+		%	value		a numeric value (e.g., attenuation value)
 		Marker(markerCount).text = [];
 		Marker(markerCount).value = [];
 
@@ -171,3 +240,21 @@ for l = 1:dwinfo.Ndatalines
 		end % end c
 	end % end p
 end % end l
+
+D.info = dwinfo;
+D.Probe = Probe;
+D.Marker = Marker;
+D.MarkerTimes = MarkerTimes;
+D.NumberOfProbes = NumberOfProbes;
+
+if any(nargout == [0 1 2 3])
+	varargout{1} = D;
+end
+
+if any(nargout == [2 3])
+	varargout{2} = errFlg;
+end
+
+if nargout == 3
+	varargout{3} = data;
+end
