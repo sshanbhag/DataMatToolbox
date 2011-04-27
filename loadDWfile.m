@@ -56,6 +56,7 @@ function varargout = loadDWfile(varargin)
 % 	 - finished parsing of data{} into Probe and Marker structs
 % 	 -	converted to function
 % 	 -	documentation
+%	27 Apr 2011 (SJS): added some user-feedback bits
 %------------------------------------------------------------------------
 % TO DO:
 %------------------------------------------------------------------------
@@ -135,6 +136,7 @@ end
 %-----------------------------------------------------------
 % now, read in data
 %-----------------------------------------------------------
+disp(['Reading Data from ' dwinfo.filename ' ... ']);
 % loop through data lines, starting line after header lines
 % (first data line)
 for line_index = 1:(dwinfo.Nlines - N_HEADER_LINES)
@@ -161,7 +163,7 @@ if ~dwinfo.NMarkerCols
 end
 
 % Pull in Marker data
-disp('Reading Marker Data...')
+disp('Parsing Marker Data...')
 
 mStartCol = dwinfo.MarkerCols(1);
 mEndCol = mStartCol + dwinfo.NMarkerCols;
@@ -191,16 +193,20 @@ for L = 1:dwinfo.Ndatalines
 		Marker(markerCount).value = [];
 
 		% loop through the marker cols
+		m = 1;
 		for M = (mStartCol+1):mEndCol
 			tmp = sscanf(data{L}{M}, '%f');
 			% check if column datum is a string
 			if isempty(tmp)
 				% column holds string data
 				Marker(markerCount).text = data{L}{M};
+				Marker(markerCount).vars{m} = data{L}{M};
 			else
 				% column hold numeric data
 				Marker(markerCount).value = tmp;
+				Marker(markerCount).vars{m} = tmp;
 			end
+			m = m+1;
 		end
 	end
 end
@@ -222,7 +228,7 @@ else
 	end
 end
 
-disp('Reading Probe Data...')
+disp('Parsing Probe Data...')
 % loop through data lines
 for l = 1:dwinfo.Ndatalines
 	% loop through probes (i.e., tetrodes)

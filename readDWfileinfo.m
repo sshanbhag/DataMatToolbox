@@ -23,9 +23,13 @@ function [out, errFlg] = readDWfileinfo(varargin)
 %						line			cell vector of header line text
 % 						fields		cell vector of field names
 % 						nfields		# of tab-delimited fields in each header line
-% 		data1		text from data line 1
-% 		ndata1	# of fields in data line 1
 % 
+% 		data1						text from data line 1
+% 		ndata1					# of fields in data line 1
+%		UnitTimestampCols		list of data columns with time stamp data
+%		MarkerTimestampCols	list of data columns with marker stime stamp data
+% 		MarkerTags				variable names in Marker data
+%
 % 	errFlg	Error flag
 % 					0		no error
 % 					1		user cancelled file opening
@@ -46,6 +50,10 @@ function [out, errFlg] = readDWfileinfo(varargin)
 %	14 Feb 2011 (SJS):
 % 		-	adjustments made for new file format with n probes, no
 % 			"spacing" columns between probes and markers
+% 	27 Apr 2011 (SJS):
+% 		-	renamed TimestampCols to UnitTimestampCols - better reflects
+% 			data stored there
+% 			created MarkerTimestampCols to indicate column with marker timestamps
 %------------------------------------------------------------------------
 % TO DO:
 %------------------------------------------------------------------------
@@ -170,15 +178,28 @@ else
 	NMarkerCols = header.nfields(2) - MarkerCols(1);
 end
 
-% find timestamp header tags
+% find timestamp header tags in header line 2
 tmp = strncmp(header.fields{2}, 'timestamp', 1);
-TimestampCols = find(tmp);
+UnitTimestampCols = find(tmp);
 % make sure something was found
-if isempty(TimestampCols)
+if isempty(UnitTimestampCols)
 	% if empty, warn user
-	warning('DWFILE:TSTAMP', '%s: no probe timestamp fields found in file %s header', ...
+	warning('DWFILE:TSTAMP', '%s: no unit/probe timestamp fields found in file %s header', ...
 									mfilename, filename);
 end
+
+% find the Marker timestamp header (Timestamp) tag in header line 2
+tmp = strncmp(header.fields{2}, 'Timestamp', 1);
+MarkerTimestampCols = find(tmp);
+% make sure something was found
+if isempty(MarkerTimestampCols)
+	% if empty, warn user
+	warning('DWFILE:TSTAMP', '%s: no marker/probe timestamp fields found in file %s header', ...
+									mfilename, filename);
+end
+
+% get marker tags
+MarkerTags = header.fields{2}(MarkerCols+(1:NMarkerCols))
 
 %-----------------------------------------------------------
 % assign values to output structure
@@ -193,8 +214,9 @@ out.Ncols = ndata1;
 out.ProbeCols = ProbeCols;
 out.MarkerCols = MarkerCols;
 out.NMarkerCols = NMarkerCols;
-out.TimestampCols = TimestampCols;
+out.UnitTimestampCols = UnitTimestampCols;
+out.MarkerTimestampCols = MarkerTimestampCols;
 out.Nprobes = Nprobes;
 out.Ndatalines = Nlines - N_HEADER_LINES;
-
+out.MarkerTags = MarkerTags;
 

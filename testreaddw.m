@@ -7,7 +7,7 @@ if ~exist('plxfiledetails', 'var') | ~exist('stimdata', 'var') | ~exist('rawstim
 										'noof_intervals',		-1	);
 
 	% load dw info
-	[stimdata, rawstim] = loadDWStimData(plxfiledetails.filename{1}, '761_11SV_2204_3.txt');
+	[stimdata, vars, plx, rawdata] = loadDWStimData(plxfiledetails.filename{1}, '761_11SV_2204_3.txt');
 end
 
 % vars is something like:
@@ -56,9 +56,9 @@ end
 % vars.names = {'wavfile_id' 'atten_dB'};
 % vars.description = 'Test Stimuli';
 
-spikes = PLX2SpikeCount(rawstim.plxdata,'var_matrix','variables',rawstim.vars,'end',50e-3);
+spikes = PLX2SpikeCount(plx,'var_matrix','variables',vars,'end',50e-3);
 
-display_genData(spikes, 'xdim',2, 'axesdimlist',1, 'conf95','normalize', 'xvalstep',1, 'minval',0,'title', rawstim.vars.description);
+display_genData(spikes, 'xdim',2, 'axesdimlist',1, 'conf95','normalize', 'xvalstep',1, 'minval',0,'title', vars.description);
 thr_conf95_excite = spikecount2thr(spikes,'increase','dimname','atten_dB','conf95',2,'interpolate')
 thr_conf95_inhibit = spikecount2thr(spikes,'decrease','dimname','atten_dB','conf95',2,'interpolate')
-display_genData(thr_conf95_excite,'xdim',2,'valuelinestyle','o-','title', rawstim.vars.description);
+display_genData(thr_conf95_excite,'xdim',2,'valuelinestyle','o-','title', vars.description);
