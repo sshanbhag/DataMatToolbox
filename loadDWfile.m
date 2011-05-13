@@ -57,6 +57,7 @@ function varargout = loadDWfile(varargin)
 % 	 -	converted to function
 % 	 -	documentation
 %	27 Apr 2011 (SJS): added some user-feedback bits
+%	13 May 2011 (SJS): fixed problem with use of fully-spec'ed filenames
 %------------------------------------------------------------------------
 % TO DO:
 %------------------------------------------------------------------------
@@ -71,9 +72,13 @@ N_CHANNELS_PER_PROBE = 5;
 % check input arguments, act depending on inputs
 %-----------------------------------------------------------
 if nargin == 1
-	% only filename was provided, use current directory as path
-	fname = varargin{1};
-	pname = pwd;
+	% only filename was provided, assume path is included or that file is
+	% in current directory 
+	[pname, fname, ext] = fileparts(varargin{1});
+	if isempty(pname)
+		pname = pwd;
+	end
+	fname = [fname ext];
 elseif nargin == 2
 	% filename and path provided as input
 	fname = varargin{1};
@@ -110,8 +115,10 @@ end
 % data from DW text file
 %-----------------------------------------------------------
 if ~dwinfo.header.nfields(2)
+	save('loadDWfile.error.mat', 'dwinfo', '-MAT');
 	error('%s: no fields found in header line 2 of data file', mfilename);
 elseif ~dwinfo.Ncols
+	save('loadDWfile.error.mat', 'dwinfo', '-MAT');
 	error('%s: no fields found in data line 1 of data file', mfilename);
 end
 

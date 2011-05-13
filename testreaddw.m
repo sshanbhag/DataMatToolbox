@@ -1,14 +1,23 @@
 
 
+% plxfilename = '761_11SV_2204_3_sort.plx';
+% dwfilename = '761_11SV_2204_3.txt';
+
+datapath = sprintf('/Users/%s/Work/Data/DataWave/TestData/EXPFUNTESTER/', username);
+plxfilename = [datapath 'test-single-04.plx'];
+dwfilename = [datapath 'test-single-04.txt'];	
+
 if ~exist('plxfiledetails', 'var') | ~exist('stimdata', 'var') | ~exist('rawstim', 'var')
 	plxfiledetails = struct(	'noof_files',			1, ...
-										'filename',				{{'761_11SV_2204_3_sort.plx'}}, ...
+										'filename',				{{plxfilename}}, ...
 										'startinterval',		1, ...
 										'noof_intervals',		-1	);
 
 	% load dw info
-	[stimdata, vars, plx, rawdata] = loadDWStimData(plxfiledetails.filename{1}, '761_11SV_2204_3.txt');
+	[stimdata, vars, plx, rawdata] = loadDWStimData(plxfiledetails.filename{1}, dwfilename);
 end
+
+
 
 % vars is something like:
 % 
@@ -56,9 +65,12 @@ end
 % vars.names = {'wavfile_id' 'atten_dB'};
 % vars.description = 'Test Stimuli';
 
-spikes = PLX2SpikeCount(plx,'var_matrix','variables',vars,'end',50e-3);
+spikes = PLX2SpikeCount(plx,'var_matrix','variables',vars,'end', 1);
 
-display_genData(spikes, 'xdim',2, 'axesdimlist',1, 'conf95','normalize', 'xvalstep',1, 'minval',0,'title', vars.description);
-thr_conf95_excite = spikecount2thr(spikes,'increase','dimname','atten_dB','conf95',2,'interpolate')
-thr_conf95_inhibit = spikecount2thr(spikes,'decrease','dimname','atten_dB','conf95',2,'interpolate')
-display_genData(thr_conf95_excite,'xdim',2,'valuelinestyle','o-','title', vars.description);
+display_GenData(spikes, 'xdim',2, 'axesdimlist',1, 'minval',10,'title', vars.description);
+
+
+% display_GenData(spikes, 'xdim',2, 'axesdimlist',1, 'conf95','normalize', 'xvalstep',1, 'minval',0,'title', vars.description);
+% thr_conf95_excite = spikeCount2Thr(spikes,'increase','dimname',vars.names{2}, 'conf95',2,'interpolate')
+% thr_conf95_inhibit = spikeCount2Thr(spikes,'decrease','dimname',vars.names{2},'conf95',2,'interpolate')
+% display_genData(thr_conf95_excite,'xdim',2,'valuelinestyle','o-','title', vars.description);
