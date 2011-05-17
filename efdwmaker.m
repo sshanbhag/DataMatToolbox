@@ -32,14 +32,14 @@
 % 		isdir		0 if regular file, 1 if directory
 % 		datenum	numeric date information
 %-------------------------------------------------------------
-% first, use dir command to find .src files
-files = dir('G1_3_890_RSP1_1175.src');
+% first, use dir command to find txt files
+files = dir('*.txt');
 
 %-------------------------------------------------------------
 % create some struct templates
 %-------------------------------------------------------------
-% create src struct template
-src = struct('noof_files',1,'filename',{''},'date','','size','');
+% create txt struct template
+txt = struct('noof_files',1,'filename',{''},'date','','size','');
 % create plx struct template
 plx = struct('noof_files',1,'filename',{''},'startinterval',1,'noof_intervals',-1);
 
