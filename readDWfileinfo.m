@@ -37,7 +37,7 @@ function [out, errFlg] = readDWfileinfo(varargin)
 % 					3		file not found
 %
 %------------------------------------------------------------------------
-% See also: 
+% See: readDataWaveHeader 
 %------------------------------------------------------------------------
 
 %------------------------------------------------------------------------
@@ -54,6 +54,9 @@ function [out, errFlg] = readDWfileinfo(varargin)
 % 		-	renamed TimestampCols to UnitTimestampCols - better reflects
 % 			data stored there
 % 			created MarkerTimestampCols to indicate column with marker timestamps
+%	19 May, 2011 (SJS):
+% 		NO LONGER USEFUL WITH DataWave txt files due to format change 
+% 		
 %------------------------------------------------------------------------
 % TO DO:
 %------------------------------------------------------------------------
@@ -61,7 +64,7 @@ function [out, errFlg] = readDWfileinfo(varargin)
 %-----------------------------------------------------------
 % default # of header lines
 %-----------------------------------------------------------
-N_HEADER_LINES = 2;
+N_HEADER_LINES = 1;
 
 %-----------------------------------------------------------
 % check input arguments, act depending on inputs
@@ -113,7 +116,7 @@ disp(['Found ' num2str(Nlines) ' lines in file ' fname ' (including header).']);
 fp = fopen(filename, 'rt');
 
 %-----------------------------------------------------------
-% Read in 2 header lines and parse to get file information
+% Read in header lines and parse to get file information
 %-----------------------------------------------------------
 header.line = cell(N_HEADER_LINES, 1);
 header.fields = cell(N_HEADER_LINES, 1);
@@ -145,6 +148,30 @@ ndata1 = length(data1);
 % close file
 %-----------------------------------------------------------
 fclose(fp);
+
+%-----------------------------------------------------------
+% assign values to output structure
+%-----------------------------------------------------------
+out.file = fname;
+out.path = pname;
+out.Nlines = Nlines;
+out.header = header;
+out.data1 = data1;
+out.Ncols = ndata1;
+out.ProbeCols = ProbeCols;
+out.MarkerCols = MarkerCols;
+out.NMarkerCols = NMarkerCols;
+out.UnitTimestampCols = UnitTimestampCols;
+out.MarkerTimestampCols = MarkerTimestampCols;
+out.Nprobes = Nprobes;
+out.Ndatalines = Nlines - N_HEADER_LINES;
+out.MarkerTags = MarkerTags;
+
+
+
+
+
+return
 
 %-----------------------------------------------------------
 % parse header information
