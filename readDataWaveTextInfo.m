@@ -1,6 +1,6 @@
-function [out, errFlg] = readDWfileinfo(varargin)
+function [out, errFlg] = readDataWaveTextInfo(varargin)
 %------------------------------------------------------------------------
-% [out, errFlg] = readDWfileinfo(fname, pname)
+% [out, errFlg] = readDataWaveTextInfo(fname, pname)
 %------------------------------------------------------------------------
 % 
 % returns structure 
@@ -56,7 +56,7 @@ function [out, errFlg] = readDWfileinfo(varargin)
 % 			created MarkerTimestampCols to indicate column with marker timestamps
 %	19 May, 2011 (SJS):
 % 		NO LONGER USEFUL WITH DataWave txt files due to format change 
-% 		
+% 	20 May, 2011 (SJS): renamed to readDataWaveTextInfo.m
 %------------------------------------------------------------------------
 % TO DO:
 %------------------------------------------------------------------------
