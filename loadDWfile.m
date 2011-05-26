@@ -1,6 +1,6 @@
 function varargout = loadDWfile(varargin)
 %------------------------------------------------------------------------
-% [D, errFlg, data] = loadDWfile(fname, pname)
+% [D, errFlg, rawdata] = loadDWfile(fname, pname)
 %------------------------------------------------------------------------
 % 
 % Description
@@ -40,7 +40,7 @@ function varargout = loadDWfile(varargin)
 % 					2		no fields found in header lines
 % 					3		file not found
 %
-%	data	"raw" data cell array
+%	rawdata	"raw" data cell array
 %------------------------------------------------------------------------
 % See also: readDWfileinfo 
 %------------------------------------------------------------------------
@@ -58,15 +58,15 @@ function varargout = loadDWfile(varargin)
 % 	 -	documentation
 %	27 Apr 2011 (SJS): added some user-feedback bits
 %	13 May 2011 (SJS): fixed problem with use of fully-spec'ed filenames
+%  25 May, 2011 (SJS): adapting for new data format
 %------------------------------------------------------------------------
 % TO DO:
 %------------------------------------------------------------------------
 
 %-----------------------------------------------------------
-% default # of header lines
+% load defaults
 %-----------------------------------------------------------
-N_HEADER_LINES = 2;
-N_CHANNELS_PER_PROBE = 5;
+DataWaveDefaults;
 
 %-----------------------------------------------------------
 % check input arguments, act depending on inputs
@@ -103,10 +103,10 @@ end
 %-----------------------------------------------------------
 % get file info, read header
 %-----------------------------------------------------------
-[dwinfo, errFlg] = readDWfileinfo(fname, pname);
+[dwinfo, errFlg] = readDataWaveTextInfo(fname, pname);
 % check if errFlg ~= 0 (error detected)
 if errFlg
-	warning('DWFILE:ReadError', '%s readDWfileinfo returned error flag %d', ...
+	warning('DWFILE:ReadError', '%s readDataWaveTextInfo returned error flag %d', ...
 												mfilename, errFlg);
 end
 
@@ -114,7 +114,7 @@ end
 % perform some checks on file information, if okay, read in
 % data from DW text file
 %-----------------------------------------------------------
-if ~dwinfo.header.nfields(2)
+if ~dwinfo.header.nfields(1)
 	save('loadDWfile.error.mat', 'dwinfo', '-MAT');
 	error('%s: no fields found in header line 2 of data file', mfilename);
 elseif ~dwinfo.Ncols
@@ -123,10 +123,15 @@ elseif ~dwinfo.Ncols
 end
 
 %-----------------------------------------------------------
+% parse header data to get information about data set
+%-----------------------------------------------------------
+[dwinfo, errFlg] = parseDataWaveTextHeader(dwinfo);
+
+%-----------------------------------------------------------
 % allocate data cell array
 %-----------------------------------------------------------
 %data = cell(dwinfo.Nlines - 2, dwinfo.ndata1);
-data = cell(dwinfo.Nlines - N_HEADER_LINES, 1);
+rawdata = cell(dwinfo.Nlines - N_HEADER_LINES, 1);
 
 %-----------------------------------------------------------
 % open file for text reading
@@ -134,25 +139,26 @@ data = cell(dwinfo.Nlines - N_HEADER_LINES, 1);
 fp = fopen(dwinfo.filename, 'rt');
 
 %-----------------------------------------------------------
-% skip past first 2 header lines
+% skip past header lines
 %-----------------------------------------------------------
 for n = 1:N_HEADER_LINES
 	fgetl(fp);
 end
 
 %-----------------------------------------------------------
-% now, read in data
+% now, read in rawdata using textscan - this will load
+% the entire file into a cell array
 %-----------------------------------------------------------
 disp(['Reading Data from ' dwinfo.filename ' ... ']);
-% loop through data lines, starting line after header lines
-% (first data line)
+% loop through rawdata lines, starting line after header lines
+% (first rawdata line)
 for line_index = 1:(dwinfo.Nlines - N_HEADER_LINES)
 	% read in text line from file
 	line_in = fgetl(fp);
 	% scan in fields 
 	tmp = textscan(line_in, '%s', dwinfo.Ncols, 'Delimiter', '\t');
-	% save in data cell array
-	data{line_index} = tmp{1};
+	% save in rawdata cell array
+	rawdata{line_index} = tmp{1};
 end
 
 %-----------------------------------------------------------
@@ -173,11 +179,11 @@ end
 disp('Parsing Marker Data...')
 
 mStartCol = dwinfo.MarkerCols(1);
-mEndCol = mStartCol + dwinfo.NMarkerCols;
+mEndCol = dwinfo.NMarkerCols;
 markerCount = 0;
 for L = 1:dwinfo.Ndatalines
 	% check if marker information is present
-	if isempty(data{L}{mStartCol})
+	if isempty(rawdata{L}{mStartCol})
 		% if not, break
 		disp(['found end of Marker Data, line ' num2str(L)])
 		break;
@@ -188,7 +194,7 @@ for L = 1:dwinfo.Ndatalines
 		markerCount = markerCount + 1;
 
 		% save time stamp as number
-		Marker(markerCount).t = str2double(data{L}{mStartCol});
+		Marker(markerCount).t = str2double(rawdata{L}{mStartCol});
 		% save times in stand-alone vector
 		MarkerTimes(markerCount) = Marker(markerCount).t;
 		
@@ -196,41 +202,24 @@ for L = 1:dwinfo.Ndatalines
 		% I am assuming two potential types of data
 		%	text		some sort of string, e.g. .wav file name
 		%	value		a numeric value (e.g., attenuation value)
-		Marker(markerCount).text = [];
-		Marker(markerCount).value = [];
-
-		% loop through the marker cols
-		m = 1;
-		for M = (mStartCol+1):mEndCol
-			tmp = sscanf(data{L}{M}, '%f');
-			% check if column datum is a string
-			if isempty(tmp)
-				% column holds string data
-				Marker(markerCount).text = data{L}{M};
-				Marker(markerCount).vars{m} = data{L}{M};
-			else
-				% column hold numeric data
-				Marker(markerCount).value = tmp;
-				Marker(markerCount).vars{m} = tmp;
-			end
-			m = m+1;
-		end
+		Marker(markerCount).string = rawdata{L}(mStartCol:mEndCol);
 	end
 end
 
+keyboard
+
 %-----------------------------------------------------------
-% Pull in Probe Data
+% Pull in Spike Channel Data
 %-----------------------------------------------------------
 
-% check # of probes
-NumberOfProbes = length(dwinfo.ProbeCols);
-if ~NumberOfProbes
+% check # of Spike channels
+if ~dwinfo.NSpikeCols
 	% if 0, error
-	error('%s: no probes detected in header', mfilename)
+	error('%s: no spike data channels detected in header', mfilename)
 else
 	% otherwise, build Probe data structure
 	tmpProbe = struct('C0', [], 'C1', [], 'C2', [],'C3', [], 'C4', []);
-	for n = 1:NumberOfProbes
+	for n = 1:dwinfo.NSpikeCols
 		Probe(n) = tmpProbe;
 	end
 end
@@ -247,8 +236,8 @@ for l = 1:dwinfo.Ndatalines
 			% if data element at line l, column datacol is not empty,
 			% assign the value (convert to double from string) to the
 			% appropriate channel in the probe struct array
-			if ~isempty(data{l}{datacol})
-				Probe(p).(['C' num2str(c)])(l) = str2double(data{l}{datacol});
+			if ~isempty(rawdata{l}{datacol})
+				Probe(p).(['C' num2str(c)])(l) = str2double(rawdata{l}{datacol});
 			end
 		end % end c
 	end % end p
@@ -269,5 +258,5 @@ if any(nargout == [2 3])
 end
 
 if nargout == 3
-	varargout{3} = data;
+	varargout{3} = rawdata;
 end

@@ -62,9 +62,9 @@ function [out, errFlg] = readDataWaveTextInfo(varargin)
 %------------------------------------------------------------------------
 
 %-----------------------------------------------------------
-% default # of header lines
+% load defaults
 %-----------------------------------------------------------
-N_HEADER_LINES = 1;
+DataWaveDefaults;
 
 %-----------------------------------------------------------
 % check input arguments, act depending on inputs
@@ -154,96 +154,12 @@ fclose(fp);
 %-----------------------------------------------------------
 out.file = fname;
 out.path = pname;
-out.Nlines = Nlines;
-out.header = header;
-out.data1 = data1;
-out.Ncols = ndata1;
-out.ProbeCols = ProbeCols;
-out.MarkerCols = MarkerCols;
-out.NMarkerCols = NMarkerCols;
-out.UnitTimestampCols = UnitTimestampCols;
-out.MarkerTimestampCols = MarkerTimestampCols;
-out.Nprobes = Nprobes;
-out.Ndatalines = Nlines - N_HEADER_LINES;
-out.MarkerTags = MarkerTags;
-
-
-
-
-
-return
-
-%-----------------------------------------------------------
-% parse header information
-%-----------------------------------------------------------
-
-% find probe header tags
-tmp = strncmp(header.fields{1}, 'Probe', 5);
-ProbeCols = find(tmp);
-% make sure something was found
-if isempty(ProbeCols)
-	% if empty, return error
-	errFlg = 2;
-	out = [];
-	return
-end
-Nprobes = length(ProbeCols);
-
-% find Marker header tags
-tmp = strncmp(header.fields{1}, 'Marker', 6);
-MarkerCols = find(tmp);
-% make sure something was found
-if isempty(MarkerCols)
-	% if empty, warn user
-	warning('DWFILE:MARKER', '%s: no Marker fields found in file %s header', ...
-									mfilename, filename);
-elseif length(MarkerCols) > 1
-	% if unpredicted length, warn user
-	warning('DWFILE:MARKER', '%s: %d Marker fields found in file %s header', ...
-									mfilename, length(MarkerCols), filename);
-else
-	NMarkerCols = header.nfields(2) - MarkerCols(1);
-end
-
-% find timestamp header tags in header line 2
-tmp = strncmp(header.fields{2}, 'timestamp', 1);
-UnitTimestampCols = find(tmp);
-% make sure something was found
-if isempty(UnitTimestampCols)
-	% if empty, warn user
-	warning('DWFILE:TSTAMP', '%s: no unit/probe timestamp fields found in file %s header', ...
-									mfilename, filename);
-end
-
-% find the Marker timestamp header (Timestamp) tag in header line 2
-tmp = strncmp(header.fields{2}, 'Timestamp', 1);
-MarkerTimestampCols = find(tmp);
-% make sure something was found
-if isempty(MarkerTimestampCols)
-	% if empty, warn user
-	warning('DWFILE:TSTAMP', '%s: no marker/probe timestamp fields found in file %s header', ...
-									mfilename, filename);
-end
-
-% get marker tags
-MarkerTags = header.fields{2}(MarkerCols+(1:NMarkerCols))
-
-%-----------------------------------------------------------
-% assign values to output structure
-%-----------------------------------------------------------
-out.file = fname;
-out.path = pname;
 out.filename = filename;
 out.Nlines = Nlines;
 out.header = header;
 out.data1 = data1;
 out.Ncols = ndata1;
-out.ProbeCols = ProbeCols;
-out.MarkerCols = MarkerCols;
-out.NMarkerCols = NMarkerCols;
-out.UnitTimestampCols = UnitTimestampCols;
-out.MarkerTimestampCols = MarkerTimestampCols;
-out.Nprobes = Nprobes;
-out.Ndatalines = Nlines - N_HEADER_LINES;
-out.MarkerTags = MarkerTags;
+
+% no error(s) encountered
+errFlg = 0;
 
