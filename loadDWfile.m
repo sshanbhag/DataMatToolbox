@@ -1,4 +1,4 @@
-function varargout = loadDWfile(varargin)
+% function varargout = loadDWfile(varargin)
 %------------------------------------------------------------------------
 % [D, errFlg, rawdata] = loadDWfile(fname, pname)
 %------------------------------------------------------------------------
@@ -68,37 +68,40 @@ function varargout = loadDWfile(varargin)
 %-----------------------------------------------------------
 DataWaveDefaults;
 
-%-----------------------------------------------------------
-% check input arguments, act depending on inputs
-%-----------------------------------------------------------
-if nargin == 1
-	% only filename was provided, assume path is included or that file is
-	% in current directory 
-	[pname, fname, ext] = fileparts(varargin{1});
-	if isempty(pname)
-		pname = pwd;
-	end
-	fname = [fname ext];
-elseif nargin == 2
-	% filename and path provided as input
-	fname = varargin{1};
-	pname = varargin{2};
-elseif nargin == 0
-	% no filename or path provided
-	% open ui panel to get filename and path from user
-	[fname, pname] = uigetfile('*.txt', 'Select Datawave Exported Text File');
-	% return if user pressed cancel button
-	if isequal(fname, 0) || isequal(pname,0)
-		disp('Cancelled...')
-		for n = 1:nargout
-			varargout{n} = [];
-		end
-		varargout{2} = 1;
-		return
-	end
-else
-	error('%s: input argument or file error', mfilename);
-end
+% %-----------------------------------------------------------
+% % check input arguments, act depending on inputs
+% %-----------------------------------------------------------
+% if nargin == 1
+% 	% only filename was provided, assume path is included or that file is
+% 	% in current directory 
+% 	[pname, fname, ext] = fileparts(varargin{1});
+% 	if isempty(pname)
+% 		pname = pwd;
+% 	end
+% 	fname = [fname ext];
+% elseif nargin == 2
+% 	% filename and path provided as input
+% 	fname = varargin{1};
+% 	pname = varargin{2};
+% elseif nargin == 0
+% 	% no filename or path provided
+% 	% open ui panel to get filename and path from user
+% 	[fname, pname] = uigetfile('*.txt', 'Select Datawave Exported Text File');
+% 	% return if user pressed cancel button
+% 	if isequal(fname, 0) || isequal(pname,0)
+% 		disp('Cancelled...')
+% 		for n = 1:nargout
+% 			varargout{n} = [];
+% 		end
+% 		varargout{2} = 1;
+% 		return
+% 	end
+% else
+% 	error('%s: input argument or file error', mfilename);
+% end
+
+fname = 'BBNspikes.txt';
+pname = pwd;
 
 %-----------------------------------------------------------
 % get file info, read header
@@ -206,42 +209,36 @@ for L = 1:dwinfo.Ndatalines
 	end
 end
 
-keyboard
-
 %-----------------------------------------------------------
 % Pull in Spike Channel Data
 %-----------------------------------------------------------
-
 % check # of Spike channels
 if ~dwinfo.NSpikeCols
 	% if 0, error
 	error('%s: no spike data channels detected in header', mfilename)
-else
-	% otherwise, build Probe data structure
-	tmpProbe = struct('C0', [], 'C1', [], 'C2', [],'C3', [], 'C4', []);
-	for n = 1:dwinfo.NSpikeCols
-		Probe(n) = tmpProbe;
-	end
 end
+% otherwise, build Probe data structure
+for n = 1:dwinfo.NSpikeCols
+	Probe(n) = struct('t', [], 'cluster', []);
+end
+
+
+%%%%%%
+% NEED TO FIGURE OUT PROCESS TO HANDLE DROPPED COLS IN TEXT FILE
 
 disp('Parsing Probe Data...')
 % loop through data lines
 for l = 1:dwinfo.Ndatalines
-	% loop through probes (i.e., tetrodes)
-	for p = 1:NumberOfProbes
-		% loop through data columns for this probe
-		for c = 0:(N_CHANNELS_PER_PROBE-1)
-			% column in data cell array 
-			datacol = c + dwinfo.ProbeCols(p);
-			% if data element at line l, column datacol is not empty,
-			% assign the value (convert to double from string) to the
-			% appropriate channel in the probe struct array
-			if ~isempty(rawdata{l}{datacol})
-				Probe(p).(['C' num2str(c)])(l) = str2double(rawdata{l}{datacol});
-			end
-		end % end c
+	% loop through spike columns (i.e., tetrodes)
+	for p = 1:dwinfo.NSpikeCols
+		c = dwinfo.SpikeCols(p);
+		rawdata{l}{c}
+		Probe(p).t = str2double(rawdata{l}{c});
+		Probe(p).cluster = str2double(rawdata{l}{c + 1});
 	end % end p
 end % end l
+
+return
 
 D.info = dwinfo;
 D.Probe = Probe;
