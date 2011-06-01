@@ -1,4 +1,4 @@
-% function varargout = loadDWfile(varargin)
+function varargout = loadDWfile(varargin)
 %------------------------------------------------------------------------
 % [D, errFlg, rawdata] = loadDWfile(fname, pname)
 %------------------------------------------------------------------------
@@ -68,40 +68,38 @@
 %-----------------------------------------------------------
 DataWaveDefaults;
 
-% %-----------------------------------------------------------
-% % check input arguments, act depending on inputs
-% %-----------------------------------------------------------
-% if nargin == 1
-% 	% only filename was provided, assume path is included or that file is
-% 	% in current directory 
-% 	[pname, fname, ext] = fileparts(varargin{1});
-% 	if isempty(pname)
-% 		pname = pwd;
-% 	end
-% 	fname = [fname ext];
-% elseif nargin == 2
-% 	% filename and path provided as input
-% 	fname = varargin{1};
-% 	pname = varargin{2};
-% elseif nargin == 0
-% 	% no filename or path provided
-% 	% open ui panel to get filename and path from user
-% 	[fname, pname] = uigetfile('*.txt', 'Select Datawave Exported Text File');
-% 	% return if user pressed cancel button
-% 	if isequal(fname, 0) || isequal(pname,0)
-% 		disp('Cancelled...')
-% 		for n = 1:nargout
-% 			varargout{n} = [];
-% 		end
-% 		varargout{2} = 1;
-% 		return
-% 	end
-% else
-% 	error('%s: input argument or file error', mfilename);
-% end
+%-----------------------------------------------------------
+% check input arguments, act depending on inputs
+%-----------------------------------------------------------
+if nargin == 1
+	% only filename was provided, assume path is included or that file is
+	% in current directory 
+	[pname, fname, ext] = fileparts(varargin{1});
+	if isempty(pname)
+		pname = pwd;
+	end
+	fname = [fname ext];
+elseif nargin == 2
+	% filename and path provided as input
+	fname = varargin{1};
+	pname = varargin{2};
+elseif nargin == 0
+	% no filename or path provided
+	% open ui panel to get filename and path from user
+	[fname, pname] = uigetfile('*.txt', 'Select Datawave Exported Text File');
+	% return if user pressed cancel button
+	if isequal(fname, 0) || isequal(pname,0)
+		disp('Cancelled...')
+		for n = 1:nargout
+			varargout{n} = [];
+		end
+		varargout{2} = 1;
+		return
+	end
+else
+	error('%s: input argument or file error', mfilename);
+end
 
-fname = 'BBNspikes.txt';
-pname = pwd;
 
 %-----------------------------------------------------------
 % get file info, read header
@@ -216,35 +214,43 @@ end
 if ~dwinfo.NSpikeCols
 	% if 0, error
 	error('%s: no spike data channels detected in header', mfilename)
+else
+	% otherwise, build Probe data structure
+	for n = 1:dwinfo.NSpikeCols
+		Probe(n) = struct('t', [], 'cluster', []);
+	end
 end
-% otherwise, build Probe data structure
-for n = 1:dwinfo.NSpikeCols
-	Probe(n) = struct('t', [], 'cluster', []);
-end
-
-
-%%%%%%
-% NEED TO FIGURE OUT PROCESS TO HANDLE DROPPED COLS IN TEXT FILE
 
 disp('Parsing Probe Data...')
-% loop through data lines
-for l = 1:dwinfo.Ndatalines
-	% loop through spike columns (i.e., tetrodes)
-	for p = 1:dwinfo.NSpikeCols
-		c = dwinfo.SpikeCols(p);
-		rawdata{l}{c}
-		Probe(p).t = str2double(rawdata{l}{c});
-		Probe(p).cluster = str2double(rawdata{l}{c + 1});
-	end % end p
-end % end l
+% loop through spike columns (i.e., tetrodes)
+for p = 1:dwinfo.NSpikeCols
+	% get current column number for spike data
+	c = dwinfo.SpikeCols(p);
+	% pull out the data for this column
+	l = 0;
+	tmpline = rawdata{1};
+	loopFlag = 1;
+	while ~isempty(tmpline{c}) && (l < dwinfo.Ndatalines) && loopFlag
+		l = l+1;
+		tmpline = rawdata{l};
+		if ~isempty(tmpline{c})
+			Probe(p).t(l) = str2double(tmpline{c});
+			Probe(p).cluster(l) = str2double(tmpline{c+1});
+		else
+			loopFlag = 0;
+		end
+	end
+end
 
-return
+
+
+
+
 
 D.info = dwinfo;
 D.Probe = Probe;
 D.Marker = Marker;
 D.MarkerTimes = MarkerTimes;
-D.NumberOfProbes = NumberOfProbes;
 
 if any(nargout == [0 1 2 3])
 	varargout{1} = D;
