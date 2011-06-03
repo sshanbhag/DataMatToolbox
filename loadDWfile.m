@@ -207,7 +207,11 @@ for L = 1:dwinfo.Ndatalines
 	end
 end
 
-
+% process marker information into arrays
+[Marker, errFlg] = parseDataWaveMarkers(MarkerData, dwinfo);
+if errFlg
+	error('%s: parseDataWaveMarkers error # %d', mfilename, errFlg)
+end
 
 %-----------------------------------------------------------
 % Pull in Spike Channel Data
@@ -249,7 +253,7 @@ end
 
 D.info = dwinfo;
 D.Probe = Probe;
-D.Marker = parseDataWaveMarkers(MarkerData, dwinfo);
+D.Marker = Marker;
 D.MarkerTimes = MarkerTimes;
 
 if any(nargout == [0 1 2 3])

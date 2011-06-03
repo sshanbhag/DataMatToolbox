@@ -81,5 +81,7 @@ for n = 1:Nmarkers
 	Marker.string{n} = M(n).string;
 end
 
+Marker.M = M;
+
 out = Marker;
 
