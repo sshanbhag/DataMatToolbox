@@ -177,7 +177,7 @@ if ~dwinfo.NMarkerCols
 end
 
 % Pull in Marker data
-disp('Parsing Marker Data...')
+disp('Reading Marker Data...')
 
 mStartCol = dwinfo.MarkerCols(1);
 mEndCol = dwinfo.NMarkerCols;
@@ -195,17 +195,19 @@ for L = 1:dwinfo.Ndatalines
 		markerCount = markerCount + 1;
 
 		% save time stamp as number
-		Marker(markerCount).t = str2double(rawdata{L}{mStartCol});
+		MarkerData(markerCount).t = str2double(rawdata{L}{mStartCol});
 		% save times in stand-alone vector
-		MarkerTimes(markerCount) = Marker(markerCount).t;
+		MarkerTimes(markerCount) = MarkerData(markerCount).t;
 		
 		% initialize fields for marker data
 		% I am assuming two potential types of data
 		%	text		some sort of string, e.g. .wav file name
 		%	value		a numeric value (e.g., attenuation value)
-		Marker(markerCount).string = rawdata{L}(mStartCol:mEndCol);
+		MarkerData(markerCount).string = rawdata{L}(mStartCol:mEndCol);
 	end
 end
+
+
 
 %-----------------------------------------------------------
 % Pull in Spike Channel Data
@@ -245,11 +247,9 @@ end
 
 
 
-
-
 D.info = dwinfo;
 D.Probe = Probe;
-D.Marker = Marker;
+D.Marker = parseDataWaveMarkers(MarkerData, dwinfo);
 D.MarkerTimes = MarkerTimes;
 
 if any(nargout == [0 1 2 3])
