@@ -223,7 +223,7 @@ if ~dwinfo.NSpikeCols
 else
 	% otherwise, build Probe data structure
 	for n = 1:dwinfo.NSpikeCols
-		Probe(n) = struct('t', [], 'cluster', []);
+		ProbeData(n) = struct('t', [], 'cluster', []);
 	end
 end
 
@@ -240,21 +240,26 @@ for p = 1:dwinfo.NSpikeCols
 		l = l+1;
 		tmpline = rawdata{l};
 		if ~isempty(tmpline{c})
-			Probe(p).t(l) = str2double(tmpline{c});
-			Probe(p).cluster(l) = str2double(tmpline{c+1});
+			ProbeData(p).t(l) = str2double(tmpline{c});
+			ProbeData(p).cluster(l) = str2double(tmpline{c+1});
 		else
 			loopFlag = 0;
 		end
 	end
 end
 
+[UnitData, ProbeData, errFlag] = parseDataWaveProbes(ProbeData, Marker);
+
+
+
 
 
 
 D.info = dwinfo;
-D.Probe = Probe;
+D.Probe = ProbeData;
 D.Marker = Marker;
 D.MarkerTimes = MarkerTimes;
+D.UnitData = UnitData;
 
 if any(nargout == [0 1 2 3])
 	varargout{1} = D;

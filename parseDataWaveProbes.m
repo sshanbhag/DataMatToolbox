@@ -1,6 +1,6 @@
-%function [out, errFlg] = parseDataWaveProbes(ProbeData, Marker, dwinfo)
+function [UnitData, ProbeData, errFlg] = parseDataWaveProbes(ProbeData, Marker)
 %------------------------------------------------------------------------
-% [out, errFlg] = parseDataWaveProbes(ProbeData, Marker, dwinfo)
+% [UnitData, ProbeData, errFlg] = parseDataWaveProbes(ProbeData, Marker)
 %------------------------------------------------------------------------
 % parse datawave marker information
 % 
@@ -33,14 +33,16 @@
 % TO DO: parse into epochs
 %------------------------------------------------------------------------
 
+errFlg = 0;
 
 %-----------------------------------------------------------
 % load defaults
 %-----------------------------------------------------------
 DataWaveDefaults;
 
-load parseprobedata.mat
-
+%-----------------------------------------------------------
+% separate spike times into units
+%-----------------------------------------------------------
 % count number of probes
 NProbes = length(ProbeData);
 
@@ -78,4 +80,5 @@ for p = 1:NProbes
 		error('%s: no units found for probe %d', mfilename, p);
 	end
 end
+
 
