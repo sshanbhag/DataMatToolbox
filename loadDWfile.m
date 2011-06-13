@@ -227,7 +227,7 @@ else
 	end
 end
 
-disp('Parsing Probe Data...')
+disp('Reading and Parsing Probe Data...')
 % loop through spike columns (i.e., tetrodes)
 for p = 1:dwinfo.NSpikeCols
 	% get current column number for spike data
@@ -248,19 +248,24 @@ for p = 1:dwinfo.NSpikeCols
 	end
 end
 
+%-----------------------------------------------------------
+% Parse ProbeData, organizing by Probe and unit
+%-----------------------------------------------------------
 [UnitData, ProbeData, errFlag] = parseDataWaveProbes(ProbeData, Marker);
 
+%-----------------------------------------------------------
+% Create output structure
+%-----------------------------------------------------------
+D = struct(	'Info', dwinfo, ...
+				'Probe', ProbeData, ...
+				'Marker', Marker, ...
+				'MarkerTimes', MarkerTimes, ...
+				'UnitData', UnitData ...
+			);
 
-
-
-
-
-D.info = dwinfo;
-D.Probe = ProbeData;
-D.Marker = Marker;
-D.MarkerTimes = MarkerTimes;
-D.UnitData = UnitData;
-
+%-----------------------------------------------------------
+% assign outputs depending on number of outputs requested
+%-----------------------------------------------------------
 if any(nargout == [0 1 2 3])
 	varargout{1} = D;
 end

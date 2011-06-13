@@ -116,6 +116,5 @@ out.UnitCols = UnitCols;
 out.NUnitCols = NUnitCols;
 out.Ndatalines = dwinfo.Nlines - N_HEADER_LINES;
 out.MarkerTags = MarkerTags;
-
-
 errFlg = 0;
+

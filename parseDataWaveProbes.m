@@ -47,7 +47,7 @@ DataWaveDefaults;
 NProbes = length(ProbeData);
 
 % initialize total unit counter
-NUnits = 0
+NUnits = 0;
 
 % loop through probes
 for p = 1:NProbes
