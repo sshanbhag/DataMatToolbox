@@ -277,3 +277,8 @@ end
 if nargout == 3
 	varargout{3} = rawdata;
 end
+
+
+%**************BEGIN DEBUGGING********************
+save test.mat D -MAT
+%**************END DEBUGGING********************
