@@ -102,28 +102,69 @@ end
 %-----------------------------------------------------------------------------
 Marker = D.Marker;
 
+NTAGS = length(STIMULUS_TAGS);
+
 % loop through unique indices
 for n = 1:Nunique
 	% loop through the indices for this set of stimuli
 	for m = 1:length(unique_indices{n})
 		u = unique_indices{n}(m);
-		
-		for t = 1:length(STIMULUS_TAGS)
+		for t = 1:NTAGS
 			if iscell(Marker.([STIMULUS_TAGS{t} 'R']))
-				T{m, t} = Marker.([STIMULUS_TAGS{t} 'R']){t};
+				T{m, t} = Marker.([STIMULUS_TAGS{t} 'R']){u};
 			else
-				T{m, t} = Marker.([STIMULUS_TAGS{t} 'R'])(t);
+				T{m, t} = Marker.([STIMULUS_TAGS{t} 'R'])(u);
 			end
-
+			
 			if iscell(Marker.([STIMULUS_TAGS{t} 'L']))
-				T{m, t+length(STIMULUS_TAGS)} = Marker.([STIMULUS_TAGS{t} 'L']){t};
+				T{m, t+length(STIMULUS_TAGS)} = Marker.([STIMULUS_TAGS{t} 'L']){u};
 			else
-				T{m, t+length(STIMULUS_TAGS)} = Marker.([STIMULUS_TAGS{t} 'L'])(t);
+				T{m, t+length(STIMULUS_TAGS)} = Marker.([STIMULUS_TAGS{t} 'L'])(u);
 			end
 		end
 	end
-	S{n} = T;
+	StimTags{n} = T;
 end
+
+
+% build a global stimulus tag array
+for m = 1:Nmarkers
+	for t = 1:NTAGS
+		if iscell(Marker.([STIMULUS_TAGS{t} 'R']))
+			G{m, t} = Marker.([STIMULUS_TAGS{t} 'R']){m};
+		else
+			G{m, t} = Marker.([STIMULUS_TAGS{t} 'R'])(m);
+		end
+
+		if iscell(Marker.([STIMULUS_TAGS{t} 'L']))
+			G{m, t+length(STIMULUS_TAGS)} = Marker.([STIMULUS_TAGS{t} 'L']){m};
+		else
+			G{m, t+length(STIMULUS_TAGS)} = Marker.([STIMULUS_TAGS{t} 'L'])(m);
+		end
+	end
+end
+
+
+for n = 1:Nunique
+	T = StimTags{n};
+
+	% if both of the type tags are 'NO_SOUND', then this is a background trial
+	if strcmp(T{m, 1}, 'NO_SOUND') && ~strcmp(T{m, NTAGS+1}, 'NO_SOUND')
+	
+	
+	% if either of the type tags are 'NO_SOUND', then that section can be ignored
+		if strcmp(T{m, 1}, 'NO_SOUND') && ~strcmp(T{m, NTAGS+1}, 'NO_SOUND')
+			tcols = (NTAGS + 1):(2*NTAGS);
+		elseif ~strcmp(T{m, 1}, 'NO_SOUND') && strcmp(T{m, NTAGS+1}, 'NO_SOUND')
+			tcols = (1:NTAGS);
+		else
+			BG_STIM{
+
+	
+	
+	[nrows, ncols] = size(T);
+	% if both type tags are NO_SOUND, treat those stimuli as background
+	
 
 	
 
