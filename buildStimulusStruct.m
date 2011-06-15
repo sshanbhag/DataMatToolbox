@@ -100,11 +100,32 @@ end
 % stimuli, frequency bandwith might vary, etc.  This next chunk of code will
 % attempt to sort this out
 %-----------------------------------------------------------------------------
+Marker = D.Marker;
 
 % loop through unique indices
 for n = 1:Nunique
-	% 
+	% loop through the indices for this set of stimuli
+	for m = 1:length(unique_indices{n})
+		u = unique_indices{n}(m);
+		
+		for t = 1:length(STIMULUS_TAGS)
+			if iscell(Marker.([STIMULUS_TAGS{t} 'R']))
+				T{m, t} = Marker.([STIMULUS_TAGS{t} 'R']){t};
+			else
+				T{m, t} = Marker.([STIMULUS_TAGS{t} 'R'])(t);
+			end
 
+			if iscell(Marker.([STIMULUS_TAGS{t} 'L']))
+				T{m, t+length(STIMULUS_TAGS)} = Marker.([STIMULUS_TAGS{t} 'L']){t};
+			else
+				T{m, t+length(STIMULUS_TAGS)} = Marker.([STIMULUS_TAGS{t} 'L'])(t);
+			end
+		end
+	end
+	S{n} = T;
+end
+
+	
 
 % 
 % 
