@@ -102,14 +102,14 @@ end
 %-----------------------------------------------------------------------------
 Marker = D.Marker;
 
-NTAGS = length(STIMULUS_TAGS);
+NTAGS_PER_CHANNEL = length(STIMULUS_TAGS);
 
 % loop through unique indices
 for n = 1:Nunique
 	% loop through the indices for this set of stimuli
 	for m = 1:length(unique_indices{n})
 		u = unique_indices{n}(m);
-		for t = 1:NTAGS
+		for t = 1:NTAGS_PER_CHANNEL
 			if iscell(Marker.([STIMULUS_TAGS{t} 'R']))
 				T{m, t} = Marker.([STIMULUS_TAGS{t} 'R']){u};
 			else
@@ -129,7 +129,7 @@ end
 
 % build a global stimulus tag array
 for m = 1:Nmarkers
-	for t = 1:NTAGS
+	for t = 1:NTAGS_PER_CHANNEL
 		if iscell(Marker.([STIMULUS_TAGS{t} 'R']))
 			G{m, t} = Marker.([STIMULUS_TAGS{t} 'R']){m};
 		else
@@ -145,27 +145,81 @@ for m = 1:Nmarkers
 end
 
 
+% preallocate some storage structures
+BG = struct('indices', [], 'count', 0);
+Var = repmat(	...
+					struct(	'ncols',			0,		...
+								'cols',			[],	...
+								'uniquevals',	cell(1, 1)	...
+							), ...
+					Nunique, ...
+					1	...
+				);
+			
+% initialize stimulus counter and channel cell array
+StimCount = 0;
+channel = cell(Nunique,	1);
+stimlist = cell(1, 1);
+
+% loop through unique stimulus types
 for n = 1:Nunique
 	T = StimTags{n};
-
-	% if both of the type tags are 'NO_SOUND', then this is a background trial
-	if strcmp(T{m, 1}, 'NO_SOUND') && ~strcmp(T{m, NTAGS+1}, 'NO_SOUND')
-	
-	
-	% if either of the type tags are 'NO_SOUND', then that section can be ignored
-		if strcmp(T{m, 1}, 'NO_SOUND') && ~strcmp(T{m, NTAGS+1}, 'NO_SOUND')
-			tcols = (NTAGS + 1):(2*NTAGS);
-		elseif ~strcmp(T{m, 1}, 'NO_SOUND') && strcmp(T{m, NTAGS+1}, 'NO_SOUND')
-			tcols = (1:NTAGS);
-		else
-			BG_STIM{
-
-	
-	
 	[nrows, ncols] = size(T);
-	% if both type tags are NO_SOUND, treat those stimuli as background
-	
 
+	if strcmp(T{n, 1}, 'NO_SOUND') && ~strcmp(T{n, NTAGS_PER_CHANNEL+1}, 'NO_SOUND')
+		% if both of the type tags are 'NO_SOUND', then 
+		% this is a background trial
+		% save Marker indices in the BG (Background) struct and increment counter
+		BG.indices = unique_indices{n};
+		BG.count = BG.count + 1;
+		% set tcols to empty so that later processing stages can skip further
+		% analyses of the tag column values
+		tcols = [];
+		channel{n} = 'B';
+	% if either of the type tags are 'NO_SOUND', then that section can be ignored
+	elseif strcmp(T{n, 1}, 'NO_SOUND') && ~strcmp(T{n, NTAGS_PER_CHANNEL+1}, 'NO_SOUND')
+		% set tcols to Tags corresponding to L channel only
+		tcols = (NTAGS_PER_CHANNEL + 2):(2*NTAGS_PER_CHANNEL);
+		channel{n} = 'L';
+	elseif ~strcmp(T{n, 1}, 'NO_SOUND') && strcmp(T{n, NTAGS_PER_CHANNEL+1}, 'NO_SOUND')
+		% set tcols to Tags corresponding to R channel only
+		tcols = (2:NTAGS_PER_CHANNEL);
+		channel{n} = 'R';
+	else
+		% set tcols to Tags corresponding to both L and R channels
+		tcols = [2:NTAGS_PER_CHANNEL (NTAGS_PER_CHANNEL + 2):(2*NTAGS_PER_CHANNEL)];
+		channel{n} = 'B';
+	end
+
+
+	if ~isempty(tcols)
+		if nrows == 1
+			% this is by necessity its own stimulus type
+			StimCount = StimCount + 1;
+			stimlist{StimCount} = unique_indices{n};
+		else
+			% now look for differences in different tags
+			
+			% tag loop
+			for col = tcols
+				testvals = cell2mat(T(:, col));
+				unique_testvals = unique(testvals, 'first');
+				if length(unique_testvals) > 1
+					Var(n).ncols = Var(n).ncols + 1;
+					Var(n).cols(Var(n).ncols) = col;
+					Var(n).uniquevals{Var(n).ncols} = unique_testvals;
+				end
+			end
+		end
+	end
+end
+
+
+%-----------------------------------------------------------------------------
+% Here's where some assumptions about the stimuli need to be made.
+%
+%
+%-----------------------------------------------------------------------------
 	
 
 % 
