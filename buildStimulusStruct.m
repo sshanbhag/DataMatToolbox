@@ -23,7 +23,7 @@
 %------------------------------------------------------------------------
 % TO DO:
 %------------------------------------------------------------------------
-
+clear all
 %-----------------------------------------------------------
 % load defaults
 %-----------------------------------------------------------
@@ -150,7 +150,8 @@ BG = struct('indices', [], 'count', 0);
 Var = repmat(	...
 					struct(	'ncols',			0,		...
 								'cols',			[],	...
-								'uniquevals',	cell(1, 1)	...
+								'uniquevals',	cell(1, 1),	...
+								'channel',		[]		...
 							), ...
 					Nunique, ...
 					1	...
@@ -208,6 +209,7 @@ for n = 1:Nunique
 					Var(n).ncols = Var(n).ncols + 1;
 					Var(n).cols(Var(n).ncols) = col;
 					Var(n).uniquevals{Var(n).ncols} = unique_testvals;
+					Var(n).channel = channel{n};
 				end
 			end
 		end
@@ -220,7 +222,20 @@ end
 %
 %
 %-----------------------------------------------------------------------------
+for n = 1:Nunique
+	if Var(n).ncols
+		candidate_vars{n} = STIMULUS_TAGS{Var(n).cols};
+	else
+		candidate_vars{n} = [];
+	end
 	
+	if ~isempty(candidate_vars{n})
+		disp('Possible variables:')
+		sprintf('%s\t', candidate_vars{n})
+	end
+	
+	
+end
 
 % 
 % 
