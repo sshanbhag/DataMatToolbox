@@ -18,7 +18,7 @@
 % get # of markers
 Nmarkers = length(D.Marker.Timestamp);
 
-D.Marker.StimulusTypeR{3} = 'TONE';
+% D.Marker.StimulusTypeR{3} = 'TONE';
 
 % build stimulus type cell array
 stimulus_tags = [D.Marker.StimulusTypeR D.Marker.StimulusTypeL];
@@ -37,7 +37,7 @@ end
 % unique L and R channel stimulus combinations
 [unique_ids, locs] = unique(stimulus_ids, 'rows', 'first')
 	
-Nunique = length(unique_ids);
+[Nunique, tmp] = size(unique_ids);
 
 if isempty(Nunique)
 	error('%s: no unique stimuli found', mfilename);
@@ -281,16 +281,16 @@ end
 %-----------------------------------------------------------------------------
 % collect attenuation information on stimuli in stimlist
 %-----------------------------------------------------------------------------
-for stimIndex = 1:StimCount
-	
-	testatt = Marker.stimlist{
-	
-	for s = 1:stimIndex
-		testvals = stimlist{s
-
-
-	end
-end
+% for stimIndex = 1:StimCount
+% 	
+% 	testatt = Marker.stimlist{
+% 	
+% 	for s = 1:stimIndex
+% 		testvals = stimlist{s
+% 
+% 
+% 	end
+% end
 
 %-----------------------------------------------------------------------------
 % Here's where some assumptions about the stimuli need to be made.
