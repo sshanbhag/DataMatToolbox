@@ -162,22 +162,25 @@ for n = 1:Nunique
 	if ~bgFlag
 		switch channel{n}
 			case 'R'
-				col_offset = 0
 				% set tcols to Tags corresponding to R channel only
-				tcols{n} = (2:NTAGS_PER_CHANNEL);
+				col_offset = 0
+% 				tcols{n} = (2:NTAGS_PER_CHANNEL);
 			case 'L'
+ 				% set tcols to Tags corresponding to L channel only
 				col_offset = NTAGS_PER_CHANNEL
-				% set tcols to Tags corresponding to L channel only
-				tcols{n} = (NTAGS_PER_CHANNEL + 2):(2*NTAGS_PER_CHANNEL);
+% 				tcols{n} = (NTAGS_PER_CHANNEL + 2):(2*NTAGS_PER_CHANNEL);
 			case 'B'
 				% set tcols to Tags corresponding to both L and R channels
 				col_offset = [0 NTAGS_PER_CHANNEL]
-				tcols{n} = [2:NTAGS_PER_CHANNEL (NTAGS_PER_CHANNEL + 2):(2*NTAGS_PER_CHANNEL)];
+% 				tcols{n} = [2:NTAGS_PER_CHANNEL (NTAGS_PER_CHANNEL + 2):(2*NTAGS_PER_CHANNEL)];
 		end
 
 		tagindex = 1;
+		% loop through the values in col_offset.  this will allow relevant
+		% columns for particular stimuli to be retreived
 		for c = col_offset
 			
+			% get type of stimulus for current channel
 			tmptype = T{1, c + 1}
 			
 			switch tmptype
@@ -210,8 +213,12 @@ for n = 1:Nunique
 		tcols{n} = [];	
 	end
 end
-	
-	
+
+%-----------------------------------------------------------------------------
+%
+% Search for appropriately varying variables for each stimulus type
+%	
+%-----------------------------------------------------------------------------	
 StimCount = 0;
 stimlist = cell(1, 1);
 Var = repmat(	...
@@ -245,11 +252,20 @@ for n = 1:Nunique
 					Var(n).cols(Var(n).ncols) = col;
 					Var(n).uniquevals{Var(n).ncols} = unique_testvals;
 					Var(n).channel = channel{n};
+% 					for u = 1:length(unique_testvals)
+% 						Var(n).vals
 				end
 			end
+			
+			if Var(n).ncols == 0
+				% only one configuration for this stimulus
+				
+			
 		end
 	end
 end
+
+% Now search for attenuation values
 
 
 %-----------------------------------------------------------------------------
