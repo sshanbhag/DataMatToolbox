@@ -217,7 +217,12 @@ end
 %-----------------------------------------------------------------------------
 %
 % Search for appropriately varying variables for each stimulus type
-%	
+%	One might ask why this is necessary, since stimulus types have
+%	already been detected.  The issue is that for some stimuli, there
+%	might be characteristics that vary so that there are different "subclasses"
+%	of stimuli.  E.g., the stimulus type might be WAVFILE but there might be
+%	5 different wav files randomly presented - this needs to be detected
+%	and accounted for.
 %-----------------------------------------------------------------------------	
 StimCount = 0;
 stimlist = cell(1, 1);
@@ -230,6 +235,13 @@ Var = repmat(	...
 					Nunique, ...
 					1	...
 				);
+
+
+% Var(1:Nunique)		struct containing information about variables
+% Var(n).ncols = Var(n).ncols + 1;
+% Var(n).cols(Var(n).ncols) = col;
+% Var(n).uniquevals{Var(n).ncols} = unique_testvals;
+% Var(n).channel = channel{n};
 
 for n = 1:Nunique
 	T = StimTags{n};
@@ -252,21 +264,33 @@ for n = 1:Nunique
 					Var(n).cols(Var(n).ncols) = col;
 					Var(n).uniquevals{Var(n).ncols} = unique_testvals;
 					Var(n).channel = channel{n};
-% 					for u = 1:length(unique_testvals)
-% 						Var(n).vals
+					Var(n).name = STIMULUS_TAGS{col};
 				end
 			end
 			
 			if Var(n).ncols == 0
 				% only one configuration for this stimulus
-				
+				StimCount = StimCount + 1;
+				stimlist{StimCount} = unique_indices{n};
+			end
 			
 		end
 	end
 end
 
-% Now search for attenuation values
+%-----------------------------------------------------------------------------
+% collect attenuation information on stimuli in stimlist
+%-----------------------------------------------------------------------------
+for stimIndex = 1:StimCount
+	
+	testatt = Marker.stimlist{
+	
+	for s = 1:stimIndex
+		testvals = stimlist{s
 
+
+	end
+end
 
 %-----------------------------------------------------------------------------
 % Here's where some assumptions about the stimuli need to be made.
