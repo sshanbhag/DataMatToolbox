@@ -32,7 +32,7 @@ DataWaveDefaults;
 load test.mat -MAT
 
 
-stimseparate_test
+stimseparate_method2
 
 
 % 
