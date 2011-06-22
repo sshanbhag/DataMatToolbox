@@ -25,6 +25,9 @@
 N_HEADER_LINES = 1;
 
 
+N_CHANNELS = 2;
+
+
 % Marker format information
 
 MARKER_TAGS = { ...
@@ -169,6 +172,10 @@ STIMULUS_TAGS = { ...
 	'ToneFreq', ...
 	'PhaseDeg', ...
 };
+
+% get number of tags used to identify stimuli that are defined in the
+% STIMULUS_TAGS{} vector
+NTAGS_PER_CHANNEL = length(STIMULUS_TAGS);
 
 TONE_VAR_TAGS = { ...
 % 	'Attenuation', ...
