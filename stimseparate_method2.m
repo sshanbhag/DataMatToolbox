@@ -31,23 +31,22 @@ for m = 1:Nmarkers
 			% need to check if each specific tag is in a cell or vector in order
 			% to address the tag appropriately (using {} for cell, () for vector)
 		
-			if iscell(Marker.([STIMULUS_TAGS{t} ctxt(c)]))
-				Tags{m, t + offset} = Marker.([STIMULUS_TAGS{t} ctxt(c)]){m};
+			if iscell(Marker.([STIMULUS_SEARCH_TAGS{t} ctxt(c)]))
+				Tags{m, t + offset} = Marker.([STIMULUS_SEARCH_TAGS{t} ctxt(c)]){m};
 			else
-				Tags{m, t + offset} = Marker.([STIMULUS_TAGS{t} ctxt(c)])(m);
+				Tags{m, t + offset} = Marker.([STIMULUS_SEARCH_TAGS{t} ctxt(c)])(m);
 			end
 		end
 	end
 end
 
-
-[tmp, Ncols] = size(Tags);
-
+%-----------------------------------------------------------------------------
 % Now we have a cell array that has a mix of text and numeric fields.
 % To enable a straightforward search for unique stimuli:
 %	(1)	use cell2str to convert each row of Tags{} to a string that
 %			stored in TagStrings{}
 %	(2)	use findUniqueText function to locate unique stimuli
+%-----------------------------------------------------------------------------
 
 % perform conversion to strings.
 TagStrings = cell2str(Tags);
@@ -59,8 +58,13 @@ TagStrings = cell2str(Tags);
 
 
 
-%  Now  pull together  all the stimuli that differ only by attenuation value
+%-----------------------------------------------------------------------------
+% Determine Stimulus Type
+%-----------------------------------------------------------------------------
 for n = 1:Nunique
+	
 end
 
-
+%-----------------------------------------------------------------------------
+%
+%-----------------------------------------------------------------------------
