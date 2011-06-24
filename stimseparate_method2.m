@@ -68,6 +68,7 @@ TagStrings = cell2str(Tags);
 % preallocate some storage structures
 BG = struct('indices', [], 'count', 0);
 Stimulus = repmat( cell2struct(STIMULUS_STRUCT_FIELDS, STIMULUS_STRUCT_FIELDS, 2), Nunique, 1);
+Nstimuli = length(Stimulus);
 
 for n = 1:Nunique
 	
@@ -108,12 +109,218 @@ for n = 1:Nunique
 	end
 	
 	Stimulus(n).Indices = uniqueIndices{n};
-	Stimulus(n).tagstring = uniqueText{n};
+	Stimulus(n).Tagstring = uniqueText{n};
 	
 	% Now copy over the Marker tags
-	
+	for f = 1:length(MARKER_TAGS)
+		
+		if iscell(Marker.(MARKER_TAGS{f}))
+			Stimulus(n).(MARKER_TAGS{f}) = ...
+										Marker.(MARKER_TAGS{f}){uniqueIndices{n}};
+		else
+			Stimulus(n).(MARKER_TAGS{f}) = ...
+										Marker.(MARKER_TAGS{f})(uniqueIndices{n});
+		end
+	end
+		
 end
 
 %-----------------------------------------------------------------------------
-% Now, for each stimulus, figure out what variables
+% Now, for each stimulus, figure out what variables are varying.  or were
+% varied.  or the variety of varying variables.
 %-----------------------------------------------------------------------------
+
+%-----------------------------------------------------------------------------
+%
+% Search for appropriately varying variables for each stimulus type
+%	One might ask why this is necessary, since stimulus types have
+%	already been detected.  The issue is that for some stimuli, there
+%	might be characteristics that vary so that there are different "subclasses"
+%	of stimuli.  E.g., the stimulus type might be WAVFILE but there might be
+%	5 different wav files randomly presented - this needs to be detected
+%	and accounted for.
+%-----------------------------------------------------------------------------	
+
+
+% Var = repmat(	...
+% 					struct(	'ncols',			0,		...
+% 								'cols',			[],	...
+% 								'uniquevals',	cell(1, 1),	...
+% 								'channel',		[]		...
+% 							), ...
+% 					Nunique, ...
+% 					1	...
+% 				);
+
+for s = 1:Nstimuli
+	
+	varindex = 0;
+	
+	
+	Stimulus(s) = setfield(Stimulus(s), 'Var', struct('name', [], 'values', [], 'indices', []) );
+	
+	switch Stimulus(s).Type{1}
+
+		case 'TONE'
+			for n = 1:length(TONE_VAR_TAGS)
+				
+				clear tmpvar;
+				
+				if Stimulus(s).Channel == 'B'
+					tmp = Stimulus(s).([TONE_VAR_TAGS{n} 'R']);
+					uniqtmp = unique(tmp);
+					if ~isempty(uniqtmp)
+						tmpvar(1).name = [TONE_VAR_TAGS{n} 'R'];
+						tmpvar(1).values = uniqtmp;
+
+						for u = 1:length(uniqtmp)
+							tmpind = find(tmp == uniqtmp(u));
+							tmpvar(1).indices = Stimulus(s).Indices(tmpind);
+						end
+					end
+					
+					
+					tmp = Stimulus(s).([TONE_VAR_TAGS{n} 'L']);
+					uniqtmp = unique(tmp);
+					if ~isempty(uniqtmp)
+						tmpvar(2).name = [TONE_VAR_TAGS{n} 'L'];
+						tmpvar(2).values = uniqtmp;
+
+						for u = 1:length(uniqtmp)
+							tmpind = find(tmp == uniqtmp(u));
+							tmpvar(2).indices = Stimulus(s).Indices(tmpind);
+						end
+					end
+									
+				else
+					tmp = Stimulus(s).([TONE_VAR_TAGS{n} Stimulus(s).Channel]);
+					uniqtmp = unique(tmp);
+					if ~isempty(uniqtmp)
+						tmpvar.name = [TONE_VAR_TAGS{n} Stimulus(s).Channel];
+						tmpvar.values = uniqtmp;
+						for u = 1:length(uniqtmp)
+							tmpind = find(tmp == uniqtmp(u));
+							tmpvar.indices = Stimulus(s).Indices(tmpind);
+						end
+					end
+				end
+				if exist('tmpvar')
+					if ~isempty(tmpvar)
+						varindex = varindex + 1
+						Stimulus(s).Var(varindex) = tmpvar;
+					end
+				end
+
+			end
+			
+		case	'NOISE'
+
+			for n = 1:length(NOISE_VAR_TAGS)
+				
+				clear tmpvar;
+				
+				if Stimulus(s).Channel == 'B'
+					tmp = Stimulus(s).([NOISE_VAR_TAGS{n} 'R']);
+					uniqtmp = unique(tmp);
+					if ~isempty(uniqtmp)
+						tmpvar(1).name = [NOISE_VAR_TAGS{n} 'R'];
+						tmpvar(1).values = uniqtmp;
+
+						for u = 1:length(uniqtmp)
+							tmpind = find(tmp == uniqtmp(u));
+							tmpvar(1).indices = Stimulus(s).Indices(tmpind);
+						end
+					end
+					
+					
+					tmp = Stimulus(s).([NOISE_VAR_TAGS{n} 'L']);
+					uniqtmp = unique(tmp);
+					if ~isempty(uniqtmp)
+						tmpvar(2).name = [NOISE_VAR_TAGS{n} 'L'];
+						tmpvar(2).values = uniqtmp;
+
+						for u = 1:length(uniqtmp)
+							tmpind = find(tmp == uniqtmp(u));
+							tmpvar(2).indices = Stimulus(s).Indices(tmpind);
+						end
+					end
+									
+				else
+					tmp = Stimulus(s).([NOISE_VAR_TAGS{n} Stimulus(s).Channel]);
+					uniqtmp = unique(tmp);
+					if ~isempty(uniqtmp)
+						tmpvar.name = [NOISE_VAR_TAGS{n} Stimulus(s).Channel];
+						tmpvar.values = uniqtmp;
+						for u = 1:length(uniqtmp)
+							tmpind = find(tmp == uniqtmp(u));
+							tmpvar.indices = Stimulus(s).Indices(tmpind);
+						end
+					end
+				end
+				if exist('tmpvar')
+					if ~isempty(tmpvar)
+						varindex = varindex + 1
+						Stimulus(s).Var(varindex) = tmpvar;
+					end
+				end
+
+			end
+			
+		case 	'WAVFILE'
+			for n = 1:length(WAV_VAR_TAGS)
+				
+				clear tmpvar;
+				
+				if Stimulus(s).Channel == 'B'
+					tmp = Stimulus(s).([WAV_VAR_TAGS{n} 'R']);
+					uniqtmp = unique(tmp);
+					if ~isempty(uniqtmp)
+						tmpvar(1).name = [WAV_VAR_TAGS{n} 'R'];
+						tmpvar(1).values = uniqtmp;
+
+						for u = 1:length(uniqtmp)
+							tmpind = find(tmp == uniqtmp(u));
+							tmpvar(1).indices = Stimulus(s).Indices(tmpind);
+						end
+					end
+					
+					
+					tmp = Stimulus(s).([WAV_VAR_TAGS{n} 'L']);
+					uniqtmp = unique(tmp);
+					if ~isempty(uniqtmp)
+						tmpvar(2).name = [WAV_VAR_TAGS{n} 'L'];
+						tmpvar(2).values = uniqtmp;
+
+						for u = 1:length(uniqtmp)
+							tmpind = find(tmp == uniqtmp(u));
+							tmpvar(2).indices = Stimulus(s).Indices(tmpind);
+						end
+					end
+									
+				else
+					tmp = Stimulus(s).([WAV_VAR_TAGS{n} Stimulus(s).Channel]);
+					uniqtmp = unique(tmp);
+					if ~isempty(uniqtmp)
+						tmpvar.name = [WAV_VAR_TAGS{n} Stimulus(s).Channel];
+						tmpvar.values = uniqtmp;
+						for u = 1:length(uniqtmp)
+							tmpind = find(tmp == uniqtmp(u));
+							tmpvar.indices = Stimulus(s).Indices(tmpind);
+						end
+					end
+				end
+				if exist('tmpvar')
+					if ~isempty(tmpvar)
+						varindex = varindex + 1
+						Stimulus(s).Var(varindex) = tmpvar;
+					end
+				end
+
+			end
+			
+			
+		otherwise
+	end
+end
+
+
