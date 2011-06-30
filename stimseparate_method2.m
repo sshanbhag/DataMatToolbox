@@ -110,6 +110,7 @@ for n = 1:Nunique
 	
 	Stimulus(n).Indices = uniqueIndices{n};
 	Stimulus(n).Tagstring = uniqueText{n};
+	Stimulus(n).Nreps = length(uniqueIndices{n});
 	
 	% Now copy over the Marker tags
 	for f = 1:length(MARKER_TAGS)
@@ -122,7 +123,32 @@ for n = 1:Nunique
 										Marker.(MARKER_TAGS{f})(uniqueIndices{n});
 		end
 	end
+	
+end
+
+
+%-----------------------------------------------------------------------------
+% this is a bit of a kludge - the Timestamps field in Stimulus only has the 
+% first timestamp, whereas we need all timestamps for each stimulus type in
+% the Timestamps field
+%-----------------------------------------------------------------------------
+
+% first need to clear the Timestamps Variable
+Stimulus = rmfield(Stimulus, 'Timestamps');
+
+% then get the timestamps for this Stimulus from the Marker structure
+for s = 1:Nstimuli
+	Stimulus(s).Timestamps = str2double(Marker.Timestamp(Stimulus(s).Indices));
+	
+	% and determine end time for sweep
+	for start_index = Stimulus(s).Indices
+		if start_index == Nmarkers
 		
+		else
+			Stimulus(s).Sweepend(
+		end
+	end
+			
 end
 
 %-----------------------------------------------------------------------------
@@ -320,7 +346,38 @@ for s = 1:Nstimuli
 			
 			
 		otherwise
+			error('%s: UNKNOWN STIMULUS TYPE: %s ', mfilename, Stimulus(s).Type{1}); 
 	end
 end
 
 
+
+
+%------------------------------------------------------------------------
+% compute start and end time for each Stimulus sweep - this will be used
+% to locate the spike times that occurred during this stimulus
+% presentation window
+%---------------------------------------------------------------------
+
+for s = 1:Nstimuli
+
+	for n = 1:Stimulus(s).Nreps
+		Stimulus(s).Sweepstart(n) = Stimulus(s).Time;
+	Stimulus(s).Sweepend(n) = 0 * Stimulus(s).sweepstart_t{n};
+	for m = 1:Stimulus(s).sweeps_per_atten(n)
+		% check if this is the last sweep in the experiment
+		if Stimulus(s).sweepstart_t{n}(m) == Marker.tstamps(end)
+			% if so, use some default number to it to calculate the end time
+			% (in this case, use the cumulative sum of the marker times - this
+			% will ensure that scale of the default end time is on the order of
+			% the tstamps units
+			Stimulus(s).sweepend_t{n}(m) = sum(Marker.tstamps);
+		else
+			% if not, use the time of the next timestamp in Marker.tstamps,
+			% which is given by adding 1 to the index for this sweep
+			Stimulus(s).sweepend_t{n}(m) = Marker.tstamps(Stimulus(s).sweepindex{n}(m) + 1);
+		end
+	end
+
+
+end
