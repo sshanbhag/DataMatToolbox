@@ -128,24 +128,38 @@ end
 
 
 %-----------------------------------------------------------------------------
-% this is a bit of a kludge - the Timestamps field in Stimulus only has the 
+% this is a bit of a kludge - the Timestamp field in Stimulus only has the 
 % first timestamp, whereas we need all timestamps for each stimulus type in
-% the Timestamps field
+% 
+% This information will be stored in the Sweepstart(1:Nreps) and
+% Sweepend(1:Nreps) arrays.  Sweepstart corresponds to the sweep timestamp,
+% and Sweepend is the timestamp for the next sweep.
+%
+% for the final sweep in the file, Sweepend isn't truly accurate, but is 
+% set to that sweep's start timestamp + max interval between all previous sweeps. 
 %-----------------------------------------------------------------------------
 
-% first need to clear the Timestamps Variable
-Stimulus = rmfield(Stimulus, 'Timestamps');
+marker_timestamp_vals = str2double(Marker.Timestamp);
+max_timestamp_difference = max(diff(marker_timestamp_vals));
 
 % then get the timestamps for this Stimulus from the Marker structure
 for s = 1:Nstimuli
-	Stimulus(s).Timestamps = str2double(Marker.Timestamp(Stimulus(s).Indices));
+	Stimulus(s).Sweepstart = marker_timestamp_vals(Stimulus(s).Indices);
+	Stimulus(s).Sweepend = zeros(size(Stimulus(s).Sweepstart));
 	
 	% and determine end time for sweep
-	for start_index = Stimulus(s).Indices
-		if start_index == Nmarkers
-		
+	for n = 1:length(Stimulus(s).Indices)
+		start_index = Stimulus(s).Indices(n)
+		if start_index ~= Nmarkers
+			% Set the Sweep end time to the Timestamp of the next marker
+			Stimulus(s).Sweepend(n) = marker_timestamp_vals(start_index + 1);
+			
 		else
-			Stimulus(s).Sweepend(
+			% if the index for this stimulus (into the Markers arrays) is
+			% equal to the total # of markers, then this is the last marker and
+			% the Sweepend time will need to be computed
+			Stimulus(s).Sweepend(n) = marker_timestamp_vals(start_index) + max_timestamp_difference;
+
 		end
 	end
 			
@@ -351,33 +365,43 @@ for s = 1:Nstimuli
 end
 
 
-
-
 %------------------------------------------------------------------------
-% compute start and end time for each Stimulus sweep - this will be used
-% to locate the spike times that occurred during this stimulus
-% presentation window
-%---------------------------------------------------------------------
+% Retrieve the spikes for each stimulus X atten combination
+%------------------------------------------------------------------------
+
+% make local copy of UnitData
+UnitData = D.UnitData;
+Nunits = length(UnitData);
 
 for s = 1:Nstimuli
+	% allocate the cell array to store valid spike times for each unit
+	Stimulus(s).Spiketimes = cell(Nunits, Stimulus(s).Nreps);
 
-	for n = 1:Stimulus(s).Nreps
-		Stimulus(s).Sweepstart(n) = Stimulus(s).Time;
-	Stimulus(s).Sweepend(n) = 0 * Stimulus(s).sweepstart_t{n};
-	for m = 1:Stimulus(s).sweeps_per_atten(n)
-		% check if this is the last sweep in the experiment
-		if Stimulus(s).sweepstart_t{n}(m) == Marker.tstamps(end)
-			% if so, use some default number to it to calculate the end time
-			% (in this case, use the cumulative sum of the marker times - this
-			% will ensure that scale of the default end time is on the order of
-			% the tstamps units
-			Stimulus(s).sweepend_t{n}(m) = sum(Marker.tstamps);
-		else
-			% if not, use the time of the next timestamp in Marker.tstamps,
-			% which is given by adding 1 to the index for this sweep
-			Stimulus(s).sweepend_t{n}(m) = Marker.tstamps(Stimulus(s).sweepindex{n}(m) + 1);
+	% loop through reps
+	for r = 1:Stimulus(s).Nreps
+	
+		% loop through the units
+		for u = 1:Nunits
+			% retrieve the spikes that are valid, using the sweepstart_t and 
+			% sweepend_t values for this stimulus/attenuation combination
+
+			% spiketimes greater than sweep start
+			above_start = (UnitData(u).timestamp >= Stimulus(s).Sweepstart(r));
+			% spiketime less than sweep end
+			below_end	= (UnitData(u).timestamp < Stimulus(s).Sweepend(r));
+			
+			% AND the two lists
+			valid_times_list = above_start & below_end;
+			% get the indices and corresponding times for this list
+			valid_index = find(valid_times_list);
+
+			% store the values
+			if ~isempty(valid_index)
+				Stimulus(s).Spiketimes{u, r} = UnitData(u).timestamp(valid_index);
+			else
+				Stimulus(s).Spiketimes{u, r} = [];
+			end
 		end
 	end
-
-
 end
+
