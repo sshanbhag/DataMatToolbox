@@ -142,11 +142,10 @@ for n = 1:Nunique
 	
 	Stimulus(n).Indices = uniqueIndices{n};
 	Stimulus(n).Tagstring = uniqueText{n};
-	Stimulus(n).Nreps = length(uniqueIndices{n});
+	Stimulus(n).Nsweeps = length(uniqueIndices{n});
 	
-	% Now copy over the Marker tags
+	% Now copy over the Marker tags and values
 	for f = 1:length(MARKER_TAGS)
-		
 		if iscell(Marker.(MARKER_TAGS{f}))
 			Stimulus(n).(MARKER_TAGS{f}) = ...
 										Marker.(MARKER_TAGS{f}){uniqueIndices{n}};
@@ -193,9 +192,9 @@ for s = 1:Nstimuli
 			Stimulus(s).Sweepend(n) = marker_timestamp_vals(start_index) + max_timestamp_difference;
 
 		end
-	end
-			
-end
+		
+	end	% end of n loop
+end	% end of S loop
 
 %-----------------------------------------------------------------------------
 % Now, for each stimulus, figure out what variables are varying.  or were
@@ -259,15 +258,15 @@ end
 %------------------------------------------------------------------------
 % make local copy of UnitData
 UnitData = Data.UnitData;
-Nunits = length(UnitData);
+Nunits = Data.Info.Nunits;
 
 % loop through stimuli
 for s = 1:Nstimuli
 	% allocate the cell array to store valid spike times for each unit
-	Stimulus(s).Spiketimes = cell(Nunits, Stimulus(s).Nreps);
+	Stimulus(s).Spiketimes = cell(Nunits, Stimulus(s).Nsweeps);
 
-	% loop through reps
-	for r = 1:Stimulus(s).Nreps
+	% loop through sweeps
+	for r = 1:Stimulus(s).Nsweeps
 	
 		% loop through the units
 		for u = 1:Nunits
@@ -298,6 +297,10 @@ for s = 1:Nstimuli
 	end	% end of R loop
 end	% end of S loop
 
+
+%**************BEGIN DEBUGGING********************
+save buildStimulusStruct_debug.mat Stimulus -MAT
+%**************END DEBUGGING********************
 
 
 

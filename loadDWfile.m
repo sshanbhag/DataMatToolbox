@@ -253,6 +253,8 @@ end
 %-----------------------------------------------------------
 [UnitData, ProbeData, errFlag] = parseDataWaveProbes(ProbeData, Marker);
 
+dwinfo.Nunits = length(UnitData);
+
 %-----------------------------------------------------------
 % Create output structure
 %-----------------------------------------------------------
@@ -262,23 +264,29 @@ D = struct(	'Info', dwinfo, ...
 				'MarkerTimes', MarkerTimes, ...
 				'UnitData', UnitData ...
 			);
+		
+Stimulus = buildStimulusStruct(D);
+		
 
 %-----------------------------------------------------------
 % assign outputs depending on number of outputs requested
 %-----------------------------------------------------------
-if any(nargout == [0 1 2 3])
+if any(nargout == [0 1 2 3 4])
 	varargout{1} = D;
 end
 
-if any(nargout == [2 3])
-	varargout{2} = errFlg;
+if any(nargout == [1 2 3 4])
+	varargout{3} = Stimulus;
 end
 
-if nargout == 3
-	varargout{3} = rawdata;
+if any(nargout == [2 3 4])
+	varargout{3} = errFlg;
 end
 
+if nargout == 4
+	varargout{4} = rawdata;
+end
 
 %**************BEGIN DEBUGGING********************
-save test.mat D -MAT
+save loadDWfile_debug.mat D Stimulus -MAT
 %**************END DEBUGGING********************
