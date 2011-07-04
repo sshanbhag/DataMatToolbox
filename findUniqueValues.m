@@ -54,5 +54,5 @@ else
 end
 
 for n = 1:NuniqueVals
-	uniqueIndices{n} = find(uniqueVals(n) == values_to_search)
+	uniqueIndices{n} = find(uniqueVals(n) == values_to_search);
 end
