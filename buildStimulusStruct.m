@@ -21,6 +21,9 @@ function [Stimulus, errFlg] = buildStimulusStruct(Data)
 % 	- uses code snipped from loadDWPLXFileAsRaster.m
 %
 % Revisions:
+%	4 July 2011 (SJS):
+% 		-	made into function
+% 		-	split Var tags search into function assignVarTags.m
 %------------------------------------------------------------------------
 % TO DO:
 %------------------------------------------------------------------------
@@ -210,219 +213,55 @@ end
 %	and accounted for.
 %-----------------------------------------------------------------------------	
 
-
-% Var = repmat(	...
-% 					struct(	'ncols',			0,		...
-% 								'cols',			[],	...
-% 								'uniquevals',	cell(1, 1),	...
-% 								'channel',		[]		...
-% 							), ...
-% 					Nunique, ...
-% 					1	...
-% 				);
-
 for s = 1:Nstimuli
-	
-	varindex = 0;
-	
-	
-	Stimulus(s) = setfield(Stimulus(s), 'Var', struct('name', [], 'values', [], 'indices', []) );
-	
 	switch Stimulus(s).Type{1}
-
 		case 'TONE'
-			for n = 1:length(TONE_VAR_TAGS)
-				
-				clear tmpvar;
-				
-				if Stimulus(s).Channel == 'B'
-					tmp = Stimulus(s).([TONE_VAR_TAGS{n} 'R']);
-					uniqtmp = unique(tmp);
-					if ~isempty(uniqtmp)
-						tmpvar(1).name = [TONE_VAR_TAGS{n} 'R'];
-						tmpvar(1).values = uniqtmp;
-
-						for u = 1:length(uniqtmp)
-							tmpind = find(tmp == uniqtmp(u));
-							tmpvar(1).indices = Stimulus(s).Indices(tmpind);
-						end
-					end
-					
-					
-					tmp = Stimulus(s).([TONE_VAR_TAGS{n} 'L']);
-					uniqtmp = unique(tmp);
-					if ~isempty(uniqtmp)
-						tmpvar(2).name = [TONE_VAR_TAGS{n} 'L'];
-						tmpvar(2).values = uniqtmp;
-
-						for u = 1:length(uniqtmp)
-							tmpind = find(tmp == uniqtmp(u));
-							tmpvar(2).indices = Stimulus(s).Indices(tmpind);
-						end
-					end
-									
-				else
-					tmp = Stimulus(s).([TONE_VAR_TAGS{n} Stimulus(s).Channel]);
-					uniqtmp = unique(tmp);
-					if ~isempty(uniqtmp)
-						tmpvar.name = [TONE_VAR_TAGS{n} Stimulus(s).Channel];
-						tmpvar.values = uniqtmp;
-						for u = 1:length(uniqtmp)
-							tmpind = find(tmp == uniqtmp(u));
-							tmpvar.indices = Stimulus(s).Indices(tmpind);
-						end
-					end
-				end
-				if exist('tmpvar')
-					if ~isempty(tmpvar)
-						varindex = varindex + 1;
-						Stimulus(s).Var(varindex) = tmpvar;
-					end
-				end
-
-			end
-			
+			Stimulus(s).Var = assignVarTags(Stimulus(s), TONE_VAR_TAGS);
 		case	'NOISE'
-
-			for n = 1:length(NOISE_VAR_TAGS)
-				
-				clear tmpvar;
-				
-				if Stimulus(s).Channel == 'B'
-					tmp = Stimulus(s).([NOISE_VAR_TAGS{n} 'R']);
-					uniqtmp = unique(tmp);
-					if ~isempty(uniqtmp)
-						tmpvar(1).name = [NOISE_VAR_TAGS{n} 'R'];
-						tmpvar(1).values = uniqtmp;
-
-						for u = 1:length(uniqtmp)
-							tmpind = find(tmp == uniqtmp(u));
-							tmpvar(1).indices = Stimulus(s).Indices(tmpind);
-						end
-					end
-					
-					
-					tmp = Stimulus(s).([NOISE_VAR_TAGS{n} 'L']);
-					uniqtmp = unique(tmp);
-					if ~isempty(uniqtmp)
-						tmpvar(2).name = [NOISE_VAR_TAGS{n} 'L'];
-						tmpvar(2).values = uniqtmp;
-
-						for u = 1:length(uniqtmp)
-							tmpind = find(tmp == uniqtmp(u));
-							tmpvar(2).indices = Stimulus(s).Indices(tmpind);
-						end
-					end
-									
-				else
-					tmp = Stimulus(s).([NOISE_VAR_TAGS{n} Stimulus(s).Channel]);
-					uniqtmp = unique(tmp);
-					if ~isempty(uniqtmp)
-						tmpvar.name = [NOISE_VAR_TAGS{n} Stimulus(s).Channel];
-						tmpvar.values = uniqtmp;
-						for u = 1:length(uniqtmp)
-							tmpind = find(tmp == uniqtmp(u));
-							tmpvar.indices = Stimulus(s).Indices(tmpind);
-						end
-					end
-				end
-				if exist('tmpvar')
-					if ~isempty(tmpvar)
-						varindex = varindex + 1;
-						Stimulus(s).Var(varindex) = tmpvar;
-					end
-				end
-
-			end
-			
+			Stimulus(s).Var = assignVarTags(Stimulus(s), NOISE_VAR_TAGS);
 		case 	'WAVFILE'
-			for n = 1:length(WAV_VAR_TAGS)
-				
-				clear tmpvar;
-				
-				if Stimulus(s).Channel == 'B'
-					tmp = Stimulus(s).([WAV_VAR_TAGS{n} 'R']);
-					uniqtmp = unique(tmp);
-					if ~isempty(uniqtmp)
-						tmpvar(1).name = [WAV_VAR_TAGS{n} 'R'];
-						tmpvar(1).values = uniqtmp;
-
-						for u = 1:length(uniqtmp)
-							tmpind = find(tmp == uniqtmp(u));
-							tmpvar(1).indices = Stimulus(s).Indices(tmpind);
-						end
-					end
-					
-					
-					tmp = Stimulus(s).([WAV_VAR_TAGS{n} 'L']);
-					uniqtmp = unique(tmp);
-					if ~isempty(uniqtmp)
-						tmpvar(2).name = [WAV_VAR_TAGS{n} 'L'];
-						tmpvar(2).values = uniqtmp;
-
-						for u = 1:length(uniqtmp)
-							tmpind = find(tmp == uniqtmp(u));
-							tmpvar(2).indices = Stimulus(s).Indices(tmpind);
-						end
-					end
-									
-				else
-					tmp = Stimulus(s).([WAV_VAR_TAGS{n} Stimulus(s).Channel]);
-					uniqtmp = unique(tmp);
-					if ~isempty(uniqtmp)
-						tmpvar.name = [WAV_VAR_TAGS{n} Stimulus(s).Channel];
-						tmpvar.values = uniqtmp;
-						for u = 1:length(uniqtmp)
-							tmpind = find(tmp == uniqtmp(u));
-							tmpvar.indices = Stimulus(s).Indices(tmpind);
-						end
-					end
-				end
-				if exist('tmpvar')
-					if ~isempty(tmpvar)
-						varindex = varindex + 1;
-						Stimulus(s).Var(varindex) = tmpvar;
-					end
-				end
-
-			end
-			
-			
+			Stimulus(s).Var = assignVarTags(Stimulus(s), WAV_VAR_TAGS);
 		otherwise
 			error('%s: UNKNOWN STIMULUS TYPE: %s ', mfilename, Stimulus(s).Type{1}); 
 	end
 end
 
 
-
 %------------------------------------------------------------------------
 % Determine attenuation values for each stimulus
 %------------------------------------------------------------------------
 for s = 1:Nstimuli
+	% get attenuation setting for Left channel if stimulus is played over
+	% Both or Left only channel
 	if strcmp(Stimulus(s).Channel, 'B') || strcmp(Stimulus(s).Channel, 'L')
 		[Stimulus(s).LAttenVals, Stimulus(s).LAttenIndices, tmpn] = ...
 													findUniqueValues(Stimulus(s).AttenuationL);
 	else
+		% otherwise, set to empty values
 		Stimulus(s).LAttenVals = [];
 		Stimulus(s).LAttenIndices = {};
 	end
 	
+	% get attenuation setting for Right channel if stimulus is played over
+	% Both or Right only channel
 	if strcmp(Stimulus(s).Channel, 'B') || strcmp(Stimulus(s).Channel, 'R')
 		[Stimulus(s).RAttenVals, Stimulus(s).RAttenIndices, tmpn] = ...
 													findUniqueValues(Stimulus(s).AttenuationR);
 	else
+		% otherwise, set to empty values
 		Stimulus(s).LAttenVals = [];
 		Stimulus(s).LAttenIndices = {};
 	end
 end
 
 %------------------------------------------------------------------------
-% Retrieve the spikes for each stimulus X atten combination
+% Retrieve the spikes for each stimulus presentation
 %------------------------------------------------------------------------
 % make local copy of UnitData
 UnitData = Data.UnitData;
 Nunits = length(UnitData);
 
+% loop through stimuli
 for s = 1:Nstimuli
 	% allocate the cell array to store valid spike times for each unit
 	Stimulus(s).Spiketimes = cell(Nunits, Stimulus(s).Nreps);
@@ -432,6 +271,7 @@ for s = 1:Nstimuli
 	
 		% loop through the units
 		for u = 1:Nunits
+			
 			% retrieve the spikes that are valid, using the sweepstart_t and 
 			% sweepend_t values for this stimulus/attenuation combination
 
@@ -442,107 +282,21 @@ for s = 1:Nstimuli
 			
 			% AND the two lists
 			valid_times_list = above_start & below_end;
+			
 			% get the indices and corresponding times for this list
 			valid_index = find(valid_times_list);
 
-			% store the values
+			% store the values if spikes were found, 
 			if ~isempty(valid_index)
 				Stimulus(s).Spiketimes{u, r} = UnitData(u).timestamp(valid_index);
 			else
+				%otherwise, set to empty array
 				Stimulus(s).Spiketimes{u, r} = [];
 			end
-		end
-	end
-end
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-function Var = assignVarTags(Stimstruct, VarTags)
-
-	% get the number of tags to assign
-	ntags = length(VarTags);
-	
-	Var = struct('name', [], 'values', [], 'indices', []);
-
-	
-	% loop through the tags
-	varindex = 0;
-	for n = 1:ntags
-		
-		clear tmpvar
-
-		% check if both channels are used and assign variable tags and values
-		% accordingly
-		if Stimstruct.Channel == 'B'
-			% both channels used
 			
-			% get the value for the current tag, right channel
-			tmp = Stimstruct.([VarTags{n} 'R']);
-			% look for unique values
-			uniqtmp = unique(tmp);
-			if ~isempty(uniqtmp)
-				% if unique, store it in 
-				tmpvar(1).name = [VarTags{n} 'R'];
-				tmpvar(1).values = uniqtmp;
-
-				for u = 1:length(uniqtmp)
-					tmpind = find(tmp == uniqtmp(u));
-					tmpvar(1).indices = Stimstruct.Indices(tmpind);
-				end
-			end
-
-			% get value for Left channel, store in tmpvar(2)
-			tmp = Stimstruct.([VarTags{n} 'L']);
-			uniqtmp = unique(tmp);
-			if ~isempty(uniqtmp)
-				tmpvar(2).name = [VarTags{n} 'L'];
-				tmpvar(2).values = uniqtmp;
-
-				for u = 1:length(uniqtmp)
-					tmpind = find(tmp == uniqtmp(u));
-					tmpvar(2).indices = Stimstruct.Indices(tmpind);
-				end
-			end
-
-		else
-			% only 1 channel used
-			tmp = Stimstruct.([VarTags{n} Stimstruct.Channel]);
-			uniqtmp = unique(tmp);
-			if ~isempty(uniqtmp)
-				tmpvar.name = [VarTags{n} Stimstruct.Channel];
-				tmpvar.values = uniqtmp;
-				for u = 1:length(uniqtmp)
-					tmpind = find(tmp == uniqtmp(u));
-					tmpvar.indices = Stimstruct.Indices(tmpind);
-				end
-			end
-		end
-		
-		% assign tmpvar to output struct
-		if exist('tmpvar')
-			varindex = varindex + 1;
-			Var(varindex) = tmpvar;
-		end
-
-	end
-
-%}
-
- 
+		end	% end of U loop
+	end	% end of R loop
+end	% end of S loop
 
 
 
