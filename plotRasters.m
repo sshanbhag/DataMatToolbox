@@ -132,24 +132,24 @@ end
 % loop through units
 for unitindex = 1:D.Info.Nunits
 	% loop through frequencies (for tone stimuli)
-	for freqindex = 1:Nstimuli
+	for stimindex = 1:Nstimuli
 		% loop through different attenuation values
-		for attenindex = 1:length(StimList(freqindex).RAttenVals)
+		for attenindex = 1:length(StimList(stimindex).RAttenVals)
 			% clear the tmpcell variable to avoid confusing results
 			clear tmpcell;
 			
 			% loop through individual sweeps for this attenuation setting
-			for sweepindex = 1:length(StimList(freqindex).RAttenIndices{attenindex})
-				spikecol = StimList(freqindex).RAttenIndices{attenindex}(sweepindex);
-				tmpcell{sweepindex} = StimList(freqindex).Spiketimes{unitindex, spikecol};
+			for sweepindex = 1:length(StimList(stimindex).RAttenIndices{attenindex})
+				spikecol = StimList(stimindex).RAttenIndices{attenindex}(sweepindex);
+				tmpcell{sweepindex} = StimList(stimindex).Spiketimes{unitindex, spikecol};
 				% subtract off Spikestart(sweepindex) to get times relative to 
 				% start of sweep and then convert from usec to msec
 				if ~isempty(tmpcell{sweepindex})
-					tmpcell{sweepindex} = tmpcell{sweepindex} -  StimList(freqindex).Sweepstart(spikecol);
+					tmpcell{sweepindex} = tmpcell{sweepindex} -  StimList(stimindex).Sweepstart(spikecol);
 					tmpcell{sweepindex} = 0.001 * tmpcell{sweepindex};
 				end
 			end
-			Spikes{unitindex, freqindex, attenindex} = tmpcell;
+			Spikes{unitindex, stimindex, attenindex} = tmpcell;
 		end	% end of ATTENINDEX
 	end	% end of FREQINDEX
 end	% end of UNITINDEX
@@ -160,13 +160,13 @@ H = figure(1);
 
 for unit = 1:D.Info.Nunits
 
-	for freq = 1:Nstimuli
+	for var = 1:Nstimuli
 	
-		for atten = 1:length(StimList(freq).RAttenVals)
-			rasterplot(Spikes{unit, freq, atten}, [0 1000], H);
+		for atten = 1:length(StimList(stimindex).RAttenVals)
+			rasterplot(Spikes{unit, stimindex, atten}, [0 1000], H);
 	
-			titlestr = sprintf('Unit %d: Atten = %d Freq = %.2f', ...
-							unit, StimList(freq).RAttenVals(atten), StimList(freq).Var(1).values(1));
+			titlestr = sprintf('Unit %d: Atten = %d Stim = %.2f', ...
+							unit, StimList(stimindex).RAttenVals(atten), StimList(stimindex).Var(1).values(1));
 			title(titlestr)
 	
 			pause
