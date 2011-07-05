@@ -32,6 +32,18 @@ ntags = length(VarTags);
 Var = struct('name', [], 'values', [], 'indices', []);
 
 
+%%%%%%%
+%{
+need different way in order to handle character and numeric values.
+at present, strings get mangled
+
+Also, need to change algorithm - create list of tags and then search for unique values
+%}
+
+
+
+
+
 % loop through the tags
 varindex = 0;
 for n = 1:ntags
