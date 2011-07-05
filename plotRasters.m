@@ -41,23 +41,35 @@ load loadDWfile_debug.mat
 % of specific types
 %-----------------------------------------------------------
 toneIndex = 0;
+wavIndex = 0;
+noiseIndex = 0;
+unknownIndex = 0;
+
 for s = 1:length(Stimulus)
 	disp(sprintf('Stimulus(%d):\n\t type:\t %s', s, Stimulus(s).Type{1}))
 	disp(sprintf('\t channel:\t %s', Stimulus(s).Channel))
 	% save tone stimulus information in StimList struct array
-	if strcmp(Stimulus(s).Type, 'TONE')
-		toneIndex = toneIndex + 1;
-		StimList(toneIndex) = Stimulus(s);
+	switch Stimulus(s).Type{1}
+		case 'TONE'
+			toneIndex = toneIndex + 1;
+			ToneStim(toneIndex) = Stimulus(s);
+			ToneFreq(toneIndex) = StimList(s).Var(1).values;
+		case 'WAVFILE'
+			wavIndex = wavIndex + 1;
+			WavStim(wavIndex) = Stimulus(s);
+		case 'NOISE'
+			noiseIndex = noiseIndex + 1;
+			NoiseStim(noiseIndex) = Stimulus(s);
+		otherwise
+			unknownIndex = unknownIndex + 1;
+			UnknownStim(unknownIndex) = Stimulus(s);
 	end
 end
 
+StimList = WavStim;
+
 % get number of stimuli
 Nstimuli = length(StimList);
-
-% find ranges of tone stimuli
-for s = 1:Nstimuli
-	ToneFreq(s) = StimList(s).Var(1).values;
-end
 
 % find ranges of attenuation
 for s = 1:Nstimuli
@@ -144,20 +156,21 @@ end	% end of UNITINDEX
 
 
 % plot a raster for each unit
-
-unit = 3;
 H = figure(1);
 
-for freq = 1:Nstimuli
-	
-	for atten = 1:length(StimList(freq).RAttenVals)
-		rasterplot(Spikes{unit, freq, atten}, [0 1000], H);
-		
-		titlestr = sprintf('Unit %d: Atten = %d Freq = %.2f', ...
-						unit, StimList(freq).RAttenVals(atten), StimList(freq).Var(1).values(1));
-		title(titlestr)
+for unit = 1:D.Info.Nunits
 
-		pause
+	for freq = 1:Nstimuli
+	
+		for atten = 1:length(StimList(freq).RAttenVals)
+			rasterplot(Spikes{unit, freq, atten}, [0 1000], H);
+	
+			titlestr = sprintf('Unit %d: Atten = %d Freq = %.2f', ...
+							unit, StimList(freq).RAttenVals(atten), StimList(freq).Var(1).values(1));
+			title(titlestr)
+	
+			pause
+		end
 	end
 end
 

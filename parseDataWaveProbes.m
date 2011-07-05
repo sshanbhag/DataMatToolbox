@@ -2,20 +2,34 @@ function [UnitData, ProbeData, errFlg] = parseDataWaveProbes(ProbeData, Marker)
 %------------------------------------------------------------------------
 % [UnitData, ProbeData, errFlg] = parseDataWaveProbes(ProbeData, Marker)
 %------------------------------------------------------------------------
+% DataMat toolbox
+%------------------------------------------------------------------------
 % parse datawave marker information
-% 
-% returns structure 
 % 
 %------------------------------------------------------------------------
 % Input Arguments:
+%	ProbeData			structure containing spike information
+% 	Marker				structure containing event information
 % 
 % Output Arguments:
+% 	UnitData(n)
+% 		probe				probe ID #
+% 		unit				unit ID # (usually equal to n-1)
+% 		indices			vector of indexes into master event list [1xN double]
+% 		timestamp		vector of time stamps, microseconds [1xN double]
+% 		sorted			1 if spikes are sorted/thresholded, 0 for unsorted spikes
 %
-% 	errFlg	Error flag
-% 					0		no error
-% 					1		user cancelled file opening
-% 					2		no fields found in header lines
-% 					3		file not found
+% 	ProbeData	spike information structure, cluster information added
+% 		t					timestamp vector (microseconds)
+% 		cluster			cluster ID number for spikes 
+% 								0 indicates unsorted spike
+% 		nclusters		number of clusters on this probe (electrode or tetrode)
+% 	
+%	errFlg		Error flag
+% 		0					no error
+% 		1					user cancelled file opening
+% 		2					no fields found in header lines
+% 		3					file not found
 %
 %------------------------------------------------------------------------
 % See: readDataWaveHeader 
@@ -29,16 +43,19 @@ function [UnitData, ProbeData, errFlg] = parseDataWaveProbes(ProbeData, Marker)
 % 	- uses code snipped from loadDWStimData.m
 %
 % Revisions:
+% 	5 July, 2011 (SJS)
+% 	 -	added sorted parameter to UnitData struct
+% 	 -	added comments
 %------------------------------------------------------------------------
 % TO DO: parse into epochs
 %------------------------------------------------------------------------
-
-errFlg = 0;
 
 %-----------------------------------------------------------
 % load defaults
 %-----------------------------------------------------------
 DataWaveDefaults;
+
+errFlg = 0;
 
 %-----------------------------------------------------------
 % separate spike times into units
@@ -69,6 +86,11 @@ for p = 1:NProbes
 		for u = (1 + NUnits) : (NUnits + ProbeData(p).nclusters)
 			UnitData(u).probe = p;
 			UnitData(u).unit = unique_clusters(n);
+			if UnitData(u).unit > 0
+				UnitData(u).sorted = 1;
+			else
+				UnitData(u).sorted = 0;
+			end
 			UnitData(u).indices = find(ProbeData(p).cluster == UnitData(u).unit);
 			UnitData(u).timestamp = ProbeData(p).t(UnitData(u).indices);
 			n = n + 1;

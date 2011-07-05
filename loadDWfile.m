@@ -1,9 +1,10 @@
 function varargout = loadDWfile(varargin)
 %------------------------------------------------------------------------
-% [D, errFlg, rawdata] = loadDWfile(fname, pname)
+% [D, Stimulus, errFlg, rawdata] = loadDWfile(fname, pname)
 %------------------------------------------------------------------------
-% 
-% Description
+% DataMat toolbox
+%------------------------------------------------------------------------
+% loads and processes data stored in Wenstrup lab Datawave .txt files
 % 
 %------------------------------------------------------------------------
 % Input Arguments:
@@ -17,30 +18,134 @@ function varargout = loadDWfile(varargin)
 % Output Arguments:
 % 	D			output structure
 %
-% 		info		DataWave file information structure:
-%			file		filename
-%			path		path to file = pname;
-%			Nlines	# of lines (including header) in file
-%			header	header structure
-%							line			cell vector of header line text
-%							fields		cell vector of field names
-%							nfields		# of tab-delimited fields in each header line
-%			data1		text from data line 1
-%			ndata1	# of fields in data line 1
+% 		info				DataWave file information structure:
+%			file				filename
+%			path				path to file = pname;
+%			Nlines			# of lines (including header) in file
+%			header			header structure
+%									line			cell vector of header line text
+%									fields		cell vector of field names
+%									nfields		# of tab-delimited fields in each header line
+%			data1				text from data line 1
+%			ndata1			# of fields in data line 1
 % 
-% 		Marker
+% 		Marker			DataWave event marker structure, containing the following
+%							arrays [Nmarkers X 1]:
+% 			string						raw string from text file
+% 			Timestamp					time of event, in microseconds
+% 			id								?
+% 			OutputFilename				output data file name
+% 			AttenuationR				R channel attenuation setting (dB)
+% 			BBNlowerFreqR				if noise stimulus, 
+% 			BBNupperFreqR
+% 			AmplitudeR
+% 			TimeShiftR
+% 			RampUpR
+% 			HoldTimeR
+% 			RampDownR
+% 			OutputTimestampR
+% 			OutputTimeWithDelayR
+% 			FixedDelayR
+% 			PA5idR
+% 			WavFilenameR
+% 			ToneFreqR
+% 			PhaseDegR
+% 			AttenuationL
+% 			BBNlowerFreqL
+% 			BBNupperFreqL
+% 			AmplitudeL
+% 			TimeShiftL
+% 			RampUpL
+% 			HoldTimeL
+% 			RampDownL
+% 			OutputTimestampL
+% 			OutputTimeWithDelayL
+% 			FixedDelayL
+% 			PA5idL
+% 			WavFilenameL
+% 			ToneFreqL
+% 			PhaseDegL
+% 			M
+% 			StimulusTypeR
+% 			StimulusTypeL
+% 			wavFilesR
+% 			wavFilesL
 % 		
-%		MarkerTimes
+%		MarkerTimes		[# of markers X 1] vector of Marker timestamps, in
+%							microseconds
 % 		
-% 		Probe
+% 		Probe				spike information structure, cluster information added
+% 			t					timestamp vector (microseconds)
+% 			cluster			cluster ID number for spikes 
+% 									0 => unsorted spike
+% 									1, 2, ... N => sorted spike cluster number
+% 			nclusters		number of clusters on this probe (electrode or tetrode)
 % 
-% 	errFlg	Error flag
-% 					0		no error
-% 					1		user cancelled file opening
-% 					2		no fields found in header lines
-% 					3		file not found
+%		UnitData			UnitData struct array holds spiketimes, probe information 
+% 							and unit ID for sorted (or unsorted) spikes
+% 			probe				probe ID #
+% 			unit				unit ID # (usually equal to n-1)
+% 			indices			vector of indexes into master event list [1xN double]
+% 			timestamp		vector of time stamps, microseconds [1xN double]
+% 			sorted			1 if spikes are sorted/thresholded, 0 for unsorted spikes
+% 
+% 	Stimulus			Structure array, with following elements
+% 		Type							'TONE', 'NOISE', 'WAVFILE'
+% 		Channel						'R', 'L', 'B'
+% 		Indices						array of indices into Marker arrays (above)
+% 		Nreps							# of times this stimulus was presented 
+% 		Var							varying variables for this stimulus
+% 		Timestamp					first occurance of this Stimulus
+% 		id
+% 		OutputFilename
+% 		AttenuationR
+% 		BBNlowerFreqR
+% 		BBNupperFreqR
+% 		AmplitudeR
+% 		TimeShiftR
+% 		RampUpR
+% 		HoldTimeR
+% 		RampDownR
+% 		OutputTimestampR
+% 		OutputTimeWithDelayR
+% 		FixedDelayR
+% 		PA5idR
+% 		WavFilenameR
+% 		ToneFreqR
+% 		PhaseDegR
+% 		AttenuationL
+% 		BBNlowerFreqL
+% 		BBNupperFreqL
+% 		AmplitudeL
+% 		TimeShiftL
+% 		RampUpL
+% 		HoldTimeL
+% 		RampDownL
+% 		OutputTimestampL
+% 		OutputTimeWithDelayL
+% 		FixedDelayL
+% 		PA5idL
+% 		WavFilenameL
+% 		ToneFreqL
+% 		PhaseDegL
+% 		Tagstring
+% 		Nsweeps						# of times this stimulus was presented
+% 		Sweepstart					list of start times for this stimulus
+% 		Sweepend						list of end times for this stimulus
+% 		LAttenVals					Left channel attenuation values
+% 		LAttenIndices				Indices for respective attenuation sweeps
+% 		RAttenVals					Right channel attenuation values
+% 		RAttenIndices				indices for R attenuaton sweeps
+% 		Spiketimes					{# units, Nsweeps} cell array of unit spike
+%										timestamps
+% 
+%	errFlg			Error flag
+% 			0					no error
+% 			1					user cancelled file opening
+% 			2					no fields found in header lines
+% 			3					file not found
 %
-%	rawdata	"raw" data cell array
+%	rawdata			"raw" data cell array
 %------------------------------------------------------------------------
 % See also: readDWfileinfo 
 %------------------------------------------------------------------------
@@ -59,6 +164,7 @@ function varargout = loadDWfile(varargin)
 %	27 Apr 2011 (SJS): added some user-feedback bits
 %	13 May 2011 (SJS): fixed problem with use of fully-spec'ed filenames
 %  25 May, 2011 (SJS): adapting for new data format
+%	5 July, 2011 (SJS): documenting and commenting
 %------------------------------------------------------------------------
 % TO DO:
 %------------------------------------------------------------------------
@@ -129,9 +235,9 @@ end
 [dwinfo, errFlg] = parseDataWaveTextHeader(dwinfo);
 
 %-----------------------------------------------------------
-% allocate data cell array
+% allocate data cell array  
+% * N_HEADER_LINES defined in DataWaveDefaults.m file
 %-----------------------------------------------------------
-%data = cell(dwinfo.Nlines - 2, dwinfo.ndata1);
 rawdata = cell(dwinfo.Nlines - N_HEADER_LINES, 1);
 
 %-----------------------------------------------------------
@@ -147,7 +253,7 @@ for n = 1:N_HEADER_LINES
 end
 
 %-----------------------------------------------------------
-% now, read in rawdata using textscan - this will load
+% read in raw data using textscan - this will load
 % the entire file into a cell array
 %-----------------------------------------------------------
 disp(['Reading Data from ' dwinfo.filename ' ... ']);
@@ -179,9 +285,14 @@ end
 % Pull in Marker data
 disp('Reading Marker Data...')
 
+% first and last columns of Marker information
 mStartCol = dwinfo.MarkerCols(1);
 mEndCol = dwinfo.NMarkerCols;
+
+% initialize marker Counter variable
 markerCount = 0;
+
+% loop, using # of data lines as upper bound
 for L = 1:dwinfo.Ndatalines
 	% check if marker information is present
 	if isempty(rawdata{L}{mStartCol})
@@ -251,6 +362,7 @@ end
 %-----------------------------------------------------------
 % Parse ProbeData, organizing by Probe and unit
 %-----------------------------------------------------------
+
 [UnitData, ProbeData, errFlag] = parseDataWaveProbes(ProbeData, Marker);
 
 dwinfo.Nunits = length(UnitData);
@@ -265,8 +377,10 @@ D = struct(	'Info', dwinfo, ...
 				'UnitData', UnitData ...
 			);
 		
+%-----------------------------------------------------------
+% Create Stimulus structure
+%-----------------------------------------------------------
 Stimulus = buildStimulusStruct(D);
-		
 
 %-----------------------------------------------------------
 % assign outputs depending on number of outputs requested
@@ -276,7 +390,7 @@ if any(nargout == [0 1 2 3 4])
 end
 
 if any(nargout == [1 2 3 4])
-	varargout{3} = Stimulus;
+	varargout{2} = Stimulus;
 end
 
 if any(nargout == [2 3 4])
