@@ -156,20 +156,87 @@ end	% end of UNITINDEX
 
 
 % plot a raster for each unit
-H = figure(1);
+
+time_limits = [0 1000];
+
+Natten = length(StimList(1).RAttenVals);
+
+nrows = Nstimuli;
+ncols = Natten;
+
+horizgap = 0.075;
+vertgap = 0.075;
+
+plotwidth = (1 - ((ncols+1) * horizgap)) / ncols;
+plotheight = (1 - ((nrows+1) * vertgap)) / nrows;
+
+
+for c = 1:ncols
+	xpos(c) = horizgap + ((c-1) * (plotwidth + horizgap));
+end
+
+for r = 1:nrows
+	ypos(r) = 1 - r*plotheight - r*vertgap;
+end
+
+posindex = 1;
+for r = 1:nrows
+	for c = 1:ncols
+		posindex + posindex + 1;
+		position{posindex} = [xpos(c) ypos(r) plotwidth plotheight];
+	end
+end
+
+	
 
 for unit = 1:D.Info.Nunits
+	% for each unit, create a new page
+	H = figure(unit);
 
-	for var = 1:Nstimuli
+	plotindex = 0;
 	
-		for atten = 1:length(StimList(stimindex).RAttenVals)
-			rasterplot(Spikes{unit, stimindex, atten}, [0 1000], H);
+	for atten = 1:Nvar
+		for var = 1:Nstimuli
+			
+			plotindex = plotindex + 1;
+			subplot(Nvar, Nstimuli, plotindex)
+			
+			rasterplot(Spikes{unit, var, atten}, time_limits, H);
+			
+			if (var == 1) & (atten == 1)
+				unitstr = sprintf('Unit %d: ', unit);
+			else
+				unitstr = '';
+			end
+
+			if (atten == 1)
+				if strcmp(StimList(var).Type, 'TONE')
+					stimstr = sprintf('Stim = %.2f', StimList(var).Var(1).values(1));
+				elseif strcmp(StimList(var).Type, 'WAVFILE')
+					tmpstr = textscan(StimList(var).Var(2).values{1}, '%s', 'Delimiter', '\\');
+					stimstr = ['Stim = ' tmpstr{1}{end}];
+				else
+					stimstr = ['Stim = ' num2str(StimList(var).Var(1).values(1))];
+				end
+			else
+				stimstr = '';
+			end
+			
+			if var == 1
+				attenstr = sprintf('%d dB', StimList(var).RAttenVals(atten));
+			else 
+				attenstr = '';
+			end
 	
-			titlestr = sprintf('Unit %d: Atten = %d Stim = %.2f', ...
-							unit, StimList(stimindex).RAttenVals(atten), StimList(stimindex).Var(1).values(1));
-			title(titlestr)
+				
+			titlestr = [unitstr ' ' stimstr ];
+			title(titlestr, 'Interpreter', 'none')
+			ylabel(attenstr, 'Interpreter', 'none')
 	
-			pause
+% 			[histvals, bins] = psth(Spikes{unit, var, atten}, 5, 1000);
+% 			subplot(2, 1, 2)
+% 			bar(bins, histvals)
+% 			xlim(time_limits)
 		end
 	end
 end
