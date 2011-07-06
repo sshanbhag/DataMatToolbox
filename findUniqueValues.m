@@ -1,25 +1,19 @@
 function [uniqueVals, uniqueIndices, NuniqueVals] = findUniqueValues(values_to_search)
 %-----------------------------------------------------------------------------
-%[uniqueVals, uniqueIndices, NuniqueVals] = findUniqueText(values_to_search)
+%[uniqueVals, uniqueIndices, NuniqueVals] = findUniqueValues(values_to_search)
 %-----------------------------------------------------------------------------
-%	algorithm: 
-% 		1) obtain target text string (searchstr) from list values_to_search
-% 		2) find locations of searchstr in full list of values_to_search
-% 		3) see if this string already exists in the uniqueVals list
-% 				If yes:
-%					- increment the testIndex so that the next value in
-% 					  testvals becomes the new searchstr
-% 				If no:
-% 					- increment NuniqueVals count
-% 					- store the current searchstr in uniqueVals
-% 					- store indices of searchstr in values_to_search in the uniqueIndices list
-% 					- rebuild the testvals list by removing instances of the current
-% 					  searchstr
+% Finds unique values in list of values_to_search
 % 						
 %-----------------------------------------------------------------------------
-% NuniqueVals		# of unique strings in values_to_search
-% uniqueVals		unique values of strings in values_to_search, cell array
-% uniqueIndices	indices where each of the unique strings are found in values_to_search
+% Input Arguments:
+%	values_to_search
+%
+% Output Arguments:
+%	uniqueVals		unique values of values_to_search array
+%	uniqueIndices	indices where each of the unique values are found in values_to_search
+%	NuniqueVals		# of unique values in values_to_search
+%-----------------------------------------------------------------------------
+% See Also: findUniqueStrings, findUniqueCellRows, unique
 %-----------------------------------------------------------------------------
 
 %------------------------------------------------------------------------
@@ -30,6 +24,7 @@ function [uniqueVals, uniqueIndices, NuniqueVals] = findUniqueValues(values_to_s
 % 	- modified from findUniqueText.m
 %
 % Revisions:
+%	6 July, 2011 (SJS): updated documentation
 %------------------------------------------------------------------------
 % TO DO:
 %------------------------------------------------------------------------

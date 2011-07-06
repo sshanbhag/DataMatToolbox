@@ -17,10 +17,15 @@ function [uniqueText, uniqueIndices, NuniqueText] = findUniqueText(strings_to_se
 % 					  searchstr
 % 						
 %-----------------------------------------------------------------------------
-% NuniqueText		# of unique strings in strings_to_search
-% uniqueText		unique values of strings in strings_to_search, cell array
-% uniqueIndices	indices where each of the unique strings are found in strings_to_search
-% testvals			temporary storage of unmatched strings
+% Input Arguments:
+%	strings_to_search
+%
+% Output Arguments:
+% 	uniqueText		unique values of strings in strings_to_search, cell array
+% 	uniqueIndices	indices where each of the unique strings are found in strings_to_search
+% 	NuniqueText		# of unique strings in strings_to_search
+%-----------------------------------------------------------------------------
+% See Also: findUniqueStrings, findUniqueCellRows, unique
 %-----------------------------------------------------------------------------
 
 %------------------------------------------------------------------------
@@ -31,12 +36,23 @@ function [uniqueText, uniqueIndices, NuniqueText] = findUniqueText(strings_to_se
 % 	- uses code snipped from loadDWStimData.m
 %
 % Revisions:
+%	6 July, 2011 (SJS): updated documentation
 %------------------------------------------------------------------------
 % TO DO:
 %------------------------------------------------------------------------
 
 % Initialize some arrays and variables
-Nmarkers = length(strings_to_search);
+if ~iscell(strings_to_search)
+	if ischar(strings_to_search)
+		tmpstr = strings_to_search;
+		clear strings_to_search;
+		strings_to_search = {tmpstr};
+	else
+		error('%s: input strings are in unexpected format', mfilename);
+	end
+end
+
+Nmarkers = length(strings_to_search)
 NuniqueText = 0;
 uniqueText = {};
 uniqueIndices = {};
@@ -44,8 +60,8 @@ textIndex = 1;
 testIndex = 1;
 runFlag = 1;
 
-
 % Make a copy of the strings_to_search cell array, stored in testvals to search
+% testvals			temporary storage of unmatched strings
 testvals = strings_to_search;
 
 % loop through markers or until runFlag is set to 0 by check within the loop

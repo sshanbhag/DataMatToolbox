@@ -1,4 +1,3 @@
-
 function Var = assignVarTags(Stimstruct, VarTags)
 %------------------------------------------------------------------------
 % Var = assignVarTags(Stimstruct, VarTags)
@@ -6,12 +5,17 @@ function Var = assignVarTags(Stimstruct, VarTags)
 % 
 %------------------------------------------------------------------------
 % Input Arguments:
+% 	Stimstruct			DataWave toolbox stimulus structure
+%	VarTags				cell string list of tags to search in Stimstruct
 % 
 % Output Arguments:
-%
+%	Var					Variable variation structure array
+% 								length is equivalent to length of VarTags elements
+% 		name
+% 		values
+% 		indices
 %
 %------------------------------------------------------------------------
-% See:  
 %------------------------------------------------------------------------
 
 %------------------------------------------------------------------------
@@ -22,6 +26,10 @@ function Var = assignVarTags(Stimstruct, VarTags)
 % 	- uses code snipped from buildStimulusStruct.m
 %
 % Revisions:
+%	6 July, 2011 (SJS): 
+% 		-	updated documentation
+% 		-	made changes to allow for different types of search vars
+% 			e.g., strings, numeric vectors, cell vectors
 %------------------------------------------------------------------------
 % TO DO:
 %------------------------------------------------------------------------
@@ -31,12 +39,13 @@ ntags = length(VarTags);
 
 Var = struct('name', [], 'values', [], 'indices', []);
 
-
 % loop through the tags
 varindex = 0;
 for n = 1:ntags
 
-	clear tmpvar
+	clear tmpvar;
+	clear uniqmp uniqindx nuniq;
+
 
 	% check if both channels are used and assign variable tags and values
 	% accordingly
@@ -54,7 +63,7 @@ for n = 1:ntags
 
 			for u = 1:length(uniqtmp)
 				tmpind = find(tmp == uniqtmp(u));
-				tmpvar(1).indices = Stimstruct.Indices(tmpind);
+				tmpvar(1).indices{u} = Stimstruct.Indices(tmpind);
 			end
 		end
 
@@ -67,20 +76,32 @@ for n = 1:ntags
 
 			for u = 1:length(uniqtmp)
 				tmpind = find(tmp == uniqtmp(u));
-				tmpvar(2).indices = Stimstruct.Indices(tmpind);
+				tmpvar(2).indices{u} = Stimstruct.Indices(tmpind);
 			end
 		end
 
 	else
-		% only 1 channel used
-		tmp = Stimstruct.([VarTags{n} Stimstruct.Channel]);
-		uniqtmp = unique(tmp);
-		if ~isempty(uniqtmp)
-			tmpvar.name = [VarTags{n} Stimstruct.Channel];
-			tmpvar.values = uniqtmp;
-			for u = 1:length(uniqtmp)
-				tmpind = find(tmp == uniqtmp(u));
-				tmpvar.indices = Stimstruct.Indices(tmpind);
+		% only 1 channel used, only get info for that channel
+		tmp = Stimstruct.([VarTags{n} Stimstruct.Channel])
+		
+		% need to handle tags differently depending on data types
+		if ischar(tmp)
+			[uniqtmp, uniqindx, nuniq] = findUniqueText(tmp)
+		elseif iscell(tmp)
+			if ischar(tmp{1})
+				[uniqtmp, uniqindx, nuniq] = findUniqueText(tmp)
+			else
+				[uniqtmp, uniqindx, nuniq] = findUniqueCellRows(tmp);
+			end
+		else
+			[uniqtmp, uniqindx, nuniq] = findUniqueValues(tmp);
+		end
+		
+		if exist('uniqtmp')
+			if ~isempty(uniqtmp)
+				tmpvar.name = [VarTags{n} Stimstruct.Channel];
+				tmpvar.values = uniqtmp;
+				tmpvar.indices = uniqindx;
 			end
 		end
 	end

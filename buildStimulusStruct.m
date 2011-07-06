@@ -93,7 +93,6 @@ TagStrings = cell2str(Tags);
 [uniqueText, uniqueIndices, Nunique] = findUniqueText(TagStrings);
 
 
-
 %-----------------------------------------------------------------------------
 % Determine Stimulus Type
 %-----------------------------------------------------------------------------
@@ -213,6 +212,8 @@ end	% end of S loop
 %-----------------------------------------------------------------------------	
 
 for s = 1:Nstimuli
+	% check the stimulus Type - it is stored as a string within a cell, so 
+	% it must be addressed using Type{} format.  
 	switch Stimulus(s).Type{1}
 		case 'TONE'
 			Stimulus(s).Var = assignVarTags(Stimulus(s), TONE_VAR_TAGS);
