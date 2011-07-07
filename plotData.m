@@ -161,14 +161,15 @@ time_limits = [0 1000];
 
 Natten = length(StimList(1).RAttenVals);
 
-nrows = Nstimuli;
-ncols = Natten;
+nrows = Natten;
+ncols = Nstimuli;
 
-horizgap = 0.075;
-vertgap = 0.075;
+horizgap = 0.05;
+vertgap = 0.06;
+psthgap = 0.015;
 
 plotwidth = (1 - ((ncols+1) * horizgap)) / ncols;
-plotheight = (1 - ((nrows+1) * vertgap)) / nrows;
+plotheight = (1 - (((nrows*2)) * vertgap)) / (nrows*2);
 
 
 for c = 1:ncols
@@ -176,14 +177,16 @@ for c = 1:ncols
 end
 
 for r = 1:nrows
-	ypos(r) = 1 - r*plotheight - r*vertgap;
+% 	if r == 1
+		yposraster(r) = 1 - 2*r*plotheight - r*vertgap - (r-1)*psthgap;
+% 	else
+	ypospsth(r) = yposraster(r) - plotheight - psthgap;
 end
 
-posindex = 1;
 for r = 1:nrows
 	for c = 1:ncols
-		posindex + posindex + 1;
-		position{posindex} = [xpos(c) ypos(r) plotwidth plotheight];
+		rasterpos{r, c} = [xpos(c) yposraster(r) plotwidth plotheight];
+		psthpos{r, c} = [xpos(c) ypospsth(r) plotwidth plotheight];
 	end
 end
 
@@ -193,15 +196,13 @@ for unit = 1:D.Info.Nunits
 	% for each unit, create a new page
 	H = figure(unit);
 
-	plotindex = 0;
-	
-	for atten = 1:Nvar
+	for atten = 1:Natten
 		for var = 1:Nstimuli
-			
-			plotindex = plotindex + 1;
-			subplot(Nvar, Nstimuli, plotindex)
+			subplot('Position', rasterpos{atten, var});
 			
 			rasterplot(Spikes{unit, var, atten}, time_limits, H);
+			
+			set(gca, 'xtick', []);
 			
 			if (var == 1) & (atten == 1)
 				unitstr = sprintf('Unit %d: ', unit);
@@ -233,10 +234,10 @@ for unit = 1:D.Info.Nunits
 			title(titlestr, 'Interpreter', 'none')
 			ylabel(attenstr, 'Interpreter', 'none')
 	
-% 			[histvals, bins] = psth(Spikes{unit, var, atten}, 5, 1000);
-% 			subplot(2, 1, 2)
-% 			bar(bins, histvals)
-% 			xlim(time_limits)
+			[histvals, bins] = psth(Spikes{unit, var, atten}, 5, 1000);
+			subplot('Position', psthpos{atten, var});
+			bar(bins, histvals)
+			xlim(time_limits)
 		end
 	end
 end
