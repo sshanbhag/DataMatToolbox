@@ -166,9 +166,32 @@ end	% end of UNITINDEX
 % stimuli)
 Natten = length(StimList(1).RAttenVals);
 
+%----------------------------------------------------------------------
+%----------------------------------------------------------------------
+% plot!
+%----------------------------------------------------------------------
+%----------------------------------------------------------------------
+
+% need to get max ISI for determining plot limits
+
+% first, get list of Marker timestamps
+tmptimes = D.MarkerTimes;
+
+% take differences
+dt = diff(tmptimes);
+
+% nonzero values
+nonzero_dt = dt( dt ~= 0 );
+
+maxtime = 0.001 * max(nonzero_dt);
+mintime = 0.001 * min(nonzero_dt);
+
+
+
+
 % pre-allocate plot options
 plotopts = struct( ...
-	'timelimits',				[0 1000]			, ...
+	'timelimits',				[0 ceil(maxtime)]			, ...
 	'psth_binwidth',			5					, ...
 	'raster_tickmarker',		'.'				, ...
 	'raster_ticksize',		12					, ...
