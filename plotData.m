@@ -173,9 +173,63 @@ for unitindex = 1:D.Info.Nunits
 	end	% end of FREQINDEX
 end	% end of UNITINDEX
 
+% count number of different attenuation settings (assume same for all
+% stimuli)
+Natten = length(StimList(1).RAttenVals);
 
-% plot a raster and psth for each unit
+% pre-allocate plot options
+plotopts = struct( ...
+	'time_limits',		[0 1000]		, ...
+	'horizgap',			0.05			, ...
+	'vertgap',			0.055			, ...
+	'plotgap',			0.0125		, ...
+	'filelabel',		D.Info.file	 ...
+);
 
+% create list of column labels (stimulus parameter - e.g., tone freq, wav name)
+plotopts.columnlabels = cell(Nstimuli, 1);
+for s = 1:Nstimuli
+	if strcmp(StimList(s).Type, 'TONE')
+		plotopts.columnlabels{s} = sprintf('Stim = %.2f', StimList(s).Var(1).values(1));
+	elseif strcmp(StimList(col).Type, 'WAVFILE')
+		tmpstr = textscan(StimList(s).Var(2).values{1}, '%s', 'Delimiter', '\\');
+		plotopts.columnlabels{s} = ['Stim = ' tmpstr{1}{end}];
+	else
+		plotopts.columnlabels{s} = ['Stim = ' num2str(StimList(s).Var(1).values(1))];
+	end
+end
+
+% create list of row labels for plots (attenuation values)
+plotopts.rowlabels = cell(Natten, 1);
+for n = 1:Natten
+	plotopts.rowlabels{n} = sprintf('%d dB', StimList(1).RAttenVals(n));
+end
+
+% allocate temporary spike cell matrix
+tmpspikes = cell(Natten, Nstimuli);
+
+% for unit = 1:D.Info.Nunits
+for unit = 1:1
+	% for each unit, create a new page
+	Hfig(unit) = figure(unit);
+	
+	for row = 1:Natten
+		for col = 1:Nstimuli
+			% assign spikes for this unit to tmpspikes - need to put different
+			% attenuation levels across rows and different stimuli (tone freq,
+			% wav file name, etc) across columns
+			tmpspikes{row, col} = Spikes{unit, col, row};
+		end
+	end
+	
+	% write unit ID label string
+	plotopts.idlabel = sprintf('Unit %d', unit);
+	
+	% plot a raster and psth for each unit
+	[Hplots, plotopts_out] = rasterpsthmatrix(tmpspikes, Natten, Nstimuli, plotopts);
+end
+
+%{
 time_limits = [0 1000];
 
 Natten = length(StimList(1).RAttenVals);
@@ -282,5 +336,6 @@ for unit = 1:1
 	end
 end
 
-		
+%}
+
 
