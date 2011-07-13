@@ -401,6 +401,8 @@ if nargout == 4
 	varargout{4} = rawdata;
 end
 
-%**************BEGIN DEBUGGING********************
+%**************BEGIN DEBUGGING******************
 save loadDWfile_debug.mat D Stimulus -MAT
 %**************END DEBUGGING********************
+
+plotData

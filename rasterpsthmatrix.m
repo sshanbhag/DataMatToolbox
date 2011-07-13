@@ -1,6 +1,6 @@
-function [H, plotopts] = rasterpsthmatrix(Spikes, Nrows, Ncols, plotopts)
+function [H, plotopts] = rasterpsthmatrix(Spikes, plotopts)
 %------------------------------------------------------------------------
-% [H, plotopts] = rasterpsthmatrix(Spikes, Nrows, Ncols, plotopts)
+% [H, plotopts] = rasterpsthmatrix(Spikes, plotopts)
 %------------------------------------------------------------------------
 % PlotTools toolbox
 %------------------------------------------------------------------------
@@ -14,30 +14,37 @@ function [H, plotopts] = rasterpsthmatrix(Spikes, Nrows, Ncols, plotopts)
 % 
 %	Optional inputs:
 %		plotopts		Plot options structure
-% 			time_limits: [0 1000]
+% 			timelimits: [0 1000]
+% 			psth_binwidth: 5
+% 			raster_tickmarker: '.'
+% 			raster_ticksize: 12
 % 			horizgap: 0.0500
 % 			vertgap: 0.0550
 % 			plotgap: 0.0125
 % 			filelabel: '768_4_1q_Bat_1_output.txt'
 % 			columnlabels: {7x1 cell}
 % 			rowlabels: {4x1 cell}
-% 			idlabel: 'Unit 1'
+% 			idlabel: 'Unit 11'
 % 
 % Output Arguments:
 % 	H				handle to plot
 %	plotopts		plot options structure, with handles updated
-% 		time_limits: [0 1000]
+% 		timelimits: [0 1000]
+% 		psth_binwidth: 5
+% 		raster_tickmarker: '.'
+% 		raster_ticksize: 12
 % 		horizgap: 0.0500
 % 		vertgap: 0.0550
 % 		plotgap: 0.0125
 % 		filelabel: '768_4_1q_Bat_1_output.txt'
 % 		columnlabels: {7x1 cell}
 % 		rowlabels: {4x1 cell}
-% 		idlabel: 'Unit 1'
+% 		idlabel: 'Unit 11'
 % 		plotwidth: 0.0857
 % 		plotheight: 0.0837
 % 		pos1: {4x7 cell}
 % 		pos2: {4x7 cell}
+% 
 %------------------------------------------------------------------------
 % See also: rasterplot, psth
 %------------------------------------------------------------------------
@@ -68,10 +75,13 @@ end
 % initialize plotopts struct if not passed in
 if ~exist('plotopts', 'var')
 	plotopts = struct( ...
-		'time_limits',		[0 1000]		, ...
-		'horizgap',			0.05			, ...
-		'vertgap',			0.055			, ...
-		'plotgap',			0.0125		...
+		'timelimits',				[0 1000]			, ...
+		'psth_binwidth',			5					, ...
+		'raster_tickmarker',		'|'				, ...
+		'raster_ticksize',		10					, ...
+		'horizgap',					0.05				, ...
+		'vertgap',					0.055				, ...
+		'plotgap',					0.0125			...
 	);
 end
 
@@ -109,7 +119,11 @@ for row = 1:Nrows
 		% select subplot location for rasters (pos1)
 		subplot('Position', pos1{row, col});
 		% store the axes handle returned by rasterplot in the handles2 cell array
-		handles1{row, col} = rasterplot(Spikes{row, col}, plotopts.time_limits, '.', 14);
+		handles1{row, col} = rasterplot(	Spikes{row, col}, ...
+													plotopts.timelimits, ...
+													plotopts.raster_tickmarker, ...
+													plotopts.raster_ticksize);
+												
 		% turn off xtick labels, and turn off yticks
 		set(gca, 'XTickLabel', []);
 		set(gca, 'ytick', []);
@@ -150,11 +164,14 @@ for row = 1:Nrows
 		subplot('Position', pos2{row, col});
 
 		% build psth from spike data and plot using bar() function
-		[histvals, bins] = psth(Spikes{row, col}, 5, 1000);
+		[histvals, bins] = psth(	Spikes{row, col}, ...
+											plotopts.psth_binwidth, ...
+											plotopts.timelimits(2));
+										
 		% store the axes handle returned by bar in the handles2 cell array
 		handles2{row, col} = bar(bins, histvals);
 		% update time limits to match raster
-		xlim(plotopts.time_limits)
+		xlim(plotopts.timelimits)
 		% turn off x tick labels for all but the bottom row and
 		% turn off y tick labels for all but the left column
 		if row ~= Nrows

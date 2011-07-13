@@ -1,5 +1,5 @@
 %------------------------------------------------------------------------
-% plotRasters
+% plotData
 %------------------------------------------------------------------------
 % 
 %------------------------------------------------------------------------
@@ -22,17 +22,6 @@
 %------------------------------------------------------------------------
 % TO DO:
 %------------------------------------------------------------------------
-
-%-----------------------------------------------------------
-% load defaults
-%-----------------------------------------------------------
-DataWaveDefaults;
-
-%-----------------------------------------------------------
-% load data
-%-----------------------------------------------------------
-load loadDWfile_debug.mat
-
 
 %-----------------------------------------------------------
 % for test data, all stimuli are tones, so this next section
@@ -179,11 +168,14 @@ Natten = length(StimList(1).RAttenVals);
 
 % pre-allocate plot options
 plotopts = struct( ...
-	'time_limits',		[0 1000]		, ...
-	'horizgap',			0.05			, ...
-	'vertgap',			0.055			, ...
-	'plotgap',			0.0125		, ...
-	'filelabel',		D.Info.file	 ...
+	'timelimits',				[0 1000]			, ...
+	'psth_binwidth',			5					, ...
+	'raster_tickmarker',		'.'				, ...
+	'raster_ticksize',		12					, ...
+	'horizgap',					0.05				, ...
+	'vertgap',					0.055				, ...
+	'plotgap',					0.0125			, ...
+	'filelabel',				D.Info.file		...
 );
 
 % create list of column labels (stimulus parameter - e.g., tone freq, wav name)
@@ -191,7 +183,7 @@ plotopts.columnlabels = cell(Nstimuli, 1);
 for s = 1:Nstimuli
 	if strcmp(StimList(s).Type, 'TONE')
 		plotopts.columnlabels{s} = sprintf('Stim = %.2f', StimList(s).Var(1).values(1));
-	elseif strcmp(StimList(col).Type, 'WAVFILE')
+	elseif strcmp(StimList(s).Type, 'WAVFILE')
 		tmpstr = textscan(StimList(s).Var(2).values{1}, '%s', 'Delimiter', '\\');
 		plotopts.columnlabels{s} = ['Stim = ' tmpstr{1}{end}];
 	else
@@ -225,7 +217,7 @@ for unit = 1:D.Info.Nunits
 	plotopts.idlabel = sprintf('Unit %d', unit);
 	
 	% plot a raster and psth for each unit
-	[Hplots, plotopts_out] = rasterpsthmatrix(tmpspikes, Natten, Nstimuli, plotopts);
+	[Hplots, plotopts_out] = rasterpsthmatrix(tmpspikes, plotopts);
 end
 
 
