@@ -1,42 +1,43 @@
 function [H, plotopts] = rasterpsthmatrix(Spikes, Nrows, Ncols, plotopts)
 %------------------------------------------------------------------------
+% [H, plotopts] = rasterpsthmatrix(Spikes, Nrows, Ncols, plotopts)
 %------------------------------------------------------------------------
 % PlotTools toolbox
 %------------------------------------------------------------------------
 % 
-% Given a cell "vector" (NX1 or 1XN) of spiketimes, e.g.
-% 
-% 			spiketimes = 
-% 				 [1x4 double]
-% 				 [1x3 double]
-% 							  []
-% 				 [1x3 double]
-% 				 [1x3 double]
-%  
-% draw a raster plot of the spiketimes, where each element in the spiketimes
-% cell vector corresponds to a vector of spiketimes in milliseconds.
-% 
-% so, for example, spiketimes{1} = [100 120 200 300]
-%	 
-% timeMinMax is optional x-axis limits as a [1X2] vector; if not provided
-% rasterplot will automatically determine limits
-% 
-% axes is an optional handle to an axes object - if not provided, 
-% rasterplot will create a new one in a new figure
 % 
 %------------------------------------------------------------------------
 % Input Arguments:
-% 	spiketimes		cell "vector" (NX1 or 1XN) of vectors containing 
-% 						times (NOT interspike intervals!) of spikes
-% 	
-% 	Optional:
-% 		timeMinMax		x-axis limit vector in form [min max]
-%		ticksymbol		symbol for raster ticks (default is '|')
-% 		axesHandle		handle to axes
+% 	Spikes		Cell matrix of {Nrows, Ncols}, each element of which contains
+% 					a cell array of spike time vectors (NOT interspike intervals!)
+% 					in milliseconds 
+% 
+%	Optional inputs:
+%		plotopts		Plot options structure
+% 			time_limits: [0 1000]
+% 			horizgap: 0.0500
+% 			vertgap: 0.0550
+% 			plotgap: 0.0125
+% 			filelabel: '768_4_1q_Bat_1_output.txt'
+% 			columnlabels: {7x1 cell}
+% 			rowlabels: {4x1 cell}
+% 			idlabel: 'Unit 1'
 % 
 % Output Arguments:
-% 	H	handle to plot
-%
+% 	H				handle to plot
+%	plotopts		plot options structure, with handles updated
+% 		time_limits: [0 1000]
+% 		horizgap: 0.0500
+% 		vertgap: 0.0550
+% 		plotgap: 0.0125
+% 		filelabel: '768_4_1q_Bat_1_output.txt'
+% 		columnlabels: {7x1 cell}
+% 		rowlabels: {4x1 cell}
+% 		idlabel: 'Unit 1'
+% 		plotwidth: 0.0857
+% 		plotheight: 0.0837
+% 		pos1: {4x7 cell}
+% 		pos2: {4x7 cell}
 %------------------------------------------------------------------------
 % See also: rasterplot, psth
 %------------------------------------------------------------------------
@@ -45,15 +46,26 @@ function [H, plotopts] = rasterpsthmatrix(Spikes, Nrows, Ncols, plotopts)
 %  Sharad J. Shanbhag
 %	sshanbhag@neomed.edu
 %------------------------------------------------------------------------
-% Created: %	7 July, 2011 (SJS)
+% Created: 	7 July, 2011 (SJS)
 %
 % Revisions:
+%	13 July, 2011 (SJS)
+% 		-	functionalized script
+% 		-	removed Nrows and Ncols as inputs (redundant)
+% 		-	updated comments/documentation
 %------------------------------------------------------------------------
 % TO DO:
 %------------------------------------------------------------------------
 
+% get dimensions of Spikes cell matrix
+[Nrows, Ncols] = size(Spikes);
 
-% plot a raster and psth for each unit
+% check size
+if ~Nrows || ~Ncols
+	error('%s: error in size of Spikes cell matrix', mfilename)
+end
+
+% initialize plotopts struct if not passed in
 if ~exist('plotopts', 'var')
 	plotopts = struct( ...
 		'time_limits',		[0 1000]		, ...
@@ -63,9 +75,11 @@ if ~exist('plotopts', 'var')
 	);
 end
 
+% compute plot widths and plot heights
 plotwidth = (1 - ((Ncols+1) * plotopts.horizgap)) / Ncols;
 plotheight = (1 - ((Nrows+2) * plotopts.vertgap)) / (2*Nrows);
 
+% compute positions for rasters (pos1) and psths (pos2)
 pos1 = cell(Nrows, Ncols);
 pos2 = cell(Nrows, Ncols);
 
@@ -79,15 +93,21 @@ for r = 1:Nrows
 	end
 end
 
+% initialize cell matrices for storing handles to raster plots (handles1) and 
+% psths (handles2)
 handles1 = cell(Nrows, Ncols);
 handles2 = cell(Nrows, Ncols);
 
-
+% loop through rows and cols of Spikes and plot data
 for row = 1:Nrows
 	for col = 1:Ncols
+
+		%-------------------------------------------------------
+		% First, plot raster for this row and column
+		%-------------------------------------------------------
+
 		% select subplot location for rasters (pos1)
 		subplot('Position', pos1{row, col});
-		% plot raster
 		% store the axes handle returned by rasterplot in the handles2 cell array
 		handles1{row, col} = rasterplot(Spikes{row, col}, plotopts.time_limits, '.', 14);
 		% turn off xtick labels, and turn off yticks
@@ -122,8 +142,13 @@ for row = 1:Nrows
 		title(titlestr, 'Interpreter', 'none')
 		ylabel(rowstr, 'Interpreter', 'none')
 	
+		%-------------------------------------------------------
+		% then, plot psth
+		%-------------------------------------------------------
+
 		% select subplot location for psth (pos2)
 		subplot('Position', pos2{row, col});
+
 		% build psth from spike data and plot using bar() function
 		[histvals, bins] = psth(Spikes{row, col}, 5, 1000);
 		% store the axes handle returned by bar in the handles2 cell array
@@ -152,13 +177,17 @@ for row = 1:Nrows
 	end
 end
 
+%-------------------------------------------------------
+% set output values
+%-------------------------------------------------------
+
 H{1} = handles1;
 H{2} = handles2;
 
-plotopts.plotwidth = plotwidth;
-plotopts.plotheight = plotheight;
-plotopts.pos1 = pos1;
-plotopts.pos2 = pos2;
-
-		
+if nargout == 2
+	plotopts.plotwidth = plotwidth;
+	plotopts.plotheight = plotheight;
+	plotopts.pos1 = pos1;
+	plotopts.pos2 = pos2;
+end
 
