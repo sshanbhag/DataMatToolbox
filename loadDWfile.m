@@ -235,43 +235,48 @@ end
 [dwinfo, errFlg] = parseDataWaveTextHeader(dwinfo);
 
 %-----------------------------------------------------------
-% allocate data cell array  
-% * N_HEADER_LINES defined in DataWaveDefaults.m file
+% read in data from file
 %-----------------------------------------------------------
-rawdata = cell(dwinfo.Nlines - N_HEADER_LINES, 1);
+[rawdata, errFlg] = readDataWaveTextFile(dwinfo);
 
-%-----------------------------------------------------------
-% open file for text reading
-%-----------------------------------------------------------
-fp = fopen(dwinfo.filename, 'rt');
-
-%-----------------------------------------------------------
-% skip past header lines
-%-----------------------------------------------------------
-for n = 1:N_HEADER_LINES
-	fgetl(fp);
-end
-
-%-----------------------------------------------------------
-% read in raw data using textscan - this will load
-% the entire file into a cell array
-%-----------------------------------------------------------
-disp(['Reading Data from ' dwinfo.filename ' ... ']);
-% loop through rawdata lines, starting line after header lines
-% (first rawdata line)
-for line_index = 1:(dwinfo.Nlines - N_HEADER_LINES)
-	% read in text line from file
-	line_in = fgetl(fp);
-	% scan in fields 
-	tmp = textscan(line_in, '%s', dwinfo.Ncols, 'Delimiter', '\t');
-	% save in rawdata cell array
-	rawdata{line_index} = tmp{1};
-end
-
-%-----------------------------------------------------------
-% close file
-%-----------------------------------------------------------
-fclose(fp);
+% %-----------------------------------------------------------
+% % allocate data cell array  
+% % * N_HEADER_LINES defined in DataWaveDefaults.m file
+% %-----------------------------------------------------------
+% rawdata = cell(dwinfo.Nlines - N_HEADER_LINES, 1);
+% 
+% %-----------------------------------------------------------
+% % open file for text reading
+% %-----------------------------------------------------------
+% fp = fopen(dwinfo.filename, 'rt');
+% 
+% %-----------------------------------------------------------
+% % skip past header lines
+% %-----------------------------------------------------------
+% for n = 1:N_HEADER_LINES
+% 	fgetl(fp);
+% end
+% 
+% %-----------------------------------------------------------
+% % read in raw data using textscan - this will load
+% % the entire file into a cell array
+% %-----------------------------------------------------------
+% disp(['Reading Data from ' dwinfo.filename ' ... ']);
+% % loop through rawdata lines, starting line after header lines
+% % (first rawdata line)
+% for line_index = 1:(dwinfo.Nlines - N_HEADER_LINES)
+% 	% read in text line from file
+% 	line_in = fgetl(fp);
+% 	% scan in fields 
+% 	tmp = textscan(line_in, '%s', dwinfo.Ncols, 'Delimiter', '\t');
+% 	% save in rawdata cell array
+% 	rawdata{line_index} = tmp{1};
+% end
+% 
+% %-----------------------------------------------------------
+% % close file
+% %-----------------------------------------------------------
+% fclose(fp);
 
 %-----------------------------------------------------------
 % get Marker information and retrieve markers from data

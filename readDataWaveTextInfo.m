@@ -3,12 +3,12 @@ function [out, errFlg] = readDataWaveTextInfo(varargin)
 % [out, errFlg] = readDataWaveTextInfo(fname, pname)
 %------------------------------------------------------------------------
 % 
-% returns structure 
+% Gets information from a DataWave exported text file
 % 
 %------------------------------------------------------------------------
 % Input Arguments:
-% 	fname		name of DataWave exported text file (usually with .dat file
-% 				extension.
+% 	fname		name of DataWave exported text file (usually with .txt file
+% 				extension)
 %				If fname is not provided, a GUI window will open to select file.
 % 
 % 	pname		path to DataWave file
