@@ -37,22 +37,10 @@ function [out, errFlg] = identifyStimulus(Marker, dwinfo)
 DataWaveDefaults;
 errFlg = 0;
 
-
-
-
 Marker.StimulusTypeR = checkStimulusType(Marker, 'R');
-
-Marker.StimulusTypeL = checkStimulusType(Marker, 'L')
-
+Marker.StimulusTypeL = checkStimulusType(Marker, 'L');
 out = Marker;
 %------------------------------------------------------------------------
-
-
-
-
-
-
-
 
 
 %------------------------------------------------------------------------
@@ -131,7 +119,7 @@ if Marker.(['ToneFreq' C])(m) > 0
 	if BBNlowFlag && BBNhiFlag
 		% if both bbn low and bbn hi flags are set, broadband noise
 		% stimulus was used; set noiseFlag to 1
-		disp('noise stim detected')
+% 		disp('noise stim detected')
 		noiseFlag = 1;
 	elseif (BBNlowFlag && ~BBNhiFlag) || (~BBNlowFlag && BBNhiFlag)
 		% for some reason, only one of the noise freq. flags was set - 

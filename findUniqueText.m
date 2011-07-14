@@ -52,7 +52,7 @@ if ~iscell(strings_to_search)
 	end
 end
 
-Nmarkers = length(strings_to_search)
+Nmarkers = length(strings_to_search);
 NuniqueText = 0;
 uniqueText = {};
 uniqueIndices = {};

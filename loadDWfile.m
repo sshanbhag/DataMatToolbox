@@ -210,7 +210,9 @@ end
 %-----------------------------------------------------------
 % get file info, read header
 %-----------------------------------------------------------
+disp(['Reading information from file ' fname ' ...']);
 [dwinfo, errFlg] = readDataWaveTextInfo(fname, pname);
+
 % check if errFlg ~= 0 (error detected)
 if errFlg
 	warning('DWFILE:ReadError', '%s readDataWaveTextInfo returned error flag %d', ...
@@ -232,55 +234,20 @@ end
 %-----------------------------------------------------------
 % parse header data to get information about data set
 %-----------------------------------------------------------
+disp('Parsing header information...');
 [dwinfo, errFlg] = parseDataWaveTextHeader(dwinfo);
 
 %-----------------------------------------------------------
 % read in data from file
 %-----------------------------------------------------------
+disp(['Reading data from file ' dwinfo.filename ' ...']);
 [rawdata, errFlg] = readDataWaveTextFile(dwinfo);
-
-% %-----------------------------------------------------------
-% % allocate data cell array  
-% % * N_HEADER_LINES defined in DataWaveDefaults.m file
-% %-----------------------------------------------------------
-% rawdata = cell(dwinfo.Nlines - N_HEADER_LINES, 1);
-% 
-% %-----------------------------------------------------------
-% % open file for text reading
-% %-----------------------------------------------------------
-% fp = fopen(dwinfo.filename, 'rt');
-% 
-% %-----------------------------------------------------------
-% % skip past header lines
-% %-----------------------------------------------------------
-% for n = 1:N_HEADER_LINES
-% 	fgetl(fp);
-% end
-% 
-% %-----------------------------------------------------------
-% % read in raw data using textscan - this will load
-% % the entire file into a cell array
-% %-----------------------------------------------------------
-% disp(['Reading Data from ' dwinfo.filename ' ... ']);
-% % loop through rawdata lines, starting line after header lines
-% % (first rawdata line)
-% for line_index = 1:(dwinfo.Nlines - N_HEADER_LINES)
-% 	% read in text line from file
-% 	line_in = fgetl(fp);
-% 	% scan in fields 
-% 	tmp = textscan(line_in, '%s', dwinfo.Ncols, 'Delimiter', '\t');
-% 	% save in rawdata cell array
-% 	rawdata{line_index} = tmp{1};
-% end
-% 
-% %-----------------------------------------------------------
-% % close file
-% %-----------------------------------------------------------
-% fclose(fp);
 
 %-----------------------------------------------------------
 % get Marker information and retrieve markers from data
 %-----------------------------------------------------------
+disp( 'Processing Marker information ...')
+
 % check for markers
 if ~dwinfo.NMarkerCols
 	% if no marker cols, error!
@@ -367,7 +334,7 @@ end
 %-----------------------------------------------------------
 % Parse ProbeData, organizing by Probe and unit
 %-----------------------------------------------------------
-
+disp('Parsing ProbeData...')
 [UnitData, ProbeData, errFlag] = parseDataWaveProbes(ProbeData, Marker);
 
 dwinfo.Nunits = length(UnitData);
@@ -385,6 +352,7 @@ D = struct(	'Info', dwinfo, ...
 %-----------------------------------------------------------
 % Create Stimulus structure
 %-----------------------------------------------------------
+disp('Creating Stimulus structure array...');
 Stimulus = buildStimulusStruct(D);
 
 %-----------------------------------------------------------
@@ -409,5 +377,10 @@ end
 %**************BEGIN DEBUGGING******************
 save loadDWfile_debug.mat D Stimulus -MAT
 %**************END DEBUGGING********************
-
-plotData
+q = input('Plot rasters and paths (y/n)? ', 's');
+if ~isempty(q)
+	if strcmpi(q(1), 'Y')
+		disp('Plotting rasters and psths for all units...')
+		plotData
+	end
+end

@@ -42,7 +42,7 @@ for s = 1:length(Stimulus)
 		case 'TONE'
 			toneIndex = toneIndex + 1;
 			ToneStim(toneIndex) = Stimulus(s);
-			ToneFreq(toneIndex) = StimList(s).Var(1).values;
+			ToneFreq{toneIndex} = Stimulus(s).Var(1).values;
 		case 'WAVFILE'
 			wavIndex = wavIndex + 1;
 			WavStim(wavIndex) = Stimulus(s);
@@ -55,10 +55,21 @@ for s = 1:length(Stimulus)
 	end
 end
 
-StimList = WavStim;
-
-% get number of stimuli
-Nstimuli = length(StimList);
+if toneIndex
+	StimList = ToneStim;
+	Nstimuli = toneIndex;
+elseif wavIndex
+	StimList = WavStim;
+	Nstimuli = wavIndex;
+elseif noiseIndex
+	StimList = NoiseStim;
+	Nstimuli = noiseIndex;
+elseif unknownIndex
+	StimList = UnknownStim;
+	Nstimuli = unknownIndex;
+else
+	error('%s: no known stimulus types found', mfilename);
+end
 
 % find ranges of attenuation
 for s = 1:Nstimuli
@@ -185,9 +196,6 @@ nonzero_dt = dt( dt ~= 0 );
 
 maxtime = 0.001 * max(nonzero_dt);
 mintime = 0.001 * min(nonzero_dt);
-
-
-
 
 % pre-allocate plot options
 plotopts = struct( ...

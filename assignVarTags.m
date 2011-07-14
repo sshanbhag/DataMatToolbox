@@ -30,6 +30,7 @@ function Var = assignVarTags(Stimstruct, VarTags)
 % 		-	updated documentation
 % 		-	made changes to allow for different types of search vars
 % 			e.g., strings, numeric vectors, cell vectors
+%	14 July, 2011 (SJS): some tweaks for speed
 %------------------------------------------------------------------------
 % TO DO:
 %------------------------------------------------------------------------
@@ -62,8 +63,8 @@ for n = 1:ntags
 			tmpvar(1).values = uniqtmp;
 
 			for u = 1:length(uniqtmp)
-				tmpind = find(tmp == uniqtmp(u));
-				tmpvar(1).indices{u} = Stimstruct.Indices(tmpind);
+% 				tmpind = find(tmp == uniqtmp(u));
+				tmpvar(1).indices{u} = Stimstruct.Indices(tmp == uniqtmp(u));
 			end
 		end
 
@@ -75,21 +76,21 @@ for n = 1:ntags
 			tmpvar(2).values = uniqtmp;
 
 			for u = 1:length(uniqtmp)
-				tmpind = find(tmp == uniqtmp(u));
-				tmpvar(2).indices{u} = Stimstruct.Indices(tmpind);
+% 				tmpind = find(tmp == uniqtmp(u));
+				tmpvar(2).indices{u} = Stimstruct.Indices(tmp == uniqtmp(u));
 			end
 		end
 
 	else
 		% only 1 channel used, only get info for that channel
-		tmp = Stimstruct.([VarTags{n} Stimstruct.Channel])
+		tmp = Stimstruct.([VarTags{n} Stimstruct.Channel]);
 		
 		% need to handle tags differently depending on data types
 		if ischar(tmp)
-			[uniqtmp, uniqindx, nuniq] = findUniqueText(tmp)
+			[uniqtmp, uniqindx, nuniq] = findUniqueText(tmp);
 		elseif iscell(tmp)
 			if ischar(tmp{1})
-				[uniqtmp, uniqindx, nuniq] = findUniqueText(tmp)
+				[uniqtmp, uniqindx, nuniq] = findUniqueText(tmp);
 			else
 				[uniqtmp, uniqindx, nuniq] = findUniqueCellRows(tmp);
 			end
@@ -97,7 +98,7 @@ for n = 1:ntags
 			[uniqtmp, uniqindx, nuniq] = findUniqueValues(tmp);
 		end
 		
-		if exist('uniqtmp')
+		if exist('uniqtmp', 'var')
 			if ~isempty(uniqtmp)
 				tmpvar.name = [VarTags{n} Stimstruct.Channel];
 				tmpvar.values = uniqtmp;
@@ -107,7 +108,7 @@ for n = 1:ntags
 	end
 
 	% assign tmpvar to output struct
-	if exist('tmpvar')
+	if exist('tmpvar', 'var')
 		varindex = varindex + 1;
 		Var(varindex) = tmpvar;
 	end

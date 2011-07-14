@@ -77,7 +77,6 @@ NUnitCols = length(UnitCols);
 % one that makes very few assumptions is to AND together the unit and spike
 % timestamp cols, NOT them and those should be the marker cols.
 %--------------------------------------------------------------------
-
 tmp = strncmp(dwinfo.header.fields{1}, 'Timestamp', length('Timestamp'));
 MarkerCols = find(tmp);
 % make sure something was found
@@ -100,9 +99,7 @@ end
 %-----------------------------------------------------------
 % get marker tags
 %-----------------------------------------------------------
-MarkerTags = dwinfo.header.fields{1}(1:NMarkerCols)
-
-
+MarkerTags = dwinfo.header.fields{1}(1:NMarkerCols);
 
 %-----------------------------------------------------------
 % assign values to output structure

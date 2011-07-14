@@ -108,7 +108,7 @@ end
 % count the number of lines in the file
 %-----------------------------------------------------------
 Nlines = countTextFileLines(filename);
-disp(['Found ' num2str(Nlines) ' lines in file ' fname ' (including header).']);
+disp(['... found ' num2str(Nlines) ' lines in file ' fname ' (including header).']);
 
 %-----------------------------------------------------------
 % Open file for reading as text
