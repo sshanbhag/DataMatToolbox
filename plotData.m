@@ -248,7 +248,7 @@ for unit = 1:D.Info.Nunits
 	plotopts.idlabel = sprintf('Unit %d', unit);
 	
 	% plot a raster and psth for each unit
-	[Hplots, plotopts_out] = rasterpsthmatrix(tmpspikes, plotopts);
+	[Hplots(unit), Plotopts(unit)] = rasterpsthmatrix(tmpspikes, plotopts);
 end
 
 

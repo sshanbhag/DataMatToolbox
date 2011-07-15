@@ -27,7 +27,11 @@ function [H, plotopts] = rasterpsthmatrix(Spikes, plotopts)
 % 			idlabel: 'Unit 11'
 % 
 % Output Arguments:
-% 	H				handle to plot
+% 	H				structure of handles to plots figure
+% 		figure		figure handle for plots
+% 		rasters		axes handles for raster plots
+% 		psths			axes handles for psth plots
+% 		
 %	plotopts		plot options structure, with handles updated
 % 		timelimits: [0 1000]
 % 		psth_binwidth: 5
@@ -60,6 +64,12 @@ function [H, plotopts] = rasterpsthmatrix(Spikes, plotopts)
 % 		-	functionalized script
 % 		-	removed Nrows and Ncols as inputs (redundant)
 % 		-	updated comments/documentation
+% 	15 July, 2011 (SJS)
+% 		-	made changes to incorporate automatic scaling of psth yaxis to
+% 			uniform value (global max of all psths)
+% 		-	added documentation
+% 		-	added psthlimits to plotoptions output struct
+% 		-	changed H from cell array to struct with descriptive fields
 %------------------------------------------------------------------------
 % TO DO:
 %------------------------------------------------------------------------
@@ -262,8 +272,10 @@ end		% END OF row LOOP
 % set output values
 %-------------------------------------------------------
 
-H{1} = handles1;
-H{2} = handles2;
+H.figure = gcf;
+H.rasters = handles1;
+H.psths = handles2;
+
 
 if nargout == 2
 	plotopts.plotwidth = plotwidth;
