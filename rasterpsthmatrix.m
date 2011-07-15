@@ -85,11 +85,36 @@ if ~exist('plotopts', 'var')
 	);
 end
 
+%----------------------------------------------------------------------------
 % compute plot widths and plot heights
+%----------------------------------------------------------------------------
+% logic:
+%-----------
+% any figure window is measured in dimensionless units, with x-axis (horizontal)
+% having range of [0 1] and y-axis (vertical) [0 1].  The upper-left corner of
+% the figure window has coordinates (0, 1) and lower-left corner is (1, 0)
+% 
+% Therefore to have all plots the same width and height, and to have them evenly
+% spaced with horizontal gaps of size plotopts.horizgap and vertical gaps of
+% plotopts.vertgap, compute the width as follows:
+% 
+% 	plotwidth = ([window width] - [# of columns + 1] * [horizgap]) / [# of columns]
+% 	
+% and the height as follows (noting that the # of plots in the vertical
+% dimension is 2 * Nrows, since there are 2 plots (raster & psth) per row):
+% 
+% 	plotheight = ([window height] - [# of rows + 2] * [vertgap]) / 2*[# of rows]
+% 	 
+%----------------------------------------------------------------------------
 plotwidth = (1 - ((Ncols+1) * plotopts.horizgap)) / Ncols;
 plotheight = (1 - ((Nrows+2) * plotopts.vertgap)) / (2*Nrows);
 
+%----------------------------------------------------------------------------
 % compute positions for rasters (pos1) and psths (pos2)
+%----------------------------------------------------------------------------
+% logic:
+%-----------
+%----------------------------------------------------------------------------
 pos1 = cell(Nrows, Ncols);
 pos2 = cell(Nrows, Ncols);
 
@@ -102,6 +127,46 @@ for r = 1:Nrows
 		pos2{r, c} = [xpos(c) ypos2(r) plotwidth plotheight];
 	end
 end
+
+
+%----------------------------------------------------------------------------
+% In order to scale all the psths to same min max y values, need to
+% pre-compute the psths and keep track of min and max values.  do this here
+%----------------------------------------------------------------------------
+% data will be stored in psth struct with histvals and bins cell matrices
+%		histvals{Nrows, Ncols} will hold histogram data
+%		bins{Nrows, Ncols} will hold the respective x-axis bins for the histvals
+%		maxval(Nrows, Ncols) will hold the max values of histvals for each element
+%----------------------------------------------------------------------------
+
+% pre-allocate them here.
+psthdata.histvals = cell(Nrows, Ncols);
+psthdata.bins = cell(Nrows, Ncols);
+psthdata.maxval = zeros(Nrows, Ncols);
+
+% loop through rows and cols of Spikes and plot data
+for row = 1:Nrows
+	for col = 1:Ncols
+		% compute psth
+
+		% build psth from spike data and plot using bar() function
+		[tmpvals, tmpbins] = psth(	Spikes{row, col}, ...
+											plotopts.psth_binwidth, ...
+											plotopts.timelimits(2));
+		psthdata.histvals{row, col} = tmpvals;
+		psthdata.bins{row, col} = tmpbins;
+		psthdata.maxval(row, col) = max(tmpvals);
+	end
+end
+
+% find the overall maximum value in psthdata.maxval matrix and build ylimit
+% vector
+psthdata.ylimits = [0 max(max(psthdata.maxval))];
+
+
+%----------------------------------------------------------------------------
+% Now, plot the data
+%----------------------------------------------------------------------------
 
 % initialize cell matrices for storing handles to raster plots (handles1) and 
 % psths (handles2)
@@ -163,15 +228,14 @@ for row = 1:Nrows
 		% select subplot location for psth (pos2)
 		subplot('Position', pos2{row, col});
 
-		% build psth from spike data and plot using bar() function
-		[histvals, bins] = psth(	Spikes{row, col}, ...
-											plotopts.psth_binwidth, ...
-											plotopts.timelimits(2));
-										
 		% store the axes handle returned by bar in the handles2 cell array
-		handles2{row, col} = bar(bins, histvals);
+		handles2{row, col} = bar(psthdata.bins{row, col}, psthdata.histvals{row, col});
+		
 		% update time limits to match raster
 		xlim(plotopts.timelimits)
+		% set ylimits to overall value in psthdata
+		ylim(psthdata.ylimits);
+		
 		% turn off x tick labels for all but the bottom row and
 		% turn off y tick labels for all but the left column
 		if row ~= Nrows
@@ -191,8 +255,8 @@ for row = 1:Nrows
 			xlabel(plotopts.filelabel, 'Interpreter', 'none');
 		end
 
-	end
-end
+	end		% END OF col LOOP
+end		% END OF row LOOP
 
 %-------------------------------------------------------
 % set output values
@@ -206,5 +270,6 @@ if nargout == 2
 	plotopts.plotheight = plotheight;
 	plotopts.pos1 = pos1;
 	plotopts.pos2 = pos2;
+	plotopts.psthlimits = psthdata.ylimits;
 end
 
