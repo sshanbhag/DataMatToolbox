@@ -381,6 +381,11 @@ q = input('Plot rasters and paths (y/n)? ', 's');
 if ~isempty(q)
 	if strcmpi(q(1), 'Y')
 		disp('Plotting rasters and psths for all units...')
-		plotData
+		
+		if ~isempty(regexp(D.Info.file, '(FRA)', 'once'))
+			plotFRAData
+		else
+			plotData
+		end
 	end
 end
