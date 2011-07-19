@@ -81,97 +81,15 @@ end
 
 %----------------------------------------------------------------------
 %----------------------------------------------------------------------
-% build up Spikes cell array to hold spike time information for 
+% build Spikes cell array to hold spike time information for 
+%----------------------------------------------------------------------
+% Spikes has three dimensions: 
+%		(1) unit index
+%		(2) stimulus index (varying parameter, e.g., wav file, tone freq)
+%		(3) attenuation value
 %----------------------------------------------------------------------
 %----------------------------------------------------------------------
-% 
-% Within each Stimulus (or, StimList in this case) struct element, there are 
-% a few key elements for organizing the spikes.
-% 
-% {R/L}AttenIndices{} contains a list of indices to Stimulus vectors that correspond
-% to attenuation values given in {R/L}AttenVals
-% 
-% for example, 
-% 	
-% 	The vector at Stimulus(1).RAttenIndices{1} correspondes to a list of 
-% 	indices for Stimulus(1) where Stimulus(1)RAttenVals(1) was the 
-% 	attenuation setting.  
-% 	
-% 	So, in order to get the spikestimes corresponding to Stimulus(1) and the 
-% 	attenuation value of Stimulus(1).RAttenVals(1), we would use the following
-% 	code:
-% 	
-% 	spikes = Stimulus(1).Spiketimes(<unit number>, Stimulus(1).RAttenIndices{1})
-% 		(*** parentheses notation   ^     and                                   ^)
-% 		
-% 	Which returns a cell array of spike time stamp vectors:
-% 	
-% 	>> Stimulus(1).Spiketimes(1, Stimulus(1).RAttenIndices{1})
-% 
-% 		ans = 
-% 
-% 		 []    [1x15 double]    [1x14 double]
-% 
-% 	To obtain individual vectors of spike times, use the following notation
-% 	(pulling in the second timestamp vector because the first one is empty):
-% 	
-% 	spikes = Stimulus(1).Spiketimes{1, Stimulus(1).RAttenIndices{1}(2)}
-% 	
-% 	>>	spikes = Stimulus(1).Spiketimes{1, Stimulus(1).RAttenIndices{1}(2)}
-% 
-% 		spikes =
-% 
-% 		Columns 1 through 10
-% 
-% 		  2868100     2869800     2870000     2870100     2870300     2870500     2870700     2870800     2871000     2871100
-% 
-% 		Columns 11 through 15
-% 
-% 		  2871200     2871300     2871500     2871600     2871700
-%----------------------------------------------------------------------
-% loop through units
-for unitindex = 1:D.Info.Nunits
-	
-	% loop through stimuli (this will thus vary across frequencies or wavfiles
-	for stimindex = 1:Nstimuli
-		
-		% loop through different attenuation values
-		for attenindex = 1:length(StimList(stimindex).RAttenVals)
-			
-			% clear the tmpcell variable to avoid confusing results
-			clear tmpcell;
-			
-			% loop through individual sweeps for this attenuation setting
-			for sweepindex = 1:length(StimList(stimindex).RAttenIndices{attenindex})
-				% To get the spikes for this sweep, we need to access the index that
-				% corresponds to the proper attenuation and stimulus combination.
-				% These indices are stored in 
-				%	Stimulus(1... nstimuli).RattenIndices{1... # att values}(1...nsweeps)
-				% 
-				% retrieve this index and store it in spikecol
-				spikecol = StimList(stimindex).RAttenIndices{attenindex}(sweepindex);
-				
-				% assign the spike times to the current tmpcell{} element
-				tmpcell{sweepindex} = StimList(stimindex).Spiketimes{unitindex, spikecol};
-				% to work with the spike timestamps, need to
-				% (1)	subtract off Spikestart(sweepindex) to get times relative to 
-				%		start of sweep
-				% (2)	then convert from usec to msec
-				if ~isempty(tmpcell{sweepindex})
-					tmpcell{sweepindex} = 0.001*(tmpcell{sweepindex} -  StimList(stimindex).Sweepstart(spikecol));
-				end
-			end
-			
-			% assign the tmpcell spiketimes to the master Spikes cell array
-			% Spikes has three dimensions: 
-			%		(1) unit index
-			%		(2) stimulus index (varying parameter, e.g., wav file, tone freq)
-			%		(3) attenuation value
-			Spikes{unitindex, stimindex, attenindex} = tmpcell;
-			
-		end	% end of ATTENINDEX
-	end	% end of FREQINDEX
-end	% end of UNITINDEX
+Spikes = buildSpikes(StimList);
 
 % count number of different attenuation settings (assume same for all
 % stimuli)

@@ -77,6 +77,8 @@ function [H, plotopts] = rasterpsthmatrix(Spikes, plotopts)
 % get dimensions of Spikes cell matrix
 [Nrows, Ncols] = size(Spikes);
 
+disp(sprintf('... %s: creating figure with %d rows, %d columns', mfilename, Nrows, Ncols))
+
 % check size
 if ~Nrows || ~Ncols
 	error('%s: error in size of Spikes cell matrix', mfilename)
@@ -172,7 +174,6 @@ end
 % find the overall maximum value in psthdata.maxval matrix and build ylimit
 % vector
 psthdata.ylimits = [0 max(max(psthdata.maxval))];
-
 
 %----------------------------------------------------------------------------
 % Now, plot the data
