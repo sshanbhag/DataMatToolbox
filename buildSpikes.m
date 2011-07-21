@@ -14,6 +14,9 @@ function [Spikes, UnitList] = buildSpikes(StimList, varargin)
 %
 % Output Arguments:
 %	Spikes		{Nunits, Nstimuli, Nattenvals} cell array of spiketimes
+% 					Spike timestamps are in units of milliseconds (relative to
+% 					sweep onset timestamp)
+% 
 % 	UnitList		list of units - really only useful if UnitList is not provided
 % 					as an input argument.  In that case UnitList is computed as
 % 						[Nunits, tmp] = size(StimList(1).Spiketimes);
@@ -23,6 +26,10 @@ function [Spikes, UnitList] = buildSpikes(StimList, varargin)
 % See also:  
 %------------------------------------------------------------------------
 % 
+%------------------------------------------------------------------------
+% More information:
+%------------------------------------------------------------------------
+%
 % Within each Stimulus (or, StimList in this case) struct element, there are 
 % a few key elements for organizing the spikes.
 % 

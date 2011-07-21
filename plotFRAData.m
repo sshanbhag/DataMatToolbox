@@ -59,23 +59,25 @@ if toneIndex
 	StimList = ToneStim;
 	Nstimuli = toneIndex;
 else
-	error('%s: no known stimulus types found', mfilename);
+	error('%s: no TONE stimulus types found in data!', mfilename);
 end
 
 % find frequencies and sort stimuli
+clear tmp;
 for s = 1:Nstimuli
 	for n = 1:length(StimList(s).Var)
  		if strncmp(StimList(s).Var(n).name, 'ToneFreqR', length('ToneFreqR'))
- 			freqs(s) = StimList(s).Var(n).values(1);
+ 			tmp(s) = StimList(s).Var(n).values(1);
 		end
 	end
 end
 
+% count number of different tone frequencies
+Nfreqs = length(tmp);
 % sort freqs from low to high, keeping indices
-[fsort, findex] = sort(freqs);
-% use indices to sort stimuli in StimList
+[Freqs, findex] = sort(tmp);
+% use indices to sort stimuli in StimList from low to high frequency
 StimList = StimList(findex);
-
 
 % find ranges of attenuation
 for s = 1:Nstimuli
@@ -83,6 +85,13 @@ for s = 1:Nstimuli
 	AttenR{s} = StimList(s).RAttenVals;
 	AttenR_indices{s} = StimList(s).RAttenIndices;
 end
+
+% count number of different attenuation settings (assume same for all
+% stimuli)
+Natten = length(StimList(1).RAttenVals);
+% assume that all stimuli are presented at same intensity levels -
+% should probably do a check on this
+AttenVals = StimList(1).RAttenVals;
 
 
 %----------------------------------------------------------------------
@@ -97,17 +106,62 @@ end
 %----------------------------------------------------------------------
 Spikes = buildSpikes(StimList);
 
-% count number of different attenuation settings (assume same for all
-% stimuli)
-Natten = length(StimList(1).RAttenVals);
-
 %----------------------------------------------------------------------
 %----------------------------------------------------------------------
 % plot!
 %----------------------------------------------------------------------
 %----------------------------------------------------------------------
+FreqAttenSpikeCount = cell(D.Info.Nunits, 1);
 
-% need to get max ISI for determining plot limits
+for unit = 1:D.Info.Nunits
+	SpikeCount = zeros(Natten, Nfreqs);
+
+	% loop through frequencies
+	for freq = 1:Nfreqs	
+		% loop through attenuation from low to high
+		fatten = 0;
+		for atten = 1:Natten
+			fatten = fatten + 1;
+			tmp = Spikes{unit, freq, atten};
+
+			% add up number of spikes for this freq and atten combination
+			for rep = 1:length(tmp)
+				if ~isempty(tmp{rep})
+					SpikeCount(fatten, freq) = SpikeCount(atten, freq) + length(tmp{rep});
+				end
+			end
+			
+		end
+	end
+
+	figure
+	subplot(211)
+	pcolor(log10(Freqs), AttenVals, SpikeCount)
+	colorbar
+	xlabel('Log Frequency (kHz)')
+	ylabel('Attenuation (dB)')
+	title(sprintf('Unit %d: Spike Count', unit));
+	
+	subplot(212)
+	waterfall(log10(Freqs), AttenVals, SpikeCount);
+	xlabel('Log Frequency (kHz)')
+	ylabel('Attenuation (dB)')
+	zlabel('Spike Count');
+	
+	FreqAttenSpikeCount{unit} = SpikeCount;
+	
+end
+
+
+
+
+
+
+%{
+
+%----------------------------------------------------------------------
+%----------------------------------------------------------------------
+% need to get max inter stimulus interval for determining plot limits
 
 % first, get list of Marker timestamps
 tmptimes = D.MarkerTimes;
@@ -176,3 +230,4 @@ for unit = 1:D.Info.Nunits
 end
 
 
+%}
