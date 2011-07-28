@@ -1,12 +1,17 @@
+function varargout = plotData(D, Stimulus)
 %------------------------------------------------------------------------
 % plotData
+%------------------------------------------------------------------------
+% DataMat toolbox
 %------------------------------------------------------------------------
 % 
 %------------------------------------------------------------------------
 % Input Arguments:
+%	D		Datawave struct
+% 	Stimulus	Stimulus struct
 % 
 % Output Arguments:
-%
+%		Hplots	figure handles
 %
 %------------------------------------------------------------------------
 % See:  
@@ -19,9 +24,16 @@
 % Created: 	4 July 2011 (SJS):
 %
 % Revisions:
+%	-	28 July, 2011 (SJS): functionalized
 %------------------------------------------------------------------------
 % TO DO:
 %------------------------------------------------------------------------
+
+%-----------------------------------------------------------
+% load defaults
+%-----------------------------------------------------------
+DataWaveDefaults;
+
 
 %-----------------------------------------------------------
 % for test data, all stimuli are tones, so this next section
@@ -151,7 +163,7 @@ tmpspikes = cell(Natten, Nstimuli);
 
 for unit = 1:D.Info.Nunits
 	% for each unit, create a new page
-	Hfig(unit) = figure(unit);
+	Hfig(unit) = figure;
 	
 	for row = 1:Natten
 		for col = 1:Nstimuli
@@ -170,3 +182,6 @@ for unit = 1:D.Info.Nunits
 end
 
 
+if nargout
+	varargout{1} = Hplots;
+end

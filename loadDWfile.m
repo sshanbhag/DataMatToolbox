@@ -165,6 +165,7 @@ function varargout = loadDWfile(varargin)
 %	13 May 2011 (SJS): fixed problem with use of fully-spec'ed filenames
 %  25 May, 2011 (SJS): adapting for new data format
 %	5 July, 2011 (SJS): documenting and commenting
+%	28 July, 2011 (SJS): added Hout to outputs
 %------------------------------------------------------------------------
 % TO DO:
 %------------------------------------------------------------------------
@@ -355,6 +356,25 @@ D = struct(	'Info', dwinfo, ...
 disp('Creating Stimulus structure array...');
 Stimulus = buildStimulusStruct(D);
 
+
+%-----------------------------------------------------------
+% save data to mat file
+%-----------------------------------------------------------
+[tmp1, matfname, ext] = fileparts(fname);
+matfname = [matfname '.mat'];
+if exist(matfname, 'file')
+	disp([mfilename ':  warning, output .mat file ' matfname ' alread exists!!!']);
+	q = input('Overwrite file? (y/n)', 's');
+	if ~isempty(q)
+		if strcmpi(q(1), 'Y')
+			save(matfname, 'D', 'Stimulus', '-MAT')
+		end
+	end
+else
+	save(matfname, 'D', 'Stimulus', '-MAT')
+end
+
+
 %-----------------------------------------------------------
 % assign outputs depending on number of outputs requested
 %-----------------------------------------------------------
@@ -374,9 +394,6 @@ if nargout == 4
 	varargout{4} = rawdata;
 end
 
-%**************BEGIN DEBUGGING******************
-save loadDWfile_debug.mat D Stimulus -MAT
-%**************END DEBUGGING********************
 q = input('Plot rasters and paths (y/n)? ', 's');
 if ~isempty(q)
 	if strcmpi(q(1), 'Y')
@@ -385,7 +402,15 @@ if ~isempty(q)
 		if ~isempty(regexp(D.Info.file, '(FRA)', 'once'))
 			plotFRAData
 		else
-			plotData
+			Hout = plotData(D, Stimulus);
 		end
 	end
+else
+	Hout = [];
 end
+
+if nargout == 5
+	varargout{5} = Hout;
+end
+
+
