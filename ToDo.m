@@ -1,0 +1,2 @@
+- Add spikes from previous sweep to all data
+	- spikes from prior to stimulus onset should be (-) time
