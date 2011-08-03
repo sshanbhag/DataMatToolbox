@@ -360,7 +360,7 @@ Stimulus = buildStimulusStruct(D);
 %-----------------------------------------------------------
 % save data to mat file
 %-----------------------------------------------------------
-[tmp1, matfname, ext] = fileparts(fname);
+[~, matfname, ext] = fileparts(fname);
 matfname = [matfname '.mat'];
 if exist(matfname, 'file')
 	disp([mfilename ':  warning, output .mat file ' matfname ' alread exists!!!']);

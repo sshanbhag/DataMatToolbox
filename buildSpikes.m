@@ -1,10 +1,11 @@
-function [Spikes, UnitList] = buildSpikes(StimList, varargin)
+function [Spikes, varargout] = buildSpikes(StimList, varargin)
 %------------------------------------------------------------------------
-% [Spikes, UnitList] = buildSpikes(StimList, varargin)
+% [Spikes, VarInfo, UnitList] = buildSpikes(StimList, varargin)
+%------------------------------------------------------------------------
+% DataMat toolbox
 %------------------------------------------------------------------------
 % build up Spikes cell array to hold spike time information for a 
 % given list of Stimulus struct instances
-%----------------------------------------------------------------------
 %------------------------------------------------------------------------
 % Input Arguments:
 %	StimList		array of Stimulus struct objects
@@ -16,6 +17,8 @@ function [Spikes, UnitList] = buildSpikes(StimList, varargin)
 %	Spikes		{Nunits, Nstimuli, Nattenvals} cell array of spiketimes
 % 					Spike timestamps are in units of milliseconds (relative to
 % 					sweep onset timestamp)
+%
+%	VarInfo		information about the dimensions of Spikes
 % 
 % 	UnitList		list of units - really only useful if UnitList is not provided
 % 					as an input argument.  In that case UnitList is computed as
@@ -23,9 +26,9 @@ function [Spikes, UnitList] = buildSpikes(StimList, varargin)
 % 						UnitList = 1:UnitList;
 % 
 %------------------------------------------------------------------------
-% See also:  
+% See also: loadDWfile
 %------------------------------------------------------------------------
-% 
+%
 %------------------------------------------------------------------------
 % More information:
 %------------------------------------------------------------------------
@@ -77,12 +80,14 @@ function [Spikes, UnitList] = buildSpikes(StimList, varargin)
 
 %------------------------------------------------------------------------
 % Sharad J. Shanbhag
-% sshanbhag@neoucom.edu
+% sshanbhag@neomed.edu
 %------------------------------------------------------------------------
 % Created: 	19 July, 2011 (SJS):
 %	-	snipped from plotData script
 %
 % Revisions:
+%	2 August, 2011 (SJS):
+%	-	added VarInfo as output
 %------------------------------------------------------------------------
 % TO DO:
 %------------------------------------------------------------------------
@@ -163,9 +168,29 @@ for unit = UnitList
 			%		(1) unit index
 			%		(2) stimulus index (varying parameter, e.g., wav file, tone freq)
 			%		(3) attenuation value
-			Spikes{unitindex, stimindex, attenindex} = tmpcell;
-			
+			Spikes{unitindex, stimindex, attenindex} = tmpcell;			
 		end	% end of ATTENINDEX
-	end	% end of FREQINDEX
+		stiminfo(stimindex).var = StimList(stimindex).Var;
+	end	% end of STIMINDEX	
 end	% end of UNITINDEX
 
+if nargout > 1
+	varargout{1} = UnitList;
+end
+
+if nargout > 2
+	
+	VarInfo(1).Name = 'unit number';
+	VarInfo(1).Value = UnitList;
+	
+	VarInfo(2).Name = 'stim info';
+	VarInfo(2).Value = stiminfo;
+	
+	
+	VarInfo(3).Name = 'attenuation value'
+	VarInfo(3).Value = atteninfo;
+	
+	
+	
+	varargout{2} = VarInfo;
+end
