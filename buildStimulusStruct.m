@@ -141,7 +141,7 @@ for n = 1:Nunique
 	
 	Stimulus(n).Indices = uniqueIndices{n};
 	Stimulus(n).Tagstring = uniqueText{n};
-	Stimulus(n).Nsweeps = length(uniqueIndices{n});
+	Stimulus(n).Nreps = length(uniqueIndices{n});
 	
 	% Now copy over the Marker tags and values
 	for f = 1:length(MARKER_TAGS)
@@ -264,10 +264,10 @@ Nunits = Data.Info.Nunits;
 % loop through stimuli
 for s = 1:Nstimuli
 	% allocate the cell array to store valid spike times for each unit
-	Stimulus(s).Spiketimes = cell(Nunits, Stimulus(s).Nsweeps);
+	Stimulus(s).Spiketimes = cell(Nunits, Stimulus(s).Nreps);
 
 	% loop through sweeps
-	for r = 1:Stimulus(s).Nsweeps
+	for r = 1:Stimulus(s).Nreps
 	
 		% loop through the units
 		for u = 1:Nunits

@@ -19,6 +19,8 @@ function [Spikes, varargout] = buildSpikes(StimList, varargin)
 % 					sweep onset timestamp)
 %
 %	VarInfo		information about the dimensions of Spikes
+% 					*note that this feature is implemented in a 0.5*assed way
+% 					 and is subject to be almost useless...*
 % 
 % 	UnitList		list of units - really only useful if UnitList is not provided
 % 					as an input argument.  In that case UnitList is computed as
@@ -171,14 +173,12 @@ for unit = UnitList
 			Spikes{unitindex, stimindex, attenindex} = tmpcell;			
 		end	% end of ATTENINDEX
 		stiminfo(stimindex).var = StimList(stimindex).Var;
+		atteninfo(stimindex).var = StimList(stimindex).RAttenVals;
 	end	% end of STIMINDEX	
 end	% end of UNITINDEX
 
-if nargout > 1
-	varargout{1} = UnitList;
-end
 
-if nargout > 2
+if nargout > 1
 	
 	VarInfo(1).Name = 'unit number';
 	VarInfo(1).Value = UnitList;
@@ -187,10 +187,12 @@ if nargout > 2
 	VarInfo(2).Value = stiminfo;
 	
 	
-	VarInfo(3).Name = 'attenuation value'
+	VarInfo(3).Name = 'attenuation value';
 	VarInfo(3).Value = atteninfo;
 	
-	
-	
-	varargout{2} = VarInfo;
+	varargout{1} = VarInfo;
+end
+
+if nargout > 2
+	varargout{2} = UnitList;
 end
