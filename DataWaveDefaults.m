@@ -216,6 +216,7 @@ STIMULUS_STRUCT_FIELDS = {	...
 	'Var'
 };
 
+% merge in the marker tags
 STIMULUS_STRUCT_FIELDS = [STIMULUS_STRUCT_FIELDS MARKER_TAGS];
 
 

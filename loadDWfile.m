@@ -166,6 +166,7 @@ function varargout = loadDWfile(varargin)
 %  25 May, 2011 (SJS): adapting for new data format
 %	5 July, 2011 (SJS): documenting and commenting
 %	28 July, 2011 (SJS): added Hout to outputs
+%	4 August, 2011 (SJS): added Background retrieval and item to outputs
 %------------------------------------------------------------------------
 % TO DO:
 %------------------------------------------------------------------------
@@ -424,8 +425,9 @@ else
 	Hout = [];
 end
 
-if nargout == 5
-	varargout{5} = Hout;
+% return plot handles if requested
+if nargout == 6
+	varargout{6} = Hout;
 end
 
 
