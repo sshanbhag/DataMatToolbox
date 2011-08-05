@@ -298,6 +298,12 @@ if errFlg
 end
 
 %-----------------------------------------------------------
+% get # of markers by looking at length of the Timestamp vector 
+% could use any of the vectors
+%-----------------------------------------------------------
+Marker.Nmarkers = length(Marker.Timestamp);
+
+%-----------------------------------------------------------
 % Pull in Spike Channel Data
 %-----------------------------------------------------------
 % check # of Spike channels
@@ -369,14 +375,14 @@ Background = buildBackgroundStruct(D);
 matfname = [matfname '.mat'];
 if exist(matfname, 'file')
 	disp([mfilename ':  warning, output .mat file ' matfname ' alread exists!!!']);
-	q = input('Overwrite file? (y/n)', 's');
+	q = input('Overwrite file? (y/n) ', 's');
 	if ~isempty(q)
 		if strcmpi(q(1), 'Y')
-			save(matfname, 'D', 'Stimulus', '-MAT')
+			save(matfname, 'D', 'Stimulus', 'Background', '-MAT')
 		end
 	end
 else
-	save(matfname, 'D', 'Stimulus', 'Background'-MAT')
+	save(matfname, 'D', 'Stimulus', 'Background', '-MAT')
 end
 
 

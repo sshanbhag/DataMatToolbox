@@ -413,12 +413,9 @@ for s = 1:Nstimuli
 			% AND the two lists
 			valid_times_list = above_start & below_end;
 			
-			% get the indices and corresponding times for this list
-			valid_index = find(valid_times_list);
-
 			% store the values if spikes were found, 
-			if ~isempty(valid_index)
-				Stimulus(s).Spiketimes{u, r} = UnitData(u).timestamp(valid_index);
+			if any(valid_times_list)
+				Stimulus(s).Spiketimes{u, r} = UnitData(u).timestamp(valid_times_list);
 			else
 				%otherwise, set to empty array
 				Stimulus(s).Spiketimes{u, r} = [];
