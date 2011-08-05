@@ -1,6 +1,6 @@
 function varargout = loadDWfile(varargin)
 %------------------------------------------------------------------------
-% [D, Stimulus, errFlg, rawdata] = loadDWfile(fname, pname)
+% [D, Stimulus, errFlg, rawdata] = loadDWfile(fname, <options>)
 %------------------------------------------------------------------------
 % DataMat toolbox
 %------------------------------------------------------------------------
@@ -8,13 +8,28 @@ function varargout = loadDWfile(varargin)
 % 
 %------------------------------------------------------------------------
 % Input Arguments:
-% 	fname		name of DataWave exported text file (usually with .dat file
-% 				extension.
+% 	fname		path to and name of DataWave exported text file 
+% 				(usually with .dat file extension)
 %				If fname is not provided, a GUI window will open to select file.
 % 
-% 	pname		path to DataWave file
-%				If pname is not provided, current directory will be assumed
-% 
+% 	Options:		given as a pair of '<option name>', '<option value>'
+% 	
+% 		'SaveMatfile'		'Yes' -> Saves data in .mat file with same name as
+% 											data file
+% 								'No'	-> does not save data, does not query user
+%								'<filename>' -> mat file will be written to filename.mat
+% 								
+% 								If option is not provided as input, the 
+% 								program will ask the user is data should be saved 
+% 								to a .mat file
+% 								
+% 		'PlotData'			'Yes' -> Plots of data will be generated
+% 								'No'	-> Plots of data will not be displayed, 
+% 								         and user will not be queried
+% 											
+% 								If option is not provided, the program will ask if
+% 								plots should be displayed
+% 								
 % Output Arguments:
 % 	D			output structure
 %
@@ -166,7 +181,9 @@ function varargout = loadDWfile(varargin)
 %  25 May, 2011 (SJS): adapting for new data format
 %	5 July, 2011 (SJS): documenting and commenting
 %	28 July, 2011 (SJS): added Hout to outputs
-%	4 August, 2011 (SJS): added Background retrieval and item to outputs
+%	4 August, 2011 (SJS): 
+% 		-	added Background retrieval and item to outputs
+% 		-	removed path name as input
 %------------------------------------------------------------------------
 % TO DO:
 %------------------------------------------------------------------------
@@ -179,19 +196,7 @@ DataWaveDefaults;
 %-----------------------------------------------------------
 % check input arguments, act depending on inputs
 %-----------------------------------------------------------
-if nargin == 1
-	% only filename was provided, assume path is included or that file is
-	% in current directory 
-	[pname, fname, ext] = fileparts(varargin{1});
-	if isempty(pname)
-		pname = pwd;
-	end
-	fname = [fname ext];
-elseif nargin == 2
-	% filename and path provided as input
-	fname = varargin{1};
-	pname = varargin{2};
-elseif nargin == 0
+if nargin == 0
 	% no filename or path provided
 	% open ui panel to get filename and path from user
 	[fname, pname] = uigetfile('*.txt', 'Select Datawave Exported Text File');
@@ -201,14 +206,47 @@ elseif nargin == 0
 		for n = 1:nargout
 			varargout{n} = [];
 		end
-		varargout{2} = 1;
+		if nargout >= 4
+			varargout{4} = 1;
+		end
 		return
 	end
-else
-	error('%s: input argument or file error', mfilename);
+end
+
+if nargin > 0
+	% only filename was provided, assume path is included or that file is
+	% in current directory 
+	[pname, fname, ext] = fileparts(varargin{1});
+	if isempty(pname)
+		pname = pwd;
+	end
+	fname = [fname ext];
 end
 
 
+if nargin >= 2
+	chkargs = varargin(2:end);
+	for n = 1:length(chkargs)
+		if ischar(chkargs{n})
+			if strcmpi(chkargs{n}, 'SaveMatfile')
+				if strncmpi(chkargs{n+1}, 'Y', 1)
+					saveMatFlg = 1;
+				elseif strncmpi(chkargs{n+1}, 'N', 1)
+					saveMatFlg = 0;
+				else
+					saveMatFlg = 1;
+					matfname = chkargs{n+1};
+				end
+			elseif strcmpi(chkargs{n}, 'PlotData')
+				if strncmpi(chkargs{n+1}, 'Y', 1)
+					plotDataFlg = 1;
+				else
+					plotDataFlg = 0;
+				end
+			end
+		end
+	end
+end
 %-----------------------------------------------------------
 % get file info, read header
 %-----------------------------------------------------------
@@ -372,20 +410,30 @@ Background = buildBackgroundStruct(D);
 %-----------------------------------------------------------
 % save data to mat file
 %-----------------------------------------------------------
-[~, matfname, ext] = fileparts(fname);
-matfname = [matfname '.mat'];
-if exist(matfname, 'file')
-	disp([mfilename ':  warning, output .mat file ' matfname ' alread exists!!!']);
-	q = input('Overwrite file? (y/n) ', 's');
-	if ~isempty(q)
-		if strcmpi(q(1), 'Y')
-			save(matfname, 'D', 'Stimulus', 'Background', '-MAT')
-		end
-	end
-else
-	save(matfname, 'D', 'Stimulus', 'Background', '-MAT')
+if ~exist('matfname', 'var')
+	[~, matfname, ext] = fileparts(fname);
+	matfname = [matfname '.mat'];
 end
 
+if exist('saveMatFlg', 'var')
+	if saveMatFlg
+		save(matfname, 'D', 'Stimulus', 'Background', '-MAT');
+	end
+else
+	% user didn't specify preference on data file saving in input args
+	% check if file exists
+	if exist(matfname, 'file')
+		disp([mfilename ':  warning, output .mat file ' matfname ' alread exists!!!']);
+		q = input('Overwrite file? (y/n) ', 's');
+		if ~isempty(q)
+			if strcmpi(q(1), 'Y')
+				save(matfname, 'D', 'Stimulus', 'Background', '-MAT')
+			end
+		end
+	else
+		save(matfname, 'D', 'Stimulus', 'Background', '-MAT')
+	end
+end
 
 %-----------------------------------------------------------
 % assign outputs depending on number of outputs requested
@@ -410,19 +458,33 @@ if nargout == 5
 	varargout{5} = rawdata;
 end
 
-q = input('Plot rasters and paths (y/n)? ', 's');
-if ~isempty(q)
-	if strcmpi(q(1), 'Y')
-		disp('Plotting rasters and psths for all units...')
-		
+
+if exist('plotDataFlg', 'var')
+	if plotDataFlg
 		if ~isempty(regexp(D.Info.file, '(FRA)', 'once'))
 			plotFRAData
 		else
 			Hout = plotData(D, Stimulus);
 		end
+	else
+		Hout = [];
 	end
 else
-	Hout = [];
+	% user didn't specify preference on data plotting in input args
+	q = input('Plot rasters and paths (y/n)? ', 's');
+	if ~isempty(q)
+		if strcmpi(q(1), 'Y')
+			disp('Plotting rasters and psths for all units...')
+
+			if ~isempty(regexp(D.Info.file, '(FRA)', 'once'))
+				plotFRAData
+			else
+				Hout = plotData(D, Stimulus);
+			end
+		end
+	else
+		Hout = [];
+	end
 end
 
 % return plot handles if requested

@@ -402,17 +402,19 @@ for s = 1:Nstimuli
 		% loop through the units
 		for u = 1:Nunits
 			
-			% retrieve the spikes that are valid, using the sweepstart_t and 
-			% sweepend_t values for this stimulus/attenuation combination
+			% retrieve the spikes that are valid for each time period, using the 
+			% sweepstart_t and sweepend_t values for each 
+			% stimulus/attenuation combination
 
+			%----------------------------------------------------------------
+			% Spikes during this stimulus
+			%----------------------------------------------------------------			
 			% spiketimes greater than sweep start
-			above_start = (UnitData(u).timestamp >= Stimulus(s).Sweepstart(r));
-			% spiketime less than sweep end
-			below_end	= (UnitData(u).timestamp < Stimulus(s).Sweepend(r));
-			
+			startT = (UnitData(u).timestamp >= Stimulus(s).Sweepstart(r));
+			% spiketimes less than sweep end
+			endT	= (UnitData(u).timestamp < Stimulus(s).Sweepend(r));
 			% AND the two lists
-			valid_times_list = above_start & below_end;
-			
+			valid_times_list = startT & endT;
 			% store the values if spikes were found, 
 			if any(valid_times_list)
 				Stimulus(s).Spiketimes{u, r} = UnitData(u).timestamp(valid_times_list);
@@ -421,15 +423,41 @@ for s = 1:Nstimuli
 				Stimulus(s).Spiketimes{u, r} = [];
 			end
 			
+			%----------------------------------------------------------------
+			% Spikes before this stimulus
+			%----------------------------------------------------------------			
+			% spiketimes greater than pre-sweep start
+			startT = (UnitData(u).timestamp > Stimulus(s).PreSweep(r));
+			% spiketimes less than sweep end
+			endT	= (UnitData(u).timestamp < Stimulus(s).Sweepstart(r));
+			% AND the two lists
+			valid_times_list = startT & endT;
+			% store the values if spikes were found, 
+			if any(valid_times_list)
+				Stimulus(s).Spiketimes_PreStim{u, r} = UnitData(u).timestamp(valid_times_list);
+			else
+				%otherwise, set to empty array
+				Stimulus(s).Spiketimes_PreStim{u, r} = [];
+			end
+
+			%----------------------------------------------------------------
+			% Spikes after this stimulus
+			%----------------------------------------------------------------			
+			% spiketimes greater than sweep end
+			startT = (UnitData(u).timestamp > Stimulus(s).Sweepend(r));
+			% spiketimes less than post-sweep end
+			endT	= (UnitData(u).timestamp < Stimulus(s).PostSweep(r));
+			% AND the two lists
+			valid_times_list = startT & endT;
+			% store the values if spikes were found, 
+			if any(valid_times_list)
+				Stimulus(s).Spiketimes_PostStim{u, r} = UnitData(u).timestamp(valid_times_list);
+			else
+				%otherwise, set to empty array
+				Stimulus(s).Spiketimes_PostStim{u, r} = [];
+			end			
+			
 		end	% end of U loop
 	end	% end of R loop
 end	% end of S loop
-
-
-%**************BEGIN DEBUGGING********************
-save buildStimulusStruct_debug.mat uniqueIndices -MAT
-%**************END DEBUGGING********************
-
-
-
 
