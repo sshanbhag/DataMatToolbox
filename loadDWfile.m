@@ -356,6 +356,11 @@ D = struct(	'Info', dwinfo, ...
 disp('Creating Stimulus structure array...');
 Stimulus = buildStimulusStruct(D);
 
+%-----------------------------------------------------------
+% Create Stimulus structure
+%-----------------------------------------------------------
+disp('Creating Background structure array...');
+Background = buildBackgroundStruct(D);
 
 %-----------------------------------------------------------
 % save data to mat file
@@ -371,27 +376,31 @@ if exist(matfname, 'file')
 		end
 	end
 else
-	save(matfname, 'D', 'Stimulus', '-MAT')
+	save(matfname, 'D', 'Stimulus', 'Background'-MAT')
 end
 
 
 %-----------------------------------------------------------
 % assign outputs depending on number of outputs requested
 %-----------------------------------------------------------
-if any(nargout == [0 1 2 3 4])
+if any(nargout == [0 1 2 3 4 5])
 	varargout{1} = D;
 end
 
-if any(nargout == [1 2 3 4])
+if any(nargout == [2 3 4 5])
 	varargout{2} = Stimulus;
 end
 
-if any(nargout == [2 3 4])
-	varargout{3} = errFlg;
+if any(nargout == [3 4 5])
+	varargout{3} = Background;
 end
 
-if nargout == 4
-	varargout{4} = rawdata;
+if any(nargout == [4 5])
+	varargout{4} = errFlg;
+end
+
+if nargout == 5
+	varargout{5} = rawdata;
 end
 
 q = input('Plot rasters and paths (y/n)? ', 's');

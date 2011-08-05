@@ -1,6 +1,6 @@
-function Stimulus = buildStimulusStruct(Data)
+function varargout = buildBackgroundStruct(Data)
 %------------------------------------------------------------------------
-% Stimulus = buildStimulusStruct(Data)
+% Background = buildBackgroundStruct(Data)
 %------------------------------------------------------------------------
 % DataMat toolbox
 %------------------------------------------------------------------------
@@ -13,78 +13,20 @@ function Stimulus = buildStimulusStruct(Data)
 %
 % Output Arguments:
 %
-% 	Stimulus			Structure array of data, sorted by stimulus type
-% 	 Fields:
-% 		Type							'TONE', 'NOISE', 'WAVFILE'
-% 		Channel						'R', 'L', 'B'
-% 		Indices						array of indices into Marker arrays (above)
-% 		Nreps							# of times this stimulus was presented 
-% 		Var							varying variables for this stimulus
-% 		Timestamp					first occurance of this Stimulus
-% 		id
-% 		OutputFilename
-% 		AttenuationR
-% 		BBNlowerFreqR
-% 		BBNupperFreqR
-% 		AmplitudeR
-% 		TimeShiftR
-% 		RampUpR
-% 		HoldTimeR
-% 		RampDownR
-% 		OutputTimestampR
-% 		OutputTimeWithDelayR
-% 		FixedDelayR
-% 		PA5idR
-% 		WavFilenameR
-% 		ToneFreqR
-% 		PhaseDegR
-% 		AttenuationL
-% 		BBNlowerFreqL
-% 		BBNupperFreqL
-% 		AmplitudeL
-% 		TimeShiftL
-% 		RampUpL
-% 		HoldTimeL
-% 		RampDownL
-% 		OutputTimestampL
-% 		OutputTimeWithDelayL
-% 		FixedDelayL
-% 		PA5idL
-% 		WavFilenameL
-% 		ToneFreqL
-% 		PhaseDegL
-% 		Tagstring
-% 		Nsweeps						# of times this stimulus was presented
-% 		Sweepstart					list of start times for this stimulus
-% 		Sweepend						list of end times for this stimulus
-% 		LAttenVals					Left channel attenuation values
-% 		LAttenIndices				Indices for respective attenuation sweeps
-% 		RAttenVals					Right channel attenuation values
-% 		RAttenIndices				indices for R attenuaton sweeps
-% 		Spiketimes					{# units, Nsweeps} cell array of unit spike
-%										timestamps
+% 	Background		structure of background (pre-first marker) data
 % 	
 %
 %------------------------------------------------------------------------
-% See also: loadDWfile, buildSpikes 
+% See also: buildStimulusStruct, loadDWfile, buildSpikes 
 %------------------------------------------------------------------------
 
 %------------------------------------------------------------------------
 % Sharad J. Shanbhag
 % sshanbhag@neomed.edu
 %------------------------------------------------------------------------
-% Created: 13 June, 2011 (SJS)
-% 	- uses code snipped from loadDWPLXFileAsRaster.m
+% Created: 4 August, 2011 (SJS)
 %
 % Revisions:
-%	4 July 2011 (SJS):
-% 		-	made into function
-% 		-	split Var tags search into function assignVarTags.m
-%	4 August, 2011 (SJS):
-%		-	updated outputs to varargin
-%		-	now will return background (pre first stimulus) spikes
-%		-	added computation of PreTimes and postTimes for each stimulus
-%		-	updated comments/documentation
 %------------------------------------------------------------------------
 % TO DO:
 %------------------------------------------------------------------------
@@ -427,12 +369,6 @@ for s = 1:Nstimuli
 		end	% end of U loop
 	end	% end of R loop
 end	% end of S loop
-
-
-%**************BEGIN DEBUGGING********************
-save buildStimulusStruct_debug.mat uniqueIndices -MAT
-%**************END DEBUGGING********************
-
 
 
 
