@@ -75,7 +75,7 @@ UnitCols = find(tmp);
 if isempty(UnitCols)
 	% if empty, warn user
 	warning('DWFILE:TSTAMP', '%s: no unit/probe timestamp fields found in file %s header', ...
-									mfilename, filename);
+									mfilename, dwinfo.filename);
 end
 NUnitCols = length(UnitCols);
 
@@ -93,11 +93,11 @@ MarkerCols = find(tmp);
 if isempty(MarkerCols)
 	% if empty, warn user
 	warning('DWFILE:MARKER', '%s: no Marker timestamp fields found in file %s header', ...
-									mfilename, filename);
+									mfilename, dwinfo.filename);
 elseif length(MarkerCols) > 1
 	% if unpredicted length, warn user
 	warning('DWFILE:MARKER', '%s: %d Marker timestamp  fields found in file %s header', ...
-									mfilename, length(MarkerCols), filename);
+									mfilename, length(MarkerCols), dwinfo.filename);
 else
 	% 3 of columns for marker information is the value of the first
 	% spike timestamp column - 1 (all spike timestamps are written after

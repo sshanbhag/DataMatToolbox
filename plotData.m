@@ -19,7 +19,7 @@ function varargout = plotData(D, Stimulus)
 
 %------------------------------------------------------------------------
 % Sharad J. Shanbhag
-% sshanbhag@neoucom.edu
+% sshanbhag@neomed.edu
 %------------------------------------------------------------------------
 % Created: 	4 July 2011 (SJS):
 %

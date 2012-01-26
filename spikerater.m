@@ -13,6 +13,11 @@ clear all
 % define some options
 %--------------------------------------------------------------------------
 %--------------------------------------------------------------------------
+inpath = '/Users/sshanbhag/Work/Data/LFHData/MatFiles';
+
+types_to_process = {'BBN', 'LFH'};
+
+outpath = '/Users/sshanbhag/Work/Data/LFHData/MatFiles';
 
 % size of time window after stimulus onset in which to count spikes
 RESPONSEWINDOW_MS = 100;
@@ -22,17 +27,11 @@ RESPONSEWINDOW_MS = 100;
 % define some constants/settings
 %--------------------------------------------------------------------------
 %--------------------------------------------------------------------------
+
 % default sound onset time time
 soundOnsetTime = 0;
-
-
 spikeCountWindow{1} = [0 RESPONSEWINDOW_MS];
-
 Nwin = length(spikeCountWindow);
-
-
-indata.filepath{1} = '/Users/sshanbhag/Work/Code/Matlab/dev/Analysis/DataWave/DataMatToolbox/2.2';
-indata.filename{1} = '782_121511_17_3q_LFH_3_spksorted_Sheetmaker.mat';
 
 %--------------------------------------------------------------------------
 % define some plot constants/settings
@@ -93,7 +92,73 @@ end
 %}
 
 
-load(fullfile(indata.filepath{1}, indata.filename{1}), 'D', 'Stimulus', 'Background');
+% 1) need to find matching pairs of files
+
+% get all BBN files first, then search for matching LFH files?
+
+% get list of files, store info in fstruct struct array
+fstruct = dir(inpath);
+
+% make sure there are files
+if isempty(fstruct)
+	error('%s: no files found in %s', mfilename, inpath);
+end
+
+% find files that aren't empty
+tmp = struct2cell(fstruct);
+bytes = cell2mat(tmp(3, :));
+clear tmp
+
+% store valid files
+[tmp, valid_findex] =  find(bytes > 0);
+nfiles = length(valid_findex);
+
+bbnCount = 0;
+lfhCount = 0;
+% loop through valid files
+for findex = 1:nfiles
+	% build full filename (with path)
+	fname = fstruct(valid_findex(findex)).name;
+
+	% check if this is one of the types to process
+	if strfind(fname, 'BBN')
+		bbnCount = bbnCount + 1;
+		bbnFiles{bbnCount} = fname;
+	elseif strfind(fname, 'LFH')
+		lfhCount = lfhCount + 1;
+		lfhFiles{lfhCount} = fname;
+	end
+end
+
+for n = 1:bbnCount
+	bbn_idstr{n} = regexprep(bbnFiles{n}, ('_BBN'), '');
+end
+
+for n = 1:lfhCount
+	lfh_idstr{n} = regexprep(lfhFiles{n}, ('_LFH'), '');
+end
+
+match_index = 0;
+for n = 1:bbnCount
+	lfhsrch = strcmp(bbn_idstr{n}, lfh_idstr);
+	
+	if sum(lfhsrch)
+		match_index = match_index + 1;
+		bbnlfhMatch{match_index, 1} = n;		
+		bbnlfhMatch{match_index, 2} = find(lfhsrch);
+	end
+	
+end
+	
+for fIndx = 1:match_index
+	%------------------------------------------------------------------------
+	% Load Data files
+	%------------------------------------------------------------------------
+	BBN = load(fullfile(inpath, bbnFiles{bbnlfhMatch{fIndx, 1}}), 'D', 'Stimulus', 'Background');
+	LFH = load(fullfile(inpath, lfhFiles{bbnlfhMatch{fIndx, 2}}), 'D', 'Stimulus', 'Background');
+end
+
+return
 
 %------------------------------------------------------------------------
 % List of units to analyze

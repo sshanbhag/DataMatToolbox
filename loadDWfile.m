@@ -22,6 +22,8 @@ function varargout = loadDWfile(varargin)
 % 								If option is not provided as input, the 
 % 								program will ask the user is data should be saved 
 % 								to a .mat file
+%
+%		'OutputPath'		<path> -> path to store output mat file
 % 								
 % 		'PlotData'			'Yes' -> Plots of data will be generated
 % 								'No'	-> Plots of data will not be displayed, 
@@ -184,6 +186,7 @@ function varargout = loadDWfile(varargin)
 %	4 August, 2011 (SJS): 
 % 		-	added Background retrieval and item to outputs
 % 		-	removed path name as input
+%	26 January, 2012 (SJS): added 'OutputPath' option
 %------------------------------------------------------------------------
 % TO DO:
 %------------------------------------------------------------------------
@@ -243,10 +246,15 @@ if nargin >= 2
 				else
 					plotDataFlg = 0;
 				end
+			elseif strcmpi(chkargs{n}, 'OutputPath')
+				if ischar(chkargs{n+1})
+					OutputPath = chkargs{n+1};
+				end				
 			end
 		end
 	end
 end
+
 %-----------------------------------------------------------
 % get file info, read header
 %-----------------------------------------------------------
@@ -421,11 +429,34 @@ D.Info.UnitInfo = buildUnitInfo(D, Stimulus);
 %-----------------------------------------------------------
 % save data to mat file
 %-----------------------------------------------------------
+% see if matfname is defined (i.e., was provided in function call)
 if ~exist('matfname', 'var')
-	[~, matfname, ext] = fileparts(fname);
-	matfname = [matfname '.mat'];
+	% if not, create it from the .txt file name
+	[~, tmpfname, ext] = fileparts(fname);
+	% remove the _Sheetmaker from the filename
+	tmpfname = regexprep(tmpfname, '(_Sheetmaker)', '');
+	% remove the _spksorted from the filename
+	tmpfname = regexprep(tmpfname, '(_spksorted)', '');
+	% append .mat
+	matfname = [tmpfname '.mat'];
+	clear tmpfname
 end
 
+% check if path was provided
+if exist('OutputPath', 'var')
+	if ~exist(OutputPath, 'dir')
+		% create output path if it doesn't exist
+		warning('%s: creating output directory %s', mfilename, OutputPath);
+		mkdir(OutputPath);
+	end
+else
+	OutputPath = [];
+end
+
+% prepend matfname with OutputPath
+matfname = fullfile(OutputPath, matfname);
+
+% if saveMatFlg is set, force write of matfile
 if exist('saveMatFlg', 'var')
 	if saveMatFlg
 		save(matfname, 'D', 'Stimulus', 'Background', '-MAT');

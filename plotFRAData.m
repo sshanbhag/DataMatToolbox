@@ -14,7 +14,7 @@
 
 %------------------------------------------------------------------------
 % Sharad J. Shanbhag
-% sshanbhag@neoucom.edu
+% sshanbhag@neomed.edu
 %------------------------------------------------------------------------
 % Created: 	19 July 2011 (SJS):
 %	-	split off from plotData to handle the FRA (frequency response area)
@@ -141,13 +141,28 @@ for unit = 1:D.Info.Nunits
 	xlabel('Log Frequency (kHz)')
 	ylabel('Attenuation (dB)')
 	title(sprintf('Unit %d: Spike Count', unit));
+	xt = get(gca, 'XTick')
+	xtl = cell(length(xt), 1);
+	get(gca, 'XTickLabel')
+	for n = 1:length(xt)
+		xtl{n} = sprintf('%.0f', 0.001 * 10^xt(n));
+	end
+	set(gca, 'XTickLabel', xtl);
+	
 	
 	subplot(212)
 	waterfall(log10(Freqs), AttenVals, SpikeCount);
 	xlabel('Log Frequency (kHz)')
 	ylabel('Attenuation (dB)')
 	zlabel('Spike Count');
-	
+	xt = get(gca, 'XTick')
+	xtl = cell(length(xt), 1);
+	get(gca, 'XTickLabel')
+	for n = 1:length(xt)
+		xtl{n} = sprintf('%.0f', 0.001 * 10^xt(n));
+	end
+	set(gca, 'XTickLabel', xtl);
+
 	FreqAttenSpikeCount{unit} = SpikeCount;
 	
 end
