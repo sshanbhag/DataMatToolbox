@@ -330,6 +330,12 @@ for L = 1:dwinfo.Ndatalines
 	end
 end
 
+% Toss out late Marker Line as it is only a place holder
+%	(added 1/26/2012, SJS)
+MarkerData = MarkerData(1:(markerCount - 1));
+MarkerTimes = MarkerTimes(1:(markerCount - 1));
+markerCount = markerCount - 1;
+
 % process marker information into arrays
 [Marker, errFlg] = parseDataWaveMarkers(MarkerData, dwinfo);
 if errFlg

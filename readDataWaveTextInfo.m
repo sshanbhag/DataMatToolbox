@@ -5,6 +5,8 @@ function [out, errFlg] = readDataWaveTextInfo(varargin)
 % 
 % Gets information from a DataWave exported text file
 % 
+% Reads information from the the 1st row of text fields (header line)
+% 
 %------------------------------------------------------------------------
 % Input Arguments:
 % 	fname		name of DataWave exported text file (usually with .txt file
@@ -42,7 +44,7 @@ function [out, errFlg] = readDataWaveTextInfo(varargin)
 
 %------------------------------------------------------------------------
 % Sharad J. Shanbhag
-% sshanbhag@neoucom.edu
+% sshanbhag@neomed.edu
 %------------------------------------------------------------------------
 % Created: 25 January, 2011 (SJS)
 %
