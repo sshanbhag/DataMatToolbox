@@ -11,6 +11,16 @@ function [out, errFlg] = parseDataWaveTextHeader(dwinfo)
 % 
 % Output Arguments:
 %
+% out.dwinfo;
+% out.MarkerCols = MarkerCols;
+% out.NMarkerCols = NMarkerCols;
+% out.SpikeCols = SpikeCols;
+% out.NSpikeCols = NSpikeCols;
+% out.UnitCols = UnitCols;
+% out.NUnitCols = NUnitCols;
+% out.Ndatalines = dwinfo.Nlines - N_HEADER_LINES;
+% out.MarkerTags = MarkerTags;
+
 % 	errFlg	Error flag
 % 					0		no error
 % 					1		user cancelled file opening
@@ -23,7 +33,7 @@ function [out, errFlg] = parseDataWaveTextHeader(dwinfo)
 
 %------------------------------------------------------------------------
 % Sharad J. Shanbhag
-% sshanbhag@neoucom.edu
+% sshanbhag@neomed.edu
 %------------------------------------------------------------------------
 % Created: 25 May, 2011 (SJS)
 % 	- uses code snipped from readDataWaveTextInfo.m
@@ -91,7 +101,7 @@ elseif length(MarkerCols) > 1
 else
 	% 3 of columns for marker information is the value of the first
 	% spike timestamp column - 1 (all spike timestamps are written after
-	% he markerinformation)
+	% the marker information)
 	NMarkerCols = SpikeCols(1) - 1;
 end
 

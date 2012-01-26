@@ -402,10 +402,15 @@ disp('Creating Stimulus structure array...');
 Stimulus = buildStimulusStruct(D);
 
 %-----------------------------------------------------------
-% Create Stimulus structure
+% Create Background structure
 %-----------------------------------------------------------
 disp('Creating Background structure array...');
 Background = buildBackgroundStruct(D);
+
+%-----------------------------------------------------------
+% Create UnitInfo struct and add to Info
+%-----------------------------------------------------------
+D.Info.UnitInfo = buildUnitInfo(D, Stimulus);
 
 %-----------------------------------------------------------
 % save data to mat file

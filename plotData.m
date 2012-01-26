@@ -147,6 +147,8 @@ for s = 1:Nstimuli
 	elseif strcmp(StimList(s).Type, 'WAVFILE')
 		tmpstr = textscan(StimList(s).Var(2).values{1}, '%s', 'Delimiter', '\\');
 		plotopts.columnlabels{s} = ['Stim = ' tmpstr{1}{end}];
+	elseif strcmp(StimList(s).Type, 'NOISE')
+		plotopts.columnlabels{s} = sprintf('Stim = BBN');
 	else
 		plotopts.columnlabels{s} = ['Stim = ' num2str(StimList(s).Var(1).values(1))];
 	end
@@ -176,7 +178,7 @@ for unit = 1:D.Info.Nunits
 	
 	% write unit ID label string
 	plotopts.idlabel = sprintf('Unit %d', unit);
-	
+		
 	% plot a raster and psth for each unit
 	[Hplots(unit), Plotopts(unit)] = rasterpsthmatrix(tmpspikes, plotopts);
 end
