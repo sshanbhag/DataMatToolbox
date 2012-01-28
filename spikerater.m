@@ -40,57 +40,6 @@ Nwin = length(spikeCountWindow);
 %------------------------------------------------------------------------
 % List of files and units to analyze
 %------------------------------------------------------------------------
-%{
-% open a dialog box to get data file name and path
-[filename, pathname] = uigetfile('*sorted_Sheetmaker.mat', 'Select file for condition 1');
-% if user clicks "Cancel", filename == 0, exit function
-if ~filename
-	return
-end
-% parse the returned path+filename into path, name and extension
-[tmppath, tmpname, tmpext] = fileparts(fullfile(pathname, filename));
-% build up the .MAT file names
-indata.filesA = {[tmpname '.mat']};
-% initialize path
-indata.inputpathA = {tmppath};
-
-% store current path
-origpath = pwd;
-% switch to data file A path
-cd(tmppath);
-
-% open a dialog box to get data file name and path
-[filename, pathname] = uigetfile('*sorted_Sheetmaker.mat', 'Select file for condition 2');
-% if user clicks "Cancel", filename == 0, exit function
-if ~filename
-	return
-end
-% parse the returned path+filename into path, name and extension
-[tmppath, tmpname, tmpext] = fileparts(fullfile(pathname, filename));
-% build up the .MAT file names
-indata.filesB = {[tmpname '.mat']};
-% initialize path
-indata.inputpathB = {tmppath};
-
-cd(origpath);
-
-% load the mat files
-try
-	% load data from condition A
-	A = load(fullfile(indata.inputpathA{1}, indata.filesA{1}), 'D', 'Stimulus');
-catch
-	error('%s: error in loading .mat file %s', indata.filesA{1}, fullfile(indata.inputpathA{1}, indata.filesA{1}));
-end
-
-try
-	% load data from condition B
-	B = load(fullfile(indata.inputpathB{1}, indata.filesB{1}), 'D', 'Stimulus');
-catch
-	error('%s: error in loading .mat file %s', indata.filesB{1}, fullfile(indata.inputpathB{1}, indata.filesB{1}));
-end
-
-%}
-
 
 % 1) need to find matching pairs of files
 
@@ -149,38 +98,298 @@ for n = 1:bbnCount
 	end
 	
 end
-	
+
+%--------------------------------------------------------------------------
+%--------------------------------------------------------------------------
+%--------------------------------------------------------------------------
+% Loop through file pairs
+%--------------------------------------------------------------------------
+%--------------------------------------------------------------------------
+%--------------------------------------------------------------------------
+Data = cell(1, match_index);
+
 for fIndx = 1:match_index
 	%------------------------------------------------------------------------
 	% Load Data files
 	%------------------------------------------------------------------------
-	BBN = load(fullfile(inpath, bbnFiles{bbnlfhMatch{fIndx, 1}}), 'D', 'Stimulus', 'Background');
-	LFH = load(fullfile(inpath, lfhFiles{bbnlfhMatch{fIndx, 2}}), 'D', 'Stimulus', 'Background');
-end
+	bbnfile = bbnFiles{bbnlfhMatch{fIndx, 1}};
+	lfhfile = lfhFiles{bbnlfhMatch{fIndx, 2}};
+	BBN = load(fullfile(inpath, bbnfile), 'D', 'Stimulus', 'Background');
+	LFH = load(fullfile(inpath, lfhfile), 'D', 'Stimulus', 'Background');
+
+	fprintf('%d\n', fIndx);
+	fprintf('\t%s\n',	BBN.D.Info.file);
+	fprintf('\t%s\n\n',	LFH.D.Info.file);
+	
+	%------------------------------------------------------------------------
+	% make sure # of units match
+	%------------------------------------------------------------------------
+	if BBN.D.Info.Nunits ~= LFH.D.Info.Nunits
+		warning('%s: # Units mismatch!!!!!!!!!!!\n', mfilename)
+		fprintf('\tBBN file has %d\tunits\n', BBN.D.Info.Nunits);
+		fprintf('\tLFH file has %d\tunits\n\n', LFH.D.Info.Nunits);
+		
+		blist = BBN.D.Info.UnitList;
+		fprintf('\tBBN Unit Info:\n')
+		fprintf('\t\tUnit\t\tProbe\t\tCluster\n')
+		for p = 1:BBN.D.Info.Nunits
+			fprintf('\t\t%d\t\t\t%d\t\t\t%d\n', blist(p, 3), blist(p, 1), blist(p, 2) );
+		end
+		
+		llist = LFH.D.Info.UnitList;
+		fprintf('\tLFH Unit Info:\n')
+		fprintf('\t\tUnit\t\tProbe\t\tCluster\n')
+		for p = 1:LFH.D.Info.Nunits
+			fprintf('\t\t%d\t\t\t%d\t\t\t%d\n', llist(p, 3), llist(p, 1), llist(p, 2) );
+		end
+		
+		% if mismatch # of units, find units that are common to both
+		% i.e., same probe and cluster #
+		% store this list in UnitList which is a n X 3 matrix with
+		%  [ Probe#		Cluster#	] as columns
+		% and store unit numbers in UnitIndex[BBN.D.Info.UnitList(:, 3) LFH.D.Info.UnitList(:, 3)]
+		if BBN.D.Info.Nunits > LFH.D.Info.Nunits
+			UnitList = zeros(LFH.D.Info.Nunits, 2);
+			UnitIndex = UnitList;
+			u = 0;
+			for p = 1:BBN.D.Info.Nunits
+				lFlag = 0;
+				for l = 1:LFH.D.Info.Nunits
+					if all(blist(p, 1:2) == llist(l, 1:2))
+						lFlag = l;
+					end
+				end
+				
+				if lFlag
+					u = u + 1;
+					UnitList(u, :) = blist(p, 1:2);
+					UnitIndex(u, :) = [p lFlag];
+				end
+			end
+		else
+			UnitList = zeros(BBN.D.Info.Nunits, 2);
+			UnitIndex = UnitList;
+			u = 0;
+			for p = 1:LFH.D.Info.Nunits
+				bFlag = 0;
+				for l = 1:BBN.D.Info.Nunits
+					if all(llist(p, 1:2) == blist(l, 1:2))
+						bFlag = l;
+					end
+				end
+				
+				if bFlag
+					u = u + 1;
+					UnitList(u, :) = llist(p, 1:2);
+					UnitIndex(u, :) = [bFlag p];
+				end
+			end
+		end
+		
+		Nunits = length(UnitList(:, 1));
+	else
+		% units match so set UnitList to one of the lists from the 
+		% D structures (for no particular reason, BBN is used)
+		Nunits = BBN.D.Info.Nunits;
+		UnitList = BBN.D.Info.UnitList(:, 1:2);
+		UnitIndex = [BBN.D.Info.UnitList(:, 3) LFH.D.Info.UnitList(:, 3)];
+	end
+	
+	%--------------------------------------------------------------------------
+	% determine number of Attenuation levels by looking at the Stimulus.Var
+	% information in each condition's data structure
+	%--------------------------------------------------------------------------
+	% check number of attenuation values
+	nVarA = length(BBN.Stimulus.Var);
+	attenindex = 0;
+	for n = 1:nVarA
+		if strcmp(BBN.Stimulus.Var(n).name, 'AttenuationR')
+			attenindex = n;
+		end
+	end
+	if attenindex
+		attenValsA = BBN.Stimulus.Var(attenindex).values;
+	else
+		error('%s: attenuation not found in Var list for file %s', mfilename, bbnfile);
+	end
+	NattenA = length(attenValsA);
+	
+	nVarB = length(LFH.Stimulus.Var);
+	attenindex = 0;
+	for n = 1:nVarB
+		if strcmp(LFH.Stimulus.Var(n).name, 'AttenuationR')
+			attenindex = n;
+		end
+	end
+	if attenindex
+		attenValsB = LFH.Stimulus.Var(attenindex).values;
+	else
+		error('%s: attenuation not found in Var list for file %s', mfilename, lfhfile);
+	end
+	NattenB = length(attenValsB);
+
+	% find minimum common attenuation value
+	ccount = 0;
+	commonAtten = [];
+	for n = 1:NattenA
+		cind = find(attenValsA(n) == attenValsB);
+		if ~isempty(cind)
+			ccount = ccount + 1;
+			commonAtten(ccount) = attenValsA(n);
+		end
+	end
+	if ccount
+		minCommonAtten = min(commonAtten);
+		minCommonAttenIndices = ...
+			[find(attenValsA == minCommonAtten) find(attenValsB == minCommonAtten)];
+	else
+		warning('%s: no common attenuation values in files %s and %s', mfilename, bbnfile, lfhfile);
+	end
+
+	%------------------------------------------------------------------------
+	% List of units to analyze
+	%------------------------------------------------------------------------
+	fprintf('\nCommon units found: %d\n', Nunits);
+	fprintf('\t\tProbe\t\tCluster\n')
+	for p = 1:Nunits
+		fprintf('\t\t\t%d\t\t\t%d\n', UnitList(p, 1), UnitList(p, 2));
+	end
+	fprintf('Using Attenuation %d dB\n', minCommonAtten);
+
+	
+	%--------------------------------------------------------------------------
+	% construct data arrays for analysis
+	%--------------------------------------------------------------------------
+	% use buildSpikes function to build the spikes arrays
+	%--------------------------------------------------------------------------
+	BBN.Spikes = buildSpikes(BBN.Stimulus);
+	LFH.Spikes = buildSpikes(LFH.Stimulus);
+
+	%--------------------------------------------------------------------------
+	% determine number of trials (use second atten value to eliminate extra
+	% trial at end)
+	%--------------------------------------------------------------------------
+	BBN.ntrials = length(BBN.Spikes{1, 1, minCommonAttenIndices(1)});
+	LFH.ntrials = length(LFH.Spikes{1, 1, minCommonAttenIndices(2)});
+	
+	%--------------------------------------------------------------------------
+	%--------------------------------------------------------------------------
+	% loop through units
+	%--------------------------------------------------------------------------
+	%--------------------------------------------------------------------------
+	% clear UnitData variable
+	clear UnitData;
+
+	% initialize the unitIndex counter - this will be used to index the analyzed
+	% data output in MUdata
+	dIndex = 0;
+
+	% loop through the units to compare for this pair of recordings (files)
+	for u = 1:Nunits
+		% increment counter
+		dIndex = dIndex + 1;
+
+		unitNumber = UnitIndex(u, :);
+		
+		% store current unit information in UnitData structure
+		UnitData(u).UnitNumber = unitNumber;
+		UnitData(u).UnitInfo(1) = BBN.D.Info.UnitInfo(unitNumber(1));
+		UnitData(u).UnitInfo(2) = LFH.D.Info.UnitInfo(unitNumber(2));
+		UnitData(u).UnitList = UnitList(u, :);
+
+		% get all spikes for current unit and attenuation, condition A
+		UnitData(u).spikes{1} = BBN.Spikes{unitNumber(1), 1, minCommonAttenIndices(1)};
+		UnitData(u).spikes{2} = LFH.Spikes{unitNumber(2), 1, minCommonAttenIndices(2)};
+
+		% Assign spike counts to the (surprise) SpikeCounts array
+		% assuming that both conditions have same number of trials... 
+		% pre allocate SpikeCounts matrix
+		NetSpikeCounts{1} = zeros(1, BBN.ntrials);
+		NetSpikeCounts{2} = zeros(1, LFH.ntrials);
+		for trial = 1:BBN.ntrials
+			NetSpikeCounts{1}(trial) = length(UnitData(u).spikes{1}{trial});
+		end
+		for trial = 1:LFH.ntrials
+			NetSpikeCounts{2}(trial) = length(UnitData(u).spikes{2}{trial});
+		end
+
+		% store in overall data structure
+		UnitData(u).NetCounts = NetSpikeCounts;
+
+		%------------------------------------------------------------------------
+		% Count number of spikes in spikeCountWindow{}
+		%------------------------------------------------------------------------
+		for trial = 1:BBN.ntrials
+			for win = 1:Nwin
+				spikewin = spikeCountWindow{win};
+				% find spikes that are within the current window
+				validSpikes = (spikewin(1) < UnitData(u).spikes{1}{trial}) & ...
+										(UnitData(u).spikes{1}{trial} < spikewin(2));
+
+				% count them and store in count matrix
+				UnitData(u).counts{1}(win, trial) = sum(validSpikes);
+			end
+		end
+		
+		for trial = 1:LFH.ntrials
+			for win = 1:Nwin
+				spikewin = spikeCountWindow{win};
+				% find spikes that are within the current window
+				validSpikes = (spikewin(1) < UnitData(u).spikes{2}{trial}) & ...
+										(UnitData(u).spikes{2}{trial} < spikewin(2));
+
+				% count them and store in count matrix
+				UnitData(u).counts{2}(win, trial) = sum(validSpikes);
+			end
+		end
+
+		%------------------------------------------------------------------------
+		% get background spikes
+		%------------------------------------------------------------------------
+		UnitData(u).BG_timestamps{1} = BBN.Background.Spiketimes{unitNumber(1)};
+		UnitData(u).BG_count(1) = length(BBN.Background.Spiketimes{unitNumber(1)});
+		UnitData(u).BG_timestamps{2} = LFH.Background.Spiketimes{unitNumber(2)};
+		UnitData(u).BG_count(2) = length(LFH.Background.Spiketimes{unitNumber(2)});
+
+	end	% END OF u LOOP
+
+	%--------------------------------------------------------------------------
+	%--------------------------------------------------------------------------
+	% process data
+	%--------------------------------------------------------------------------
+	%--------------------------------------------------------------------------
+	for f = 1:2
+		for u = 1:Nunits
+			UnitData(u).Net_mean(f) = mean(UnitData(u).NetCounts{f});
+			UnitData(u).Net_std(f) = std(UnitData(u).NetCounts{f});
+
+			for w = 1:length(spikeCountWindow)
+				UnitData(u).Count_mean{f}(w) = mean(UnitData(u).counts{f}(w, :));
+				UnitData(u).Count_std{f}(w) = std(UnitData(u).counts{f}(w, :));
+			end
+
+		end
+	end
+	
+	
+	%--------------------------------------------------------------------------
+	%--------------------------------------------------------------------------
+	% save data for this set of files
+	%--------------------------------------------------------------------------
+	%--------------------------------------------------------------------------
+	clear tmp
+	tmp.UnitData = UnitData;
+	tmp.BBNinfo = BBN.D.Info;
+	tmp.LFHinfo = LFH.D.Info;
+	Data{fIndx} = tmp;
+	clear tmp;
+	
+end	%%%%%% END OF FILE LOOP
 
 return
 
-%------------------------------------------------------------------------
-% List of units to analyze
-%------------------------------------------------------------------------
-disp(sprintf('File %s:\t\t %d units found', indata.filename{1}, D.Info.Nunits))
 
 
-% type code for units:
-%	
-% 	Value		String
-% 	 1			 junk
-% 	 2			 messy
-% 	 3			 multi
-% 	 4			 sorted
-%	 5			 unclassified
-type_strings = { ...
-	'junk'			, ...
-	'messy'			, ...
-	'multi'			, ...
-	'sorted'			, ...
-	'unclassified'	 ...
-};
 
 %--------------------------------------------------------------------------
 %--------------------------------------------------------------------------
@@ -189,178 +398,7 @@ type_strings = { ...
 %--------------------------------------------------------------------------
 %--------------------------------------------------------------------------
 %--------------------------------------------------------------------------
-	
-Nunits = D.Info.Nunits;
-	
-%--------------------------------------------------------------------------
-% determine number of Attenuation levels by looking at the Stimulus.Var
-% information in each condition's data structure
-%--------------------------------------------------------------------------
 
-% check number of attenuation values
-nVar = length(Stimulus.Var);
-attenindex = 0;
-for n = 1:nVar
-	if strcmp(Stimulus.Var(n).name, 'AttenuationR')
-		attenindex = n;
-	end
-end
-if attenindex
-	indata.attenVals = Stimulus.Var(attenindex).values;
-else
-	error('%s: attenuation not found in Var list for file %s', mfilename, indata.filename{1});
-end
-Natten = length(indata.attenVals);
-	
-%--------------------------------------------------------------------------
-% construct data arrays for mutual information analysis
-%--------------------------------------------------------------------------
-% use buildSpikes function to build the spikes arrays
-%--------------------------------------------------------------------------
-Spikes = buildSpikes(Stimulus);
-	
-%--------------------------------------------------------------------------
-% determine number of trials (use second atten value to eliminate extra
-% trial at end)
-%--------------------------------------------------------------------------
-for n = 1:Natten
-	indata.ntrials(n) = length(Spikes{1, 1, n});
-end
-
-NtrialList = indata.ntrials;
-	
-
-%--------------------------------------------------------------------------
-%--------------------------------------------------------------------------
-% loop through units
-%--------------------------------------------------------------------------
-%--------------------------------------------------------------------------
-% clear UnitData variable
-clear UnitData;
-	
-% initialize the unitIndex counter - this will be used to index the analyzed
-% data output in MUdata
-unitIndex = 0;
-
-% loop through the units to compare for this pair of recordings (files)
-for unitNumber = 1:Nunits
-	% increment counter
-	unitIndex = unitIndex + 1;
-		
-	% store current unit information in UnitData structure
-	UnitData(unitIndex).UnitNumber = unitNumber;
-	UnitData(unitIndex).UnitInfo = D.Info.UnitInfo(unitNumber);
-	
-	%--------------------------------------------------------------------------
-	%--------------------------------------------------------------------------
-	% Loop through attenuation values
-	%--------------------------------------------------------------------------
-	%--------------------------------------------------------------------------
-	for attIndex = 1:Natten
-		disp(sprintf('...Atten = %d dB', indata.attenVals(attIndex)))
-			
-		% get all spikes for current unit and attenuation, condition A
-		unitresp = Spikes{unitNumber, 1, attIndex};
-		UnitData(unitIndex).unitresp{attIndex} = unitresp;
-		
-		% Assign spike counts to the (surprise) SpikeCounts array
-		% assuming that both conditions have same number of trials... 
-	 	% pre allocate SpikeCounts matrix
-	 	NetSpikeCounts = zeros(1, NtrialList(attIndex));
-		for trial = 1:NtrialList(attIndex)
-			NetSpikeCounts(1, trial) = length(unitresp{trial});
-		end
-			
-		% store in overall data structure
-		UnitData(unitIndex).NetSpikeCounts{attIndex} = NetSpikeCounts;
-
-		%------------------------------------------------------------------------
-		%------------------------------------------------------------------------
-		% Count number of spikes in spikeCountWindow{}
-		%------------------------------------------------------------------------
-		%------------------------------------------------------------------------
-		for trial = 1:NtrialList(attIndex)
-			for win = 1:Nwin
-				spikewin = spikeCountWindow{win};
-				% find spikes that are within the current window
-				validSpikes = (spikewin(1) < unitresp{trial}) & ...
-									(unitresp{trial} < spikewin(2));
-									
-				% count them and store in count matrix
-				UnitData(unitIndex).counts{win}(attIndex, trial) = sum(validSpikes);
-			end
-		end
-						
-	end		% END OF attenIndex LOOP
-	
-	
-	%------------------------------------------------------------------------
-	% get background spikes
-	%------------------------------------------------------------------------
-	
-	UnitData(unitIndex).BG_timestamps = Background.Spiketimes{unitIndex};
-	UnitData(unitIndex).BG_count = length(Background.Spiketimes{unitIndex});
-	
-end		% END OF unitIndex LOOP
-
-
-
-%--------------------------------------------------------------------------
-%--------------------------------------------------------------------------
-%--------------------------------------------------------------------------
-% process data
-%--------------------------------------------------------------------------
-%--------------------------------------------------------------------------
-%--------------------------------------------------------------------------
-%{
-for indexF = 1:Nfiles
-	UnitData = UnitDataList{indexF};
-
-	for u = 1:length(indata.units_to_compare{indexF})
-
-		for a = 1:Natten
-
-			% loop through the different spike rate windows
-			for w = 1:length(spikeCountWindow)
-				% get mean and stddeviation of spike counts
-				UnitData(u).meanCountsA{w, a} = mean(UnitData(u).countsA{w}(a, :));
-				UnitData(u).stddevCountsA{w, a} = std(UnitData(u).countsA{w}(a, :));
-
-				UnitData(u).meanCountsB{w, a} = mean(UnitData(u).countsB{w}(a, :));
-				UnitData(u).stddevCountsB{w, a} = std(UnitData(u).countsB{w}(a, :));
-			end
-			
-			% find peak information
-			[maxval maxindex] = max(UnitData(u).I_sliding{a});
-			UnitData(u).peakMI(a) = maxval;
-			UnitData(u).peakMI_time(a) = maxindex * windowDuration;
-			
-		end
-		
-		% find peak MI across all attenuation values
-		[maxval maxindex] = max(UnitData(u).peakMI);
-		UnitData(u).globalPeakMI = maxval;
-		UnitData(u).globalPeakMI_Time = UnitData(u).peakMI_time(maxindex);
-		UnitData(u).globalPeakMI_Atten = indata.attenVals{indexF}(maxindex);
-	end
-	
-	MIData{indexF} = UnitData;
-end
-%}
-
-for u = 1:Nunits
-	for a = 1:Natten
-		UnitData(u).Net_mean(a) = mean(UnitData(u).NetSpikeCounts{a});
-		UnitData(u).Net_std(a) = std(UnitData(u).NetSpikeCounts{a});
-		
-		
-		for w = 1:length(spikeCountWindow)
-			UnitData(u).Count_mean{w, a} = mean(UnitData(u).counts{w}(a, :));
-			UnitData(u).Count_std{w, a} = std(UnitData(u).counts{w}(a, :));
-		end
-		
-	end
-end
 
 %--------------------------------------------------------------------------
 %--------------------------------------------------------------------------
@@ -368,189 +406,11 @@ end
 %--------------------------------------------------------------------------
 %--------------------------------------------------------------------------
 
-%----------------------------------------------------------------
-% Write all data to MutInf mat file and MI data to _MI.txt file
-%----------------------------------------------------------------
-%{
-for indexF = 1:Nfiles
-	attenVals = indata.attenVals{indexF};
-	Natten = indata.Natten{indexF};
-	
-	endA = strfind(indata.filesA{indexF}, 'sorted') - 2;
-	endB = strfind(indata.filesB{indexF}, 'sorted') - 2;
-	
-	outname = [indata.filesA{indexF}(1:endA) '-' indata.filesB{indexF}(1:endB) '_MI.txt'];
-	
-	matfilename = [indata.filesA{indexF}(1:endA) '-' indata.filesB{indexF}(1:endB) '_MutInf.mat'];
-	disp(['Writing all data to file ' matfilename '...']);
-	save(matfilename, 'MIData', '-MAT')
-	disp('...done')
-	
-	disp(['Exporting MI data to text file ' outname '...']);
-	fp = fopen(outname, 'w');
-	
-	% write headers
-	fprintf(fp, 'FileA\t');
-	fprintf(fp, 'FileB\t');
-	fprintf(fp, 'unitNumber\t');
-	fprintf(fp, 'unitType\t');
-	fprintf(fp, 'unitTypeString\t');
-	% I_global for all attenuation values
-	for a = 1:Natten
-		astr = sprintf('I_global(%d dB)', attenVals(a));
-		fprintf(fp, '%s\t', astr);
-	end
-	% I_sh for all attenuation values
-	for a = 1:Natten
-		astr = sprintf('I_sh(%d dB)', attenVals(a));
-		fprintf(fp, '%s\t', astr);
-	end
-	% peakMI for all attenuation values
-	for a = 1:Natten
-		astr = sprintf('peakMI(%d dB)', attenVals(a));
-		fprintf(fp, '%s\t', astr);
-	end
-	% peakMI_sh for all attenuation values
-	for a = 1:Natten
-		astr = sprintf('peakMI_time(%d dB)', attenVals(a));
-		fprintf(fp, '%s\t', astr);
-	end
-	% terminate header line
-	fprintf(fp, '\n');
-	
-	% write data for all units
-	UnitData = MIData{indexF};
-	% loop through units
-	for u = 1:length(UnitData)
-		Utmp = UnitData(u);
-		fprintf(fp, '%s\t', indata.filesA{indexF});
-		fprintf(fp, '%s\t', indata.filesB{indexF});
-		fprintf(fp, '%d\t', Utmp.unitNumber);
-		fprintf(fp, '%d\t', Utmp.unitType);
-		fprintf(fp, '%s\t', Utmp.unitTypeString);
-		% I_global for all attenuations
-		for a = 1:Natten
-			fprintf(fp, '%f\t', Utmp.I_global(a));
-		end
-		% I_sh for all attenuation values
-		for a = 1:Natten
-			fprintf(fp, '%f\t', Utmp.Ish_global(a));
-		end
-		% peakMI for all attenuations
-		for a = 1:Natten
-			fprintf(fp, '%f\t', Utmp.peakMI(a));
-		end
-		% peakMI time for all attenuations
-		for a = 1:Natten
-			fprintf(fp, '%f\t', Utmp.peakMI_time(a));
-		end
-		% end of line
-		fprintf(fp, '\n');
-	end		% END OF u LOOP
-
-
-	% close file
-	fclose(fp);
-	disp('...done')
-
-end		% END of indexF LOOP
-
-%}
-
 %--------------------------------------------------------------------------
 %--------------------------------------------------------------------------
 % write to rate file
 %--------------------------------------------------------------------------
 %--------------------------------------------------------------------------
-%{
-for indexF = 1:Nfiles
-	UnitData = MIData{indexF};
-
-	attenVals = indata.attenVals{indexF};
-	Natten = indata.Natten{indexF};
-	
-	endA = strfind(indata.filesA{indexF}, 'sorted') - 2;
-	endB = strfind(indata.filesB{indexF}, 'sorted') - 2;
-	
-	outname = [indata.filesA{indexF}(1:endA) '-' indata.filesB{indexF}(1:endB) '_RATE.txt'];
-	disp(['Exporting SpikeCount data to text file ' outname '...'])
-	fp = fopen(outname, 'w');
-	
-	% write headers
-	fprintf(fp, 'FileA\t');
-	fprintf(fp, 'FileB\t');
-	fprintf(fp, 'unitNumber\t');
-	fprintf(fp, 'unitType\t');
-	fprintf(fp, 'unitTypeString\t');
-	
-	% loop through spike count windows
-	for w = 1:length(spikeCountWindow)
-		% meanCountsA for all attenuation values
-		for a = 1:Natten
-			astr = sprintf('meanCountsA(%d db %d-%d ms)', ...
-									attenVals(a), spikeCountWindow{w}(1), spikeCountWindow{w}(2));
-			fprintf(fp, '%s\t', astr);
-		end
-		% stddevCountsA for all attenuation values
-		for a = 1:Natten
-			astr = sprintf('stddevCountsA(%d db %d-%d ms)', ...
-									attenVals(a), spikeCountWindow{w}(1), spikeCountWindow{w}(2));
-			fprintf(fp, '%s\t', astr);
-		end
-		% meanCountsB for all attenuation values
-		for a = 1:Natten
-			astr = sprintf('meanCountsB(%d db %d-%d ms)', ...
-									attenVals(a), spikeCountWindow{w}(1), spikeCountWindow{w}(2));
-			fprintf(fp, '%s\t', astr);
-		end
-		% stddevCountsB for all attenuation values
-		for a = 1:Natten
-			astr = sprintf('stddevCountsB(%d db %d-%d ms)', ...
-									attenVals(a), spikeCountWindow{w}(1), spikeCountWindow{w}(2));
-			fprintf(fp, '%s\t', astr);
-		end
-	end
-	% end of header line
-	fprintf(fp, '\n');
-	
-	% write data
-	for u = 1:length(UnitData)
-		Utmp = UnitData(u);
-		fprintf(fp, '%s\t', indata.filesA{indexF});
-		fprintf(fp, '%s\t', indata.filesB{indexF});
-		fprintf(fp, '%d\t', Utmp.unitNumber);
-		fprintf(fp, '%d\t', Utmp.unitType);
-		fprintf(fp, '%s\t', Utmp.unitTypeString);
-		
-		% loop through spike count windows
-		for w = 1:length(spikeCountWindow)
-
-			for a = 1:Natten
-				fprintf(fp, '%f\t', Utmp.meanCountsA{w, a});
-			end
-
-			for a = 1:Natten
-				fprintf(fp, '%f\t', Utmp.stddevCountsA{w, a});
-			end
-
-			for a = 1:Natten
-				fprintf(fp, '%f\t', Utmp.meanCountsB{w, a});
-			end
-
-			for a = 1:Natten
-				fprintf(fp, '%f\t', Utmp.stddevCountsB{w, a});
-			end
-		end
-		% end of line
-		fprintf(fp, '\n');
-	end
-	fclose(fp);
-	disp('...done')
-end		%END OF FILE LOOP
-
-%}
-
-
 fp = fopen('tmpout.csv', 'w');
 
 fprintf(fp, 'SpikeCountWindowLength,%f,msec,\n', RESPONSEWINDOW_MS);
@@ -604,56 +464,4 @@ if fp ~= 1
 	fclose(fp);
 end
 
-%----------------------------------------------------------------
-%----------------------------------------------------------------
-% Write peak MI data
-%----------------------------------------------------------------
-%----------------------------------------------------------------
-%{
-for indexF = 1:Nfiles
-	endA = strfind(indata.filesA{indexF}, 'sorted') - 2;
-	endB = strfind(indata.filesB{indexF}, 'sorted') - 2;
-	
-	outname = [indata.filesA{indexF}(1:endA) '-' indata.filesB{indexF}(1:endB) '_GlobalPeakMI.txt'];
-	
 
-	disp(['Exporting Global Peak MI data to text file ' outname '...']);
-	fp = fopen(outname, 'w');
-	
-	% write headers
-	fprintf(fp, 'FileA\t');
-	fprintf(fp, 'FileB\t');
-	fprintf(fp, 'unitNumber\t');
-	fprintf(fp, 'unitType\t');
-	fprintf(fp, 'unitTypeString\t');
-	% globalPeakMI 
-	fprintf(fp, 'globalPeakMI(bits)\t');
-	% globalPeakMI_Time
-	fprintf(fp, 'globalPeakMI_Time(ms)\t');
-	% globalPeakMI_Attenuation
-	fprintf(fp, 'globalPeakMI_Atten(dB)\t');
-	% end of header line
-	fprintf(fp, '\n');
-	
-	% write data for all units
-	UnitData = MIData{indexF};
-	% loop through units
-	for u = 1:length(UnitData)
-		Utmp = UnitData(u);
-		fprintf(fp, '%s\t', indata.filesA{indexF});
-		fprintf(fp, '%s\t', indata.filesB{indexF});
-		fprintf(fp, '%d\t', Utmp.unitNumber);
-		fprintf(fp, '%d\t', Utmp.unitType);
-		fprintf(fp, '%s\t', Utmp.unitTypeString);
-		fprintf(fp, '%f\t', UnitData(u).globalPeakMI);
-		fprintf(fp, '%f\t', UnitData(u).globalPeakMI_Time);
-		fprintf(fp, '%f\t', UnitData(u).globalPeakMI_Atten);
-		% end of line
-		fprintf(fp, '\n');
-	end		% END OF u LOOP
-	% close file
-	fclose(fp);
-	disp('...done')
-
-end		% END of indexF LOOP
-%}

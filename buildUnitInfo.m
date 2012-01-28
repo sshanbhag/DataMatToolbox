@@ -1,4 +1,4 @@
-function UnitInfo = buildUnitInfo(D, Stimulus)
+function [UnitInfo, UnitList] = buildUnitInfo(D, Stimulus)
 %------------------------------------------------------------------------
 % buildUnitInfo
 %------------------------------------------------------------------------
@@ -66,5 +66,15 @@ if nUnits == 0
 	UnitInfo = [];
 end
 
+if nargout == 2
+	if nUnits == 0
+		UnitList = [];
+	else
+		UnitList = zeros(nUnits, 3);
+		for u = 1:nUnits
+			UnitList(u, :) = cell2mat(struct2cell(UnitInfo(u)));
+		end
+	end
+end
 
 

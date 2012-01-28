@@ -424,7 +424,7 @@ Background = buildBackgroundStruct(D);
 %-----------------------------------------------------------
 % Create UnitInfo struct and add to Info
 %-----------------------------------------------------------
-D.Info.UnitInfo = buildUnitInfo(D, Stimulus);
+[D.Info.UnitInfo, D.Info.UnitList] = buildUnitInfo(D, Stimulus);
 
 %-----------------------------------------------------------
 % save data to mat file
