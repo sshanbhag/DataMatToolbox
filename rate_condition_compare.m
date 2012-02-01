@@ -1,5 +1,5 @@
 %------------------------------------------------------------------------
-% spikerater.m
+% rate_condition_compare.m
 %------------------------------------------------------------------------
 % script for spike rate computation and analysis from DataMat toolbox
 %------------------------------------------------------------------------
@@ -43,17 +43,16 @@ outcsvfile = sprintf('%s_%dms.csv', matrootname, RESPONSEWINDOW_MS);
 %--------------------------------------------------------------------------
 
 
-if exist(fullfile(outpath, outmatfile), 'file')
+if exist(fullfile(outpath, ['dummy' outmatfile]), 'file')
 	load(fullfile(outpath, outmatfile));
 else
 
 	%------------------------------------------------------------------------
 	% List of files and units to analyze
 	%------------------------------------------------------------------------
-
 	% 1) need to find matching pairs of files
-
 	% get all BBN files first, then search for matching LFH files?
+	%------------------------------------------------------------------------
 
 	% get list of files, store info in fstruct struct array
 	fstruct = dir(inpath);
@@ -88,27 +87,68 @@ else
 			lfhFiles{lfhCount} = fname;
 		end
 	end
-
+	
+	%--------------------------------------------------------------------------
+	% now, need to parse filenames in order to extract condition
+	% 		...BBN_..._1.mat  ---> pre odor (clean bedding)
+	% 		...BBN_..._2.mat  ---> mild aversive odor (clean cotton)
+	% 		...BBN_..._3.mat  ---> strong aversive odof (cat odor)
+	%--------------------------------------------------------------------------
+	bbn_conditions = zeros(1, bbnCount);
 	for n = 1:bbnCount
-		bbn_idstr{n} = regexprep(bbnFiles{n}, ('_BBN'), '');
+		% parse file name
+		[~, tmpfname, ext] = fileparts(bbnFiles{n});
+		% condition id value is last character in what remains of name
+		bbn_condition(n) = str2num(tmpfname(end));
 	end
-
+	lfh_conditions = zeros(1, lfhCount);
 	for n = 1:lfhCount
-		lfh_idstr{n} = regexprep(lfhFiles{n}, ('_LFH'), '');
+		% parse file name
+		[~, tmpfname, ext] = fileparts(lfhFiles{n});
+		% condition id value is last character in what remains of name
+		lfh_condition(n) = str2num(tmpfname(end));
 	end
+	
+	%--------------------------------------------------------------------------
+	% to search for files for same experiment but different conditions, 
+	% need to remove _xxx characters and condition id
+	% store these is bbn_idstr and lfh_idstr
+	%--------------------------------------------------------------------------
 
-	match_index = 0;
+	% go through the list of BBN filenames and remove the _BBN chars and 
+	% last 2 characters that correspond to '_<condition>'
 	for n = 1:bbnCount
-		lfhsrch = strcmp(bbn_idstr{n}, lfh_idstr);
-
-		if sum(lfhsrch)
-			match_index = match_index + 1;
-			bbnlfhMatch{match_index, 1} = n;		
-			bbnlfhMatch{match_index, 2} = find(lfhsrch);
-		end
-
+		% parse file name
+		[~, tmpfname, ext] = fileparts(bbnFiles{n});
+		% remove _BBN
+		tmpfname = regexprep(tmpfname, ('_BBN'), '');
+		% remove last 2 chars and store in bbn_idstr cell array
+		bbn_idstr{n} = tmpfname(1:(end - 2));
 	end
-
+	% Repeat this for LFH files
+	for n = 1:lfhCount
+		% parse file name
+		[~, tmpfname, ext] = fileparts(lfhFiles{n});
+		% remove _LFH
+		tmpfname = regexprep(tmpfname, ('_LFH'), '');
+		% remove last 2 chars and store in lfh_idstr cell array
+		lfh_idstr{n} = tmpfname(1:(end - 2));
+	end
+	
+	%--------------------------------------------------------------------------
+	% find matching filenames/conditions
+	%--------------------------------------------------------------------------
+	bbnList = find_condition_instances(bbn_idstr, bbnFiles);
+	lfhList = find_condition_instances(lfh_idstr, lfhFiles);
+	
+	% get the conditions and store in bbnList
+	for n = 1:length(bbnList)
+		bbnList{n, 4} = bbn_condition(bbnList{n, 1});
+	end
+	for n = 1:length(lfhList)
+		lfhList{n, 4} = lfh_condition(lfhList{n, 1});
+	end
+	
 	%--------------------------------------------------------------------------
 	%--------------------------------------------------------------------------
 	%--------------------------------------------------------------------------
@@ -134,8 +174,90 @@ else
 	%--------------------------------------------------------------------------
 
 	% pre-allocate Data cell array to hold data for each pair of BBN and LFH files
-	Data = cell(1, match_index);
+	BBNData = cell(1, length(bbnList));
+	
+	% limit list to analyze to those files for which there are all three
+	% conditions (1, 2, 3)
+	n = 0;
+	for bIndx = 1:length(bbnList)
+		clist = bbnList{bIndx, 4};
+		if (~isempty(clist)) && (length(clist) >= 3)
+			% see if desired conditions are in the list
+			ctest = zeros(3, length(clist));
+			ctest(1, :) = (clist == 1);
+			ctest(2, :) = (clist == 2);
+			ctest(3, :) = (clist == 3);
+			if sum(sum(ctest)) == 3
+				for c = 1:3
+					cind(c) = find(ctest(c, :));
+				end
 
+				% if so, sort and store the file information
+				n = n + 1;
+				validBBNList(n, :) = bbnList(bIndx, :);
+				for c = 1:3
+					for j = 1:4
+						validBBNList{n, j} = validBBNList{n, j}(cind);
+					end
+				end
+			end
+		end
+	end
+	
+	n = 0;
+	for lIndx = 1:length(lfhList)
+		clist = lfhList{lIndx, 4};
+		if (~isempty(clist)) && (length(clist) >= 3)
+			% see if desired conditions are in the list
+			ctest = zeros(3, length(clist));
+			ctest(1, :) = (clist == 1);
+			ctest(2, :) = (clist == 2);
+			ctest(3, :) = (clist == 3);
+			if sum(sum(ctest)) == 3
+				for c = 1:3
+					cind(c) = find(ctest(c, :));
+				end
+
+				% if so, sort and store the file information
+				n = n + 1;
+				validLFHList(n, :) = lfhList(lIndx, :);
+				for c = 1:3
+					for j = 1:4
+						validLFHList{n, j} = validLFHList{n, j}(cind);
+					end
+				end
+			end
+		end
+	end
+
+
+	% loop through file list
+	for fIndx = 1:length(validBBNList)
+		
+		bfiles = validBBNList{fIndx, 3};
+		
+		if isempty(bfiles)
+			error('%s: empty bfiles', mfilename)
+		end
+		
+		% load BBN file data into list
+		BBN = cell(1, length(bfiles));
+		for b = 1:length(bfiles);
+			BBN{b} = load(fullfile(inpath, bfiles{b}), 'D', 'Stimulus', 'Background');
+		end
+
+		match_units;
+		
+return
+	end
+	
+		
+	
+	
+	
+	
+	
+	
 	% loop through file list
 	for fIndx = 1:match_index
 		%------------------------------------------------------------------------
@@ -310,20 +432,6 @@ else
 			fprintf('\t\t\t%d\t\t\t%d\n', UnitList(p, 1), UnitList(p, 2));
 		end
 		fprintf('Using Attenuation %d dB\n', minCommonAtten);
-
-		%--------------------------------------------------------------------------
-		% now, need to parse filenames in order to extract condition
-		% 		...BBN_..._1.mat  ---> pre odor (clean bedding)
-		% 		...BBN_..._2.mat  ---> mild aversive odor (clean cotton)
-		% 		...BBN_..._3.mat  ---> strong aversive odof (cat odor)
-		%--------------------------------------------------------------------------
-
-		for f = 1:length(Data)
-			
-
-		end
-
-
 
 		%--------------------------------------------------------------------------
 		% construct data arrays for analysis

@@ -36,8 +36,6 @@ outmatfile = [matrootname '.mat'];
 outcountmatfile = sprintf('%s_%dms.mat', matrootname, RESPONSEWINDOW_MS);
 outcsvfile = sprintf('%s_%dms.csv', matrootname, RESPONSEWINDOW_MS);
 
-
-
 %--------------------------------------------------------------------------
 % define some plot constants/settings
 %--------------------------------------------------------------------------
@@ -89,10 +87,11 @@ else
 		end
 	end
 
+	% go through the list of BBN filenames and remove the _BBN chars
 	for n = 1:bbnCount
 		bbn_idstr{n} = regexprep(bbnFiles{n}, ('_BBN'), '');
 	end
-
+	% go through the list of LFH filenames and remove the _FLH chars
 	for n = 1:lfhCount
 		lfh_idstr{n} = regexprep(lfhFiles{n}, ('_LFH'), '');
 	end
@@ -150,6 +149,33 @@ else
 		fprintf('\t%s\n',	BBN.D.Info.file);
 		fprintf('\t%s\n\n',	LFH.D.Info.file);
 
+		%--------------------------------------------------------------------------
+		% now, need to parse filenames in order to extract condition
+		% 		...BBN_..._1.mat  ---> pre odor (clean bedding)
+		% 		...BBN_..._2.mat  ---> mild aversive odor (clean cotton)
+		% 		...BBN_..._3.mat  ---> strong aversive odof (cat odor)
+		%--------------------------------------------------------------------------
+		% parse file name
+		[~, tmpfname, ext] = fileparts(BBN.D.Info.file);
+		% remove the _Sheetmaker from the filename
+		tmpfname = regexprep(tmpfname, '(_Sheetmaker)', '');
+		% remove the _spksorted from the filename
+		tmpfname = regexprep(tmpfname, '(_spksorted)', '');
+		% condition id value is last character in what remains of name
+		BBN.D.Info.condition = str2num(tmpfname(end));
+		
+		% parse file name
+		[~, tmpfname, ext] = fileparts(LFH.D.Info.file);
+		% remove the _Sheetmaker from the filename
+		tmpfname = regexprep(tmpfname, '(_Sheetmaker)', '');
+		% remove the _spksorted from the filename
+		tmpfname = regexprep(tmpfname, '(_spksorted)', '');
+		% condition id value is last character in what remains of name
+		LFH.D.Info.condition = str2num(tmpfname(end));
+	
+		fprintf('BBN Condition: %d\nLFH Condition: %d\n', ...
+			BBN.D.Info.condition, LFH.D.Info.condition);		
+		
 		%------------------------------------------------------------------------
 		% make sure # of units match
 		%------------------------------------------------------------------------
@@ -310,20 +336,6 @@ else
 			fprintf('\t\t\t%d\t\t\t%d\n', UnitList(p, 1), UnitList(p, 2));
 		end
 		fprintf('Using Attenuation %d dB\n', minCommonAtten);
-
-		%--------------------------------------------------------------------------
-		% now, need to parse filenames in order to extract condition
-		% 		...BBN_..._1.mat  ---> pre odor (clean bedding)
-		% 		...BBN_..._2.mat  ---> mild aversive odor (clean cotton)
-		% 		...BBN_..._3.mat  ---> strong aversive odof (cat odor)
-		%--------------------------------------------------------------------------
-
-		for f = 1:length(Data)
-			
-
-		end
-
-
 
 		%--------------------------------------------------------------------------
 		% construct data arrays for analysis
