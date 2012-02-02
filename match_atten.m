@@ -1,4 +1,4 @@
-function [M, L] = match_units(Cdata)
+function [M, L] = match_atten(Cdata)
 
 Ncond = length(Cdata);
 
@@ -7,17 +7,15 @@ if Ncond == 1
 	return
 end
 
-nUnitList = zeros(Ncond, 1);
+nAttenList = zeros(Ncond, 1);
 for c = 1:Ncond
-	nUnitList(c) = length(Cdata{c});
+	nAttenList(c) = length(Cdata{c});
 end
 
 % find max, min of # units
-[maxNunits, maxIndex] = max(nUnitList);
+[maxNatten, maxIndex] = max(nAttenList);
 
-% loop through the "base" array that has the most units
-% This will ensure that the max # of possible probe/unit combinations will
-% be tested.
+% loop through the "base" array that has the most atten vals
 
 % get the "base" array, and build list of test arrays
 baseC = Cdata{maxIndex};
@@ -30,20 +28,20 @@ for n = 1:ntest
 	testC{n} = Cdata{testindex(n)};
 end
 
-M = zeros(maxNunits, Ncond);
+M = zeros(maxNatten, Ncond);
 
 % loop through max # units (base array)
-for u = 1:maxNunits
+for u = 1:maxNatten
 	M(u, maxIndex) = u;
 	% loop through test arrays
 	for t = 1:ntest
-		testval = false(nUnitList(testindex(t)), 1);
-		testout = zeros(nUnitList(testindex(t)), 1);
+		testval = false(nAttenList(testindex(t)), 1);
+		testout = zeros(nAttenList(testindex(t)), 1);
 		
 		% loop through units for current test array
-		for r = 1:nUnitList(testindex(t))	
+		for r = 1:nAttenList(testindex(t))	
 			% compare base pair to test pair
-			testval(r) = isequal(baseC(u, 1:2), testC{t}(r, 1:2));
+			testval(r) = isequal(baseC(u), testC{t}(r));
 			%{
 			fprintf('u(%d) vs. t(%d)r(%d) -> ', u, t, r);
 			fprintf('%d %d\t\t', baseC(u,1), baseC(u,2));
@@ -60,7 +58,7 @@ for u = 1:maxNunits
 		
 		matchind = find(testout > 0);
 		if length(matchind) > 1
-			warning('DATAMAT:unitnum', '%s: multiple units found!', mfilename)
+			warning('DATAMAT:unitnum', '%s: multiple identical attenuation values found!', mfilename)
 			M(u, testindex(t)) = testout(matchind(1));
 		elseif ~isempty(matchind)
 			M(u, testindex(t)) = testout(matchind);
@@ -68,9 +66,14 @@ for u = 1:maxNunits
 	end
 end
 
-if nargout > 1
-	allM = all(M, 2);
-	
+allM = all(M, 2);
+
+if ~any(allM)
+	warning('%s: no common attenuation values', mfilename);
+	fprintf('\tUsing lowest value from each file\n')
+	M = ones(1, Ncond);
+	L = ones(1, Ncond);
+else
 	[nr, nc] = size(M);
 	u = 0;
 	for n = 1:nr
@@ -80,7 +83,6 @@ if nargout > 1
 		end
 	end
 end
-
 	
 
 
