@@ -109,7 +109,7 @@ save(fullfile(outpath, 'data.mat'), 'bbnData', 'lfhData', '-MAT')
 % 	load(fullfile(outpath, 'data.mat'), 'bbnData', 'lfhData', '-MAT')
 % end
 
-%--------------------------------------------------------------------------
+%% -------------------------------------------------------------------------
 %--------------------------------------------------------------------------
 % Two issues needed to be dealt with:
 % (1) # of units in each file (from each "test" with a specific stimulus, 
@@ -329,6 +329,19 @@ end
 %--------------------------------------------------------------------------
 % write to .csv file
 %--------------------------------------------------------------------------
+
+bbnR = export_data(fullfile(outpath, 'BBN.csv'), ...
+							bbnData, ...
+							validBBNList, ...
+							spikeCountWindow	);
+						
+						
+lfhR = export_data(fullfile(outpath, 'LFH.csv'), ...
+							lfhData, ...
+							validLFHList, ...
+							spikeCountWindow	);
+						
+
 
 %{
 fp = fopen(fullfile(outpath, 'temp.csv'), 'w');
