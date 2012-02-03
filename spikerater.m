@@ -200,6 +200,7 @@ for fIndx = 1:Nfiles
 	tmp.Info = RAW.D.Info;
 	tmp.Stimulus = RAW.Stimulus;
 	tmp.AttenVals = attenVals;
+	tmp.SpikeWindows = spikewindows;
 
 	Data{fIndx} = tmp;
 	clear tmp;

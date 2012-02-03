@@ -75,7 +75,8 @@ for findex = 1:nfiles
 	% build full filename (with path)
 	fname = fstruct(valid_findex(findex)).name;
 
-	% check if this is one of the types to process
+	% check if this is one of the types to process - 
+	% if so, add to appropriate list
 	if strfind(fname, 'BBN')
 		bbnCount = bbnCount + 1;
 		bbnFiles{bbnCount} = fname;
@@ -85,7 +86,10 @@ for findex = 1:nfiles
 	end
 end
 
-%{
+%% -------------------------------------------------------------------------
+% Now compute spike rate for all files and units
+%--------------------------------------------------------------------------
+
 tmpfiles = cell(bbnCount, 1);
 for n = 1:bbnCount
 	tmpfiles{n} = fullfile(inpath, bbnFiles{n});
@@ -99,12 +103,11 @@ end
 lfhData = spikerater(tmpfiles, spikeCountWindow);
 
 save(fullfile(outpath, 'data.mat'), 'bbnData', 'lfhData', '-MAT')
-%}
 
-if ~exist('bbnData', 'var')
-	fprintf('Loading data file %s\n', fullfile(outpath, 'data.mat'));
-	load(fullfile(outpath, 'data.mat'), 'bbnData', 'lfhData', '-MAT')
-end
+% if ~exist('bbnData', 'var')
+% 	fprintf('Loading data file %s\n', fullfile(outpath, 'data.mat'));
+% 	load(fullfile(outpath, 'data.mat'), 'bbnData', 'lfhData', '-MAT')
+% end
 
 %--------------------------------------------------------------------------
 %--------------------------------------------------------------------------
@@ -327,13 +330,18 @@ end
 % write to .csv file
 %--------------------------------------------------------------------------
 
-fp = 1;
+%{
+fp = fopen(fullfile(outpath, 'temp.csv'), 'w');
 
-% fp = fopen(fullfile(outpath, 'temp.csv'), 'w');
+fprintf(fp, 'N_SpikeCountWindows:,%d\n', Nwin);
+fprintf(fp, 'Start_ms,End_ms,\n')
+for w = 1:Nwin
+	fprintf(fp, '%d,%d,\n', spikeCountWindow{w}(1), spikeCountWindow{w}(2) );
+end
 
-fprintf(fp, 'SpikeCountWindowLength,%f,msec,\n', RESPONSEWINDOW_MS);
 
 fprintf(fp, 'File,');
+fprintf(fp, 'Condition,');
 fprintf(fp, 'UnitNum,');
 fprintf(fp, 'Probe,');
 fprintf(fp, 'Cluster,');
@@ -341,9 +349,13 @@ fprintf(fp, 'BGcount,');
 fprintf(fp, 'Atten_dB,');
 fprintf(fp, 'Net_mean,');
 fprintf(fp, 'Net_sd,');
-fprintf(fp, 'Count_mean,');
-fprintf(fp, 'Count_sd,');
+% loop through spike count windows
+for w = 1:Nwin
+	fprintf(fp, 'Count_mean_w%d,', w);
+	fprintf(fp, 'Count_sd_w%d,', w);
+end
 fprintf(fp, '\n');
+
 
 rindx = 0;
 for f = 1:length(validBBNList)
@@ -352,19 +364,20 @@ for f = 1:length(validBBNList)
 	validUnitIndices = validBBNList{f, 5};
 	validAttenIndices = validBBNList{f, 7};
 	
-	Nconditions = length(validDataIndices)
+	Nconditions = length(validDataIndices);
 	[Nunits, tmp] = size(validUnitIndices);
 
 	for c = 1:Nconditions
-		tmpD = bbnData{validDataIndices(c)}
+		tmpD = bbnData{validDataIndices(c)};
 		attIndex = validAttenIndices(1, c);
 
 		for u = 1:Nunits
 			% columns in validUnitIndices correspond to conditions/files
 			vUI = validUnitIndices(u, c);
 			tmpU = tmpD.UnitData(vUI);
-keyboard	
+
 			fprintf(fp, '%s,', tmpD.Info.file);
+			fprintf(fp, '%d,', tmpD.Info.condition);
 			fprintf(fp, '%d,', tmpU.UnitInfo.unit);
 			fprintf(fp, '%d,', tmpU.UnitInfo.probe);
 			fprintf(fp, '%d,', tmpU.UnitInfo.cluster);
@@ -380,22 +393,28 @@ keyboard
 			end
 			fprintf(fp, '\n');
 		
-		rindx = rindx + 1;
-		col = 1;
-		Rdata{rindx, col} = tmpD.BBNinfo.file;	col = col + 1;
-		Rdata{rindx, col} = tmpU.UnitInfo.unit;	col = col + 1;
-		Rdata{rindx, col} = tmpU.UnitInfo.probe;	col = col + 1;
-		Rdata{rindx, col} = tmpU.UnitInfo.cluster;	col = col + 1;
-		Rdata{rindx, col} = tmpU.BG_count;	col = col + 1;
-		Rdata{rindx, col} = tmpD.AttenVals(attIndex);	col = col + 1;
-		Rdata{rindx, col} = tmpU.Net_mean(attIndex);	col = col + 1;
-		Rdata{rindx, col} = tmpU.Net_std(attIndex);	col = col + 1;
-		Rdata{rindx, col} = tmpU.Count_mean{1}(attIndex);	col = col + 1;
-		Rdata{rindx, col} = tmpU.Count_std{1}(attIndex);	col = col + 1;
-	end
-end
-end
+			% store in Rdata cell matrix
+			rindx = rindx + 1;
+			col = 1;
+			Rdata{rindx, col} = tmpD.Info.file;	col = col + 1;
+			Rdata{rindx, col} = tmpD.Info.condition;	col = col + 1;
+			Rdata{rindx, col} = tmpU.UnitInfo.unit;	col = col + 1;
+			Rdata{rindx, col} = tmpU.UnitInfo.probe;	col = col + 1;
+			Rdata{rindx, col} = tmpU.UnitInfo.cluster;	col = col + 1;
+			Rdata{rindx, col} = tmpU.BG_count;	col = col + 1;
+			Rdata{rindx, col} = tmpD.AttenVals(attIndex);	col = col + 1;
+			Rdata{rindx, col} = tmpU.Net_mean(attIndex);	col = col + 1;
+			Rdata{rindx, col} = tmpU.Net_std(attIndex);	col = col + 1;
+			% loop through spike count windows
+			for w = 1:Nwin
+				Rdata{rindx, col} = tmpU.Count_mean{attIndex}(w);	col = col + 1;
+				Rdata{rindx, col} = tmpU.Count_std{attIndex}(w);	col = col + 1;
+			end		% END w LOOP
+		end		% END u LOOP
+	end		% END c LOOP
+end		%END f LOOP
 if fp ~= 1
 	fclose(fp);
 end
 
+%}
