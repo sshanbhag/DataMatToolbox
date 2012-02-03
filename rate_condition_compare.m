@@ -174,10 +174,8 @@ for n = 1:length(lfhList)
 	lfhList{n, 4} = tmp;
 end
 
-% pre-allocate Data cell array to hold data for each pair of BBN and LFH files
-% BBNData = cell(1, length(bbnList));
 
-%--------------------------------------------------------------------------
+%% ------------------------------------------------------------------------
 % limit list to analyze to those files for which there are all three
 % conditions (1, 2, 3)
 %--------------------------------------------------------------------------
@@ -187,6 +185,13 @@ end
 % 	{n, 2}	->	full .mat file name
 % 	{n, 4}	->	condition #
 %--------------------------------------------------------------------------
+
+validBBNList = find_valid_data(bbnData, bbnList);
+
+validLFHList = find_valid_data(lfhData, lfhList);
+
+
+%{
 
 % BBN files
 n = 0;
@@ -241,7 +246,6 @@ for lIndx = 1:length(lfhList)
 		end
 	end
 end
-
 
 
 % loop through file list
@@ -319,8 +323,10 @@ for fIndx = 1:length(validBBNList)
 	validBBNList{fIndx, 8} = m;
 end
 
+%}
 
-%--------------------------------------------------------------------------
+
+%% ------------------------------------------------------------------------
 %--------------------------------------------------------------------------
 % export data
 %--------------------------------------------------------------------------
