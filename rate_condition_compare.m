@@ -172,7 +172,7 @@ for n = 1:length(lfhList)
 end
 
 % pre-allocate Data cell array to hold data for each pair of BBN and LFH files
-BBNData = cell(1, length(bbnList));
+% BBNData = cell(1, length(bbnList));
 
 %--------------------------------------------------------------------------
 % limit list to analyze to those files for which there are all three
@@ -327,9 +327,9 @@ end
 % write to .csv file
 %--------------------------------------------------------------------------
 
-return
+fp = 1;
 
-fp = fopen(fullfile(outpath, 'temp.csv'), 'w');
+% fp = fopen(fullfile(outpath, 'temp.csv'), 'w');
 
 fprintf(fp, 'SpikeCountWindowLength,%f,msec,\n', RESPONSEWINDOW_MS);
 
@@ -350,42 +350,48 @@ for f = 1:length(validBBNList)
 	
 	validDataIndices = validBBNList{f, 1};
 	validUnitIndices = validBBNList{f, 5};
+	validAttenIndices = validBBNList{f, 7};
 	
 	Nconditions = length(validDataIndices)
 	[Nunits, tmp] = size(validUnitIndices);
-	
+
 	for c = 1:Nconditions
-		tmpD =  bbnData{validDataIndices(c)}
-	
+		tmpD = bbnData{validDataIndices(c)}
+		attIndex = validAttenIndices(1, c);
+
 		for u = 1:Nunits
 			% columns in validUnitIndices correspond to conditions/files
 			vUI = validUnitIndices(u, c);
 			tmpU = tmpD.UnitData(vUI);
-
-			fprintf(fp, '%s,', tmpD.BBNinfo.file);
+keyboard	
+			fprintf(fp, '%s,', tmpD.Info.file);
 			fprintf(fp, '%d,', tmpU.UnitInfo.unit);
 			fprintf(fp, '%d,', tmpU.UnitInfo.probe);
 			fprintf(fp, '%d,', tmpU.UnitInfo.cluster);
-			fprintf(fp, '%.4f,', tmpU.BG_count(1));
-			fprintf(fp, '%.4f,', tmpD.minAtten(1));
-			fprintf(fp, '%.4f,', tmpU.Net_mean(1));
-			fprintf(fp, '%.4f,', tmpU.Net_std(1));
-			fprintf(fp, '%.4f,', tmpU.Count_mean{1});
-			fprintf(fp, '%.4f,', tmpU.Count_std{1});
+			fprintf(fp, '%.4f,', tmpU.BG_count);
+			fprintf(fp, '%.4f,', tmpD.AttenVals(attIndex));
+			fprintf(fp, '%.4f,', tmpU.Net_mean(attIndex));
+			fprintf(fp, '%.4f,', tmpU.Net_std(attIndex));
+			
+			% loop through spike count windows
+			for w = 1:Nwin
+				fprintf(fp, '%.4f,', tmpU.Count_mean{attIndex}(w));
+				fprintf(fp, '%.4f,', tmpU.Count_std{attIndex}(w));
+			end
 			fprintf(fp, '\n');
 		
 		rindx = rindx + 1;
-		c = 1;
-		Rdata{rindx, c} = tmpD.BBNinfo.file;	c = c + 1;
-		Rdata{rindx, c} = tmpU.UnitInfo(1).unit;	c = c + 1;
-		Rdata{rindx, c} = tmpU.UnitInfo(1).probe;	c = c + 1;
-		Rdata{rindx, c} = tmpU.UnitInfo(1).cluster;	c = c + 1;
-		Rdata{rindx, c} = tmpU.BG_count(1);	c = c + 1;
-		Rdata{rindx, c} = tmpD.minAtten(1);	c = c + 1;
-		Rdata{rindx, c} = tmpU.Net_mean(1);	c = c + 1;
-		Rdata{rindx, c} = tmpU.Net_std(1);	c = c + 1;
-		Rdata{rindx, c} = tmpU.Count_mean{1};	c = c + 1;
-		Rdata{rindx, c} = tmpU.Count_std{1};	c = c + 1;
+		col = 1;
+		Rdata{rindx, col} = tmpD.BBNinfo.file;	col = col + 1;
+		Rdata{rindx, col} = tmpU.UnitInfo.unit;	col = col + 1;
+		Rdata{rindx, col} = tmpU.UnitInfo.probe;	col = col + 1;
+		Rdata{rindx, col} = tmpU.UnitInfo.cluster;	col = col + 1;
+		Rdata{rindx, col} = tmpU.BG_count;	col = col + 1;
+		Rdata{rindx, col} = tmpD.AttenVals(attIndex);	col = col + 1;
+		Rdata{rindx, col} = tmpU.Net_mean(attIndex);	col = col + 1;
+		Rdata{rindx, col} = tmpU.Net_std(attIndex);	col = col + 1;
+		Rdata{rindx, col} = tmpU.Count_mean{1}(attIndex);	col = col + 1;
+		Rdata{rindx, col} = tmpU.Count_std{1}(attIndex);	col = col + 1;
 	end
 end
 end

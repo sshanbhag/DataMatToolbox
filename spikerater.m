@@ -199,6 +199,7 @@ for fIndx = 1:Nfiles
 	tmp.UnitData = UnitData;
 	tmp.Info = RAW.D.Info;
 	tmp.Stimulus = RAW.Stimulus;
+	tmp.AttenVals = attenVals;
 
 	Data{fIndx} = tmp;
 	clear tmp;
