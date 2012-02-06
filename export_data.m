@@ -1,4 +1,28 @@
-function Rdata = export_data(exFile, exData, exList, spikeWin)
+function [Rdata, Rstruct] = export_data(exFile, exData, exList, spikeWin)
+%--------------------------------------------------------------------------
+% [Rdata, Rstruct] = export_data(exFile, exData, exList, spikeWin)
+%--------------------------------------------------------------------------
+% 
+% Rdata			[length(exList),  9 + 2*length(spikeWin)] cell array
+% 
+% 	column			Data
+% 		1					filename
+% 		2					condition id number
+% 		3					unit #
+% 		4					probe #
+% 		5					cluster #
+% 		6					background spike count
+% 		7					attenuation value
+% 		8					Net spike count mean (over entire sweep)
+% 		9					Nes spike count std. deviation
+% 		
+% 		for each value of spikeWin (spike window) there will be 2
+% 		columns of data:
+% 		
+% 			mean count in spike window
+% 			std. dev. of spike count within spike window
+%--------------------------------------------------------------------------
+
 
 Nwin = length(spikeWin);
 
@@ -89,6 +113,48 @@ if fp ~= 1
 end
 
 
+rindx = 0;
+for f = 1:length(exList)
+	
+	validDataIndices = exList{f, 1};
+	validUnitIndices = exList{f, 5};
+	validAttenIndices = exList{f, 7};
+	
+	Nconditions = length(validDataIndices);
+	[Nunits, tmp] = size(validUnitIndices);
+
+	rindx = rindx + 1;
+	for c = 1:Nconditions
+		tmpD = exData{validDataIndices(c)};
+		attIndex = validAttenIndices(1, c);
+
+		for u = 1:Nunits
+			% columns in validUnitIndices correspond to conditions/files
+			vUI = validUnitIndices(u, c);
+			tmpU = tmpD.UnitData(vUI);
+			
+			if tmpU.UnitInfo.cluster ~= 0
+		
+				% store in Rstruct struct array
+				Rstruct(rindx).file{c} = tmpD.Info.file;
+				Rstruct(rindx).condition(c) = tmpD.Info.condition;
+				Rstruct(rindx).unit(c) = tmpU.UnitInfo.unit;
+				Rstruct(rindx).probe(c) = tmpU.UnitInfo.probe;
+				Rstruct(rindx).cluster(c) = tmpU.UnitInfo.cluster;
+				Rstruct(rindx).BG_count(c) = tmpU.BG_count;
+				Rstruct(rindx).AttenVals(c) = tmpD.AttenVals(attIndex);
+				Rstruct(rindx).Net_mean(c) = tmpU.Net_mean(attIndex);
+				Rstruct(rindx).Net_std(c) = tmpU.Net_std(attIndex);
+				% loop through spike count windows
+				for w = 1:Nwin
+					Rstruct(rindx).Count_mean{c}(w) = tmpU.Count_mean{attIndex}(w);
+					Rstruct(rindx).Count_std{c}(w)= tmpU.Count_std{attIndex}(w);
+				end		% END w LOOP
+			end
+	
+		end		% END u LOOP
+	end		% END c LOOP
+end		%END f LOOP
 
 
 
