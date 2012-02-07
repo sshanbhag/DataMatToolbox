@@ -18,11 +18,22 @@ RESPONSEWINDOW_MS = 100;
 
 % default sound onset time time
 soundOnsetTime = 0;
+
+% spike count windows
 spikeCountWindow{1} = [0 100];
 spikeCountWindow{2} = [0 200];
 spikeCountWindow{3} = [0 300];
-
+spikeCountWindow{4} = [0 50];
+spikeCountWindow{5} = [50 100];
+spikeCountWindow{6} = [100 300];
 Nwin = length(spikeCountWindow);
+
+% background count windows
+bg_spikeCountWindow(1) = 50;
+bg_spikeCountWindow(2) = 100;
+bg_spikeCountWindow(3) = 200;
+bg_spikeCountWindow(4) = 300;
+Nbgwin = length(bg_spikeCountWindow);
 
 %--------------------------------------------------------------------------
 %--------------------------------------------------------------------------
@@ -94,13 +105,13 @@ tmpfiles = cell(bbnCount, 1);
 for n = 1:bbnCount
 	tmpfiles{n} = fullfile(inpath, bbnFiles{n});
 end
-bbnData = spikerater(tmpfiles, spikeCountWindow);
+bbnData = spikerater(tmpfiles, spikeCountWindow, bg_spikeCountWindow);
 
 tmpfiles = cell(lfhCount, 1);
 for n = 1:lfhCount
 	tmpfiles{n} = fullfile(inpath, lfhFiles{n});
 end
-lfhData = spikerater(tmpfiles, spikeCountWindow);
+lfhData = spikerater(tmpfiles, spikeCountWindow, bg_spikeCountWindow);
 
 save(fullfile(outpath, 'data.mat'), 'bbnData', 'lfhData', '-MAT')
 
@@ -199,15 +210,35 @@ validLFHList = find_valid_data(lfhData, lfhList);
 %--------------------------------------------------------------------------
 % write to .csv file
 %--------------------------------------------------------------------------
+excludeList = [ 0 ];
 
-[bbnR, bbnS] = export_data(fullfile(outpath, 'BBN.csv'), ...
+bbnR = export_data(fullfile(outpath, 'BBN.csv'), ...
 							bbnData, ...
 							validBBNList, ...
 							spikeCountWindow	);
-save(fullfile(outpath, 'BBNrate.mat'), 'bbnData', 'bbnList', 'validBBNList', 'bbnR', 'bbnS', '-MAT')
+
+bbnS = export_data_by_condition(fullfile(outpath, 'BBN_bycondition.csv'), ...
+							bbnData, ...
+							validBBNList, ...
+							spikeCountWindow, ...
+							excludeList	);
 						
-[lfhR, lfhS] = export_data(fullfile(outpath, 'LFH.csv'), ...
+save(fullfile(outpath, 'BBNrate.mat'), 'bbnData', 'bbnList', 'validBBNList', ...
+									'bbnR', 'bbnS', ...
+									'spikeCountWindow', 'bg_spikeCountWindow', '-MAT');
+						
+lfhR = export_data(fullfile(outpath, 'LFH.csv'), ...
 							lfhData, ...
 							validLFHList, ...
 							spikeCountWindow	);
-save(fullfile(outpath, 'LFHrate.mat'), 'lfhData', 'lfhList','validLFHList', 'lfhR', 'lfhS', '-MAT')
+
+lfhS = export_data_by_condition(fullfile(outpath, 'LFH_bycondition.csv'), ...
+							lfhData, ...
+							validLFHList, ...
+							spikeCountWindow, ...
+							excludeList	);
+						
+save(fullfile(outpath, 'LFHrate.mat'), 'lfhData', 'lfhList','validLFHList', ...
+									'lfhR', 'lfhS', ...
+									'spikeCountWindow', 'bg_spikeCountWindow', '-MAT');
+
