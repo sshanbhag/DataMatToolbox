@@ -105,13 +105,13 @@ tmpfiles = cell(bbnCount, 1);
 for n = 1:bbnCount
 	tmpfiles{n} = fullfile(inpath, bbnFiles{n});
 end
-bbnData = spikerater(tmpfiles, spikeCountWindow, bg_spikeCountWindow);
+bbnData = spikerater_byfiles(tmpfiles, spikeCountWindow, bg_spikeCountWindow);
 
 tmpfiles = cell(lfhCount, 1);
 for n = 1:lfhCount
 	tmpfiles{n} = fullfile(inpath, lfhFiles{n});
 end
-lfhData = spikerater(tmpfiles, spikeCountWindow, bg_spikeCountWindow);
+lfhData = spikerater_byfiles(tmpfiles, spikeCountWindow, bg_spikeCountWindow);
 
 save(fullfile(outpath, 'data.mat'), 'bbnData', 'lfhData', '-MAT')
 
@@ -195,6 +195,11 @@ end
 % 	{n, 1}	->	file search strings (no _BBN or _LFH or condition value)
 % 	{n, 2}	->	full .mat file name
 % 	{n, 4}	->	condition #
+% 	{n, 5}	-> matches;
+% 	{n, 6}	-> unitM;
+% 	{n, 7}	-> attenuation indices (matching);
+% 	{n, 8}	-> attenuation indices (all)
+% 
 %--------------------------------------------------------------------------
 
 validBBNList = find_valid_data(bbnData, bbnList);

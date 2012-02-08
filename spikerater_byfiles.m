@@ -1,6 +1,6 @@
-function Data = spikerater(infiles, spikewindows, bgspikewindows, bgtime)
+function Data = spikerater_byfiles(infiles, spikewindows, bgspikewindows, bgtime)
 %------------------------------------------------------------------------
-% Data = spikerater(infiles, spikewindows, bgspikewindows, bgtime)
+% Data = spikerater_byfiles(infiles, spikewindows, bgspikewindows, bgtime)
 %------------------------------------------------------------------------
 % script for spike rate computation and analysis from DataMat toolbox
 %------------------------------------------------------------------------
