@@ -7,6 +7,7 @@ for d = 1:Ndata
 	
 	
 	for u = 1:NvalidUnits
+		bbnData{validDataIndices(c)}.UnitData(validUnitIndices(u, c)).UnitList
 		for c = 1:Nconditions
 			clustn(u, c) = bbnData{validDataIndices(c)}.UnitData(validUnitIndices(u, c)).UnitInfo.cluster;
 		end
@@ -14,6 +15,6 @@ for d = 1:Ndata
 	
 	clustn
 	
-	pause(1)
+return
 	
 end
