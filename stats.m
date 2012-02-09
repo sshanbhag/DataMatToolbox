@@ -1,22 +1,69 @@
-%% statistics
+%-------------------------------------------------------------------
+% stats
+%-------------------------------------------------------------------
 
+%% -----------------------------------------------------------------
+%-------------------------------------------------------------------
+% Some Constants
+%-------------------------------------------------------------------
+%-------------------------------------------------------------------
+
+%-------------------------------------------------------------------
+% limit to nonzero clusters?  1 = yes, 0 = no
+%-------------------------------------------------------------------
+NONZERO_LIMIT = 0;
+%-------------------------------------------------------------------
 % mnemonics for conditions
+%-------------------------------------------------------------------
 PRE = 1;
 MILD= 2;
 CAT = 3;
-
-% load data if necessary
-if ~exist('bbnS', 'var')
-	inpath = '/Users/sshanbhag/Work/Data/LFHData/MatFiles/output';
-	load(fullfile(inpath, 'BBNrate.mat'), 'bbnS')
+%-------------------------------------------------------------------
+% colors for different conditions
+%-------------------------------------------------------------------
+tcolors{PRE}	= 'b';
+tcolors{MILD}	= 'g';
+tcolors{CAT}	= 'r';
+%-------------------------------------------------------------------
+% background data parameters
+%-------------------------------------------------------------------
+BGTIME_MS = 5000;
+BGSWEEPTIME_MS = 1000;
+Nbgsweeps = round(BGTIME_MS / BGSWEEPTIME_MS);
+bgwin = cell(Nbgsweeps, 1);
+for b = 1:Nbgsweeps
+	bgwin{b} = [b-1 b] * BGSWEEPTIME_MS;
 end
-if ~exist('lfhS', 'var')
-	inpath = '/Users/sshanbhag/Work/Data/LFHData/MatFiles/output';
-	load(fullfile(inpath, 'LFHrate.mat'), 'lfhS', 'spikeCountWindow', 'bg_spikeCountWindow')
+
+%% -----------------------------------------------------------------
+%-------------------------------------------------------------------
+% Load data if necessary
+%-------------------------------------------------------------------
+%-------------------------------------------------------------------
+inpath = '/Users/sshanbhag/Work/Data/LFHData/MatFiles/output';
+if NONZERO_LIMIT
+	outpath = [inpath '/rasters/nonzero_units'];
+else
+	outpath = [inpath '/rasters/all_units'];
+end
+if ~exist(outpath, 'dir')
+	mkdir(outpath);
 end
 
-% some lengths
+if ~exist('bbnData', 'var')
+	load(fullfile(inpath, 'BBNrate.mat'), 'validBBNList', 'bbnData', ...
+						'spikeCountWindow', 'bg_spikeCountWindow')
+end
+if ~exist('lfhData', 'var')
+	load(fullfile(inpath, 'LFHrate.mat'),  'validLFHList', ...
+						'lfhData', 'spikeCountWindow', 'bg_spikeCountWindow')
+end
+
 Nwin = length(spikeCountWindow);
+Nbgwin = length(bg_spikeCountWindow);
+Nconditions = 3;
+ntrials = zeros(Nconditions, 1);
+tind = cell(Nconditions, 1);
 
 B = matrixify_data(bbnS);
 L = matrixify_data(lfhS);
