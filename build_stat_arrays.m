@@ -70,12 +70,24 @@ Nconditions = length(Clist);
 % create the struct for each condition
 %-----------------------------------------------------------------------------
 for c = 1:Nconditions
-	S{c} = build_struct_bycondition(Sdata, Slist, Clist(c));
+	Sc{c} = build_struct_bycondition(Sdata, Slist, Clist(c));
 end
 
 %-----------------------------------------------------------------------------
 % get spike rates for the window
 %-----------------------------------------------------------------------------
+
+for l = 1:length(Sc{1});
+
+
+
+
+
+end
+	
+
+
+
 
 
 
@@ -108,7 +120,7 @@ end
 %
 % this will be a 9 X 1 X Nitems cell array
 %-----------------------------------------------------------------------------
-Smat = struct2mat(Snet);
+Smat = struct2cell(S);
 
 
 
