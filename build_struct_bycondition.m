@@ -94,7 +94,7 @@ for f = 1:Nlist
 			% increment output struct index
 			sindx = sindx + 1;
 			%-----------------------------------------------------------------
-			% file				original data file name
+			% file				original data file name (minus sorted/sheetmaker)
 			% condition			stimulus condition (odor)
 			% unit				unit # (from loadDWfile...)
 			% probe				probe #
@@ -105,12 +105,20 @@ for f = 1:Nlist
 			% ntrials			# of trials for this stimulus (a.k.a. # sweeps)
 			% spikes				cell array of neural spike times in milliseconds
 			%-----------------------------------------------------------------
-			Sout(sindx).file			= D.Info.file;
+			
+			
+			% parse file name
+			[~, tmpfname, ext] = fileparts(D.Info.file);
+			% remove the _Sheetmaker from the filename
+			tmpfname = regexprep(tmpfname, '(_Sheetmaker)', '');
+			% remove the _spksorted from the filename
+			tmpfname = regexprep(tmpfname, '(_spksorted)', '');
+			Sout(sindx).file			= tmpfname;
 			Sout(sindx).condition	= D.Info.condition;
 			Sout(sindx).unit			= U.UnitInfo.unit;
 			Sout(sindx).probe			= U.UnitInfo.probe;
 			Sout(sindx).cluster		= U.UnitInfo.cluster;
-			Sout(sindx).BG_tstamps	= U.BG_timestamps;
+			Sout(sindx).BGspikes		= U.BG_timestamps;
 			Sout(sindx).atten			= D.AttenVals(attIndex);
 			Sout(sindx).ntrials		= U.ntrials(attIndex);
 			Sout(sindx).spikes		= U.spikes{attIndex}; 

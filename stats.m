@@ -29,11 +29,6 @@ tcolors{CAT}	= 'r';
 %-------------------------------------------------------------------
 BGTIME_MS = 5000;
 BGSWEEPTIME_MS = 1000;
-Nbgsweeps = round(BGTIME_MS / BGSWEEPTIME_MS);
-bgwin = cell(Nbgsweeps, 1);
-for b = 1:Nbgsweeps
-	bgwin{b} = [b-1 b] * BGSWEEPTIME_MS;
-end
 
 %-------------------------------------------------------------------
 % file paths
@@ -59,56 +54,17 @@ if ~exist('lfhData', 'var')
 						'lfhS', 'spikeCountWindow', 'bg_spikeCountWindow')
 end
 
-Nwin = length(spikeCountWindow);
-Nbgwin = length(bg_spikeCountWindow);
-Nconditions = 3;
-ntrials = zeros(Nconditions, 1);
-tind = cell(Nconditions, 1);
+Windows = {	[0 50] ; ...
+				[50 100] ;	...
+				[100 150]	;	...
+				[150 200]	;	...
+			};
+BGWindow = 50;
+Clist = [1 2 3];
 
-build_stat_arrays;
+[Mbbn, Mbbnstruct, Mfields] = build_stat_arrays(bbnData, validBBNList, Clist, Windows, BGTIME_MS, BGSWEEPTIME_MS);
+[Mlfh, Mlfhstruct] = build_stat_arrays(lfhData, validLFHList, Clist, Windows, BGTIME_MS, BGSWEEPTIME_MS);
 
-return
-
-
-B = matrixify_data(bbnS);
-L = matrixify_data(lfhS);
-
-
-%% ANOVA, 1 way for each condition
-
-
-for w = 1:Nwin
-
-	%% BBN 
-	C = [B.Count_mean(:, w,  1) B.Count_mean(:, w,  2) B.Count_mean(:, w,  3)];
-	clabels = {'Pre', 'Mild', 'Cat'};
-	[B.p{w}, B.table{w}, B.stats{w}] = anova1(C, clabels, 'on');
-	ylabel('# spikes in window')
-	title(sprintf('BBN, Window: %d - %d ms', spikeCountWindow{w}(1), spikeCountWindow{w}(2)))
-	figure
-	[c,m,h,nms] = multcompare(B.stats{w})
-	B.multcomp{w} = struct('c', c, 'm', m, 'h', h, 'names', nms);
-	
-	%% LFH
-	C = [L.Count_mean(:, w,  1) L.Count_mean(:, w,  2) L.Count_mean(:, w,  3)];
-	clabels = {'Pre', 'Mild', 'Cat'};
-	[L.p{w}, L.table{w}, L.stats{w}] = anova1(C, clabels, 'on');
-	ylabel('# spikes in window')
-	title(sprintf('LFH, Window: %d - %d ms', spikeCountWindow{w}(1), spikeCountWindow{w}(2)))
-	figure
-	[c,m,h,nms] = multcompare(L.stats{w})
-	L.multcomp{w} = struct('c', c, 'm', m, 'h', h, 'names', nms);
-
-end
-
-
-%% deal with background
-
-
-
-
-
-
-
-
+save(	'statsdata.mat', 'Mbbn', 'Mbbnstruct', 'Mfields', ...
+		'Mlfh', 'Mlfhstruct', 'Windows', 'BGWindow', 'Clist', '-MAT');
 
