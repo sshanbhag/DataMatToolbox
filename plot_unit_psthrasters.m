@@ -1,7 +1,7 @@
 %-------------------------------------------------------------------
-% plot_unit_rasters
+% plot_unit_psthrasters
 %-------------------------------------------------------------------
-% raster data Plots
+% raster and psth data Plots
 
 %% -----------------------------------------------------------------
 %-------------------------------------------------------------------
@@ -12,7 +12,12 @@
 %-------------------------------------------------------------------
 % limit to nonzero clusters?  1 = yes, 0 = no
 %-------------------------------------------------------------------
-NONZERO_LIMIT = 0;
+NONZERO_LIMIT = 1;
+
+%-------------------------------------------------------------------
+% psth binsize
+%-------------------------------------------------------------------
+PSTHBINSIZE_MS = 10;
 %-------------------------------------------------------------------
 % mnemonics for conditions
 %-------------------------------------------------------------------
@@ -43,9 +48,9 @@ end
 %-------------------------------------------------------------------
 inpath = '/Users/sshanbhag/Work/Data/LFHData/MatFiles/output';
 if NONZERO_LIMIT
-	outpath = [inpath '/rasters/nonzero_units'];
+	outpath = [inpath '/plots/nonzero_units'];
 else
-	outpath = [inpath '/rasters/all_units'];
+	outpath = [inpath '/plots/all_units'];
 end
 if ~exist(outpath, 'dir')
 	mkdir(outpath);
@@ -74,7 +79,7 @@ tind = cell(Nconditions, 1);
 Ndata = length(validBBNList);
 
 %-------------------------------------------------------------------
-% plot background rasters
+% plot background data
 %-------------------------------------------------------------------
 for d = 1:Ndata
 	validDataIndices = validBBNList{d, 1};
@@ -98,8 +103,6 @@ for d = 1:Ndata
 	
 	% loop through units
 	for u = 1:Nunits
-		% select proper subplot for this unit
-		subplot(1, Nunits, u)
 		% get the index value for this non-zero unit
 		uIndex = nonZeroUnits(u);
 		
@@ -135,7 +138,17 @@ for d = 1:Ndata
 			end
 			S(tind{c}) = tmpbg;
 		end
-		
+
+		%-------------------------------------------------------------------
+		%-------------------------------------------------------------------
+		% plot raster
+		%-------------------------------------------------------------------
+		%-------------------------------------------------------------------
+		% select proper figure 
+		Hbgraster = figure(1);
+		% select proper subplot for this unit
+		subplot(1, Nunits, u);
+
 		[h, hr] = rasterplot(S, [0 BGSWEEPTIME_MS], '.', 20);
 		
 		% set the colors for the data points
@@ -156,19 +169,63 @@ for d = 1:Ndata
 			set(gca, 'XTickLabel', []);
 			set(gca, 'YTickLabel', []);
 		end
-		title(tstr, 'Interpreter', 'none')
+		title(tstr, 'Interpreter', 'none');
+		
+		%-------------------------------------------------------------------
+		%-------------------------------------------------------------------
+		% plot PSTH
+		%-------------------------------------------------------------------
+		%-------------------------------------------------------------------
+		% select proper figure 
+		Hbgpsth = figure(2);
+		for c = 1:Nconditions
+			% select proper subplot for this unit
+			subplot(Nconditions, Nunits, (c-1)*Nunits + u);
+			[pcounts, pbins] = psth(S(tind{c}), PSTHBINSIZE_MS, BGSWEEPTIME_MS);
+			bar(pbins, pcounts, 1, tcolors{c}, 'EdgeColor', tcolors{c});
+			Hpsth = gcf;
+			xlim([0 BGSWEEPTIME_MS]);
+			if u == 1
+				ylabel(sprintf('Condition %d', c), 'Color', tcolors{c});
+				if c == 1
+					tstr = {	validBBNList{d, 2}{1}, 'BBN - Background', ...
+								sprintf('p%d c%d u%d',	U.UnitInfo.probe, ...
+																U.UnitInfo.cluster, ...
+																U.UnitInfo.unit ...
+											) ...
+								};
+					title(tstr, 'Interpreter', 'none');
+				elseif c == 3
+					xlabel('Time (ms)');
+				end
+			elseif c == 1
+				tstr = {	sprintf('p%d c%d u%d', ...
+											U.UnitInfo.probe, ...
+											U.UnitInfo.cluster, ...
+											U.UnitInfo.unit	) ...
+							};
+				title(tstr, 'Interpreter', 'none');
+				set(gca, 'XTickLabel', []);
+			else
+				set(gca, 'XTickLabel', []);
+			end
+		end
 
 	end	% END uNITS LOOP
 	drawnow
 	
 	% save plot to file
 	outfile = [validBBNList{d, 2}{1} '_BBN_BGraster.fig'];
-	fprintf('Writing plot to file: %s   ... ', outfile);
-	saveas(gcf, fullfile(outpath, outfile), 'fig');
+	fprintf('Writing plots...\n')
+	fprintf('\traster plot to file: %s   ... ', outfile);
+	saveas(Hbgraster, fullfile(outpath, outfile), 'fig');
 	fprintf('... done.\n');
-	
-end	% END dATA LOOP
+	outfile = [validBBNList{d, 2}{1} '_BBN_BGpsth.fig'];
+	fprintf('\tpsth plot to file: %s   ... ', outfile);
+	saveas(Hbgpsth, fullfile(outpath, outfile), 'fig');
+	fprintf('... done.\n');	
 
+end	% END dATA LOOP
 
 %-------------------------------------------------------------------
 % plot rasters for BBN sweeps
@@ -197,7 +254,6 @@ for d = 1:Ndata
 	
 	% loop through all units
 	for u = 1:Nunits
-		subplot(1, Nunits, u)
 		% get index to non-zero unit
 		uIndex = nonZeroUnits(u);
 		
@@ -226,6 +282,17 @@ for d = 1:Ndata
 		end
 		
 		sweepend =  fix(mean(1000*round(1e-6* diff(bbnData{validDataIndices(c)}.Stimulus.Sweepstart))));
+
+		%-------------------------------------------------------------------
+		%-------------------------------------------------------------------
+		% plot raster
+		%-------------------------------------------------------------------
+		%-------------------------------------------------------------------
+		% select proper figure 
+		Hraster = figure(3);
+		% select proper subplot for this unit
+		subplot(1, Nunits, u);
+		
 		[h, hr] = rasterplot(S, [0 sweepend], '.', 20);
 		
 		for c = 1:Nconditions
@@ -247,16 +314,64 @@ for d = 1:Ndata
 		end
 		title(tstr, 'Interpreter', 'none')
 
+		
+		%-------------------------------------------------------------------
+		%-------------------------------------------------------------------
+		% plot PSTH
+		%-------------------------------------------------------------------
+		%-------------------------------------------------------------------
+		% select proper figure 
+		Hpsth = figure(4);
+		for c = 1:Nconditions
+			% select proper subplot for this unit
+			subplot(Nconditions, Nunits, (c-1)*Nunits + u);
+			[pcounts, pbins] = psth(S(tind{c}), PSTHBINSIZE_MS, BGSWEEPTIME_MS);
+			bar(pbins, pcounts, 1, tcolors{c}, 'EdgeColor', tcolors{c});
+			Hpsth = gcf;
+			xlim([0 BGSWEEPTIME_MS]);
+			if u == 1
+				ylabel(sprintf('Condition %d', c), 'Color', tcolors{c});
+				if c == 1
+					tstr = {	validBBNList{d, 2}{1}, 'BBN', ...
+								sprintf('p%d c%d u%d',	U.UnitInfo.probe, ...
+																U.UnitInfo.cluster, ...
+																U.UnitInfo.unit ...
+											) ...
+								};
+					title(tstr, 'Interpreter', 'none');
+				elseif c == 3
+					xlabel('Time (ms)');
+				end
+			elseif c == 1
+				tstr = {	sprintf('p%d c%d u%d', ...
+											U.UnitInfo.probe, ...
+											U.UnitInfo.cluster, ...
+											U.UnitInfo.unit	) ...
+							};
+				title(tstr, 'Interpreter', 'none');
+				set(gca, 'XTickLabel', []);
+			else
+				set(gca, 'XTickLabel', []);
+			end
+		end
+		
+		
 	end	% END uNITS LOOP
 	drawnow
 	
 	% save plot to file
 	outfile = [validBBNList{d, 2}{1} '_BBN_raster.fig'];
-	fprintf('Writing plot to file: %s   ... ', outfile);
-	saveas(gcf, fullfile(outpath, outfile), 'fig');
+	fprintf('Writing plots...\n')
+	fprintf('\traster plot to file: %s   ... ', outfile);
+	saveas(Hraster, fullfile(outpath, outfile), 'fig');
 	fprintf('... done.\n');
+	outfile = [validBBNList{d, 2}{1} '_BBN_psth.fig'];
+	fprintf('\tpsth plot to file: %s   ... ', outfile);
+	saveas(Hpsth, fullfile(outpath, outfile), 'fig');
+	fprintf('... done.\n');	
 	
 end	% END dATA LOOP
+
 
 %-------------------------------------------------------------------
 %-------------------------------------------------------------------
@@ -290,8 +405,6 @@ for d = 1:Ndata
 	
 	% loop through units
 	for u = 1:Nunits
-		% select proper subplot for this unit
-		subplot(1, Nunits, u)
 		% get the index value for this non-zero unit
 		uIndex = nonZeroUnits(u);
 		
@@ -327,7 +440,17 @@ for d = 1:Ndata
 			end
 			S(tind{c}) = tmpbg;
 		end
-		
+
+		%-------------------------------------------------------------------
+		%-------------------------------------------------------------------
+		% plot raster
+		%-------------------------------------------------------------------
+		%-------------------------------------------------------------------
+		% select proper figure 
+		Hbgraster = figure(1);
+		% select proper subplot for this unit
+		subplot(1, Nunits, u);
+
 		[h, hr] = rasterplot(S, [0 BGSWEEPTIME_MS], '.', 20);
 		
 		% set the colors for the data points
@@ -348,16 +471,64 @@ for d = 1:Ndata
 			set(gca, 'XTickLabel', []);
 			set(gca, 'YTickLabel', []);
 		end
-		title(tstr, 'Interpreter', 'none')
+		title(tstr, 'Interpreter', 'none');
+		
+		
+		%-------------------------------------------------------------------
+		%-------------------------------------------------------------------
+		% plot PSTH
+		%-------------------------------------------------------------------
+		%-------------------------------------------------------------------
+		% select proper figure 
+		Hbgpsth = figure(2);
+		for c = 1:Nconditions
+			% select proper subplot for this unit
+			subplot(Nconditions, Nunits, (c-1)*Nunits + u);
+			[pcounts, pbins] = psth(S(tind{c}), PSTHBINSIZE_MS, BGSWEEPTIME_MS);
+			bar(pbins, pcounts, 1, tcolors{c}, 'EdgeColor', tcolors{c});
+			Hpsth = gcf;
+			xlim([0 BGSWEEPTIME_MS]);
+			if u == 1
+				ylabel(sprintf('Condition %d', c), 'Color', tcolors{c});
+				if c == 1
+					tstr = {	validLFHList{d, 2}{1}, 'LFH - Background', ...
+								sprintf('p%d c%d u%d',	U.UnitInfo.probe, ...
+																U.UnitInfo.cluster, ...
+																U.UnitInfo.unit ...
+											) ...
+								};
+					title(tstr, 'Interpreter', 'none');
+				elseif c == 3
+					xlabel('Time (ms)');
+				end
+			elseif c == 1
+				tstr = {	sprintf('p%d c%d u%d', ...
+											U.UnitInfo.probe, ...
+											U.UnitInfo.cluster, ...
+											U.UnitInfo.unit	) ...
+							};
+				title(tstr, 'Interpreter', 'none');
+				set(gca, 'XTickLabel', []);
+			else
+				set(gca, 'XTickLabel', []);
+			end
+		end
+		
 
 	end	% END uNITS LOOP
 	drawnow
 	
 	% save plot to file
 	outfile = [validLFHList{d, 2}{1} '_LFH_BGraster.fig'];
-	fprintf('Writing plot to file: %s   ... ', outfile);
-	saveas(gcf, fullfile(outpath, outfile), 'fig');
+	fprintf('Writing plots...\n')
+	fprintf('\traster plot to file: %s   ... ', outfile);
+	saveas(Hbgraster, fullfile(outpath, outfile), 'fig');
 	fprintf('... done.\n');
+	outfile = [validLFHList{d, 2}{1} '_LFH_BGpsth.fig'];
+	fprintf('\tpsth plot to file: %s   ... ', outfile);
+	saveas(Hbgpsth, fullfile(outpath, outfile), 'fig');
+	fprintf('... done.\n');	
+
 	
 end	% END dATA LOOP
 
@@ -417,6 +588,17 @@ for d = 1:Ndata
 		end
 		
 		sweepend =  fix(mean(1000*round(1e-6* diff(lfhData{validDataIndices(c)}.Stimulus.Sweepstart))));
+
+		%-------------------------------------------------------------------
+		%-------------------------------------------------------------------
+		% plot raster
+		%-------------------------------------------------------------------
+		%-------------------------------------------------------------------
+		% select proper figure 
+		Hraster = figure(3);
+		% select proper subplot for this unit
+		subplot(1, Nunits, u);
+		% plot raster
 		[h, hr] = rasterplot(S, [0 sweepend], '.', 20);
 		
 		for c = 1:Nconditions
@@ -437,15 +619,62 @@ for d = 1:Ndata
 			set(gca, 'YTickLabel', []);
 		end
 		title(tstr, 'Interpreter', 'none')
+		
+		%-------------------------------------------------------------------
+		%-------------------------------------------------------------------
+		% plot PSTH
+		%-------------------------------------------------------------------
+		%-------------------------------------------------------------------
+		% select proper figure 
+		Hpsth = figure(4);
+		for c = 1:Nconditions
+			% select proper subplot for this unit
+			subplot(Nconditions, Nunits, (c-1)*Nunits + u);
+			[pcounts, pbins] = psth(S(tind{c}), PSTHBINSIZE_MS, BGSWEEPTIME_MS);
+			bar(pbins, pcounts, 1, tcolors{c}, 'EdgeColor', tcolors{c});
+			Hpsth = gcf;
+			xlim([0 BGSWEEPTIME_MS]);
+			if u == 1
+				ylabel(sprintf('Condition %d', c), 'Color', tcolors{c});
+				if c == 1
+					tstr = {	validLFHList{d, 2}{1}, 'LFH', ...
+								sprintf('p%d c%d u%d',	U.UnitInfo.probe, ...
+																U.UnitInfo.cluster, ...
+																U.UnitInfo.unit ...
+											) ...
+								};
+					title(tstr, 'Interpreter', 'none');
+				elseif c == 3
+					xlabel('Time (ms)');
+				end
+			elseif c == 1
+				tstr = {	sprintf('p%d c%d u%d', ...
+											U.UnitInfo.probe, ...
+											U.UnitInfo.cluster, ...
+											U.UnitInfo.unit	) ...
+							};
+				title(tstr, 'Interpreter', 'none');
+				set(gca, 'XTickLabel', []);
+			else
+				set(gca, 'XTickLabel', []);
+			end
+		end
 
 	end	% END uNITS LOOP
 	drawnow
 	
+
+	% save plot to file
 	outfile = [validLFHList{d, 2}{1} '_LFH_raster.fig'];
-	fprintf('Writing plot to file: %s   ... ', outfile);
-	saveas(gcf, fullfile(outpath, outfile), 'fig');
+	fprintf('Writing plots...\n')
+	fprintf('\traster plot to file: %s   ... ', outfile);
+	saveas(Hraster, fullfile(outpath, outfile), 'fig');
 	fprintf('... done.\n');
-	
+	outfile = [validLFHList{d, 2}{1} '_LFH_psth.fig'];
+	fprintf('\tpsth plot to file: %s   ... ', outfile);
+	saveas(Hpsth, fullfile(outpath, outfile), 'fig');
+	fprintf('... done.\n');	
+
 end	% END dATA LOOP
 
 
