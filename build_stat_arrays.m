@@ -68,13 +68,7 @@ for w = 1:Nwin
 	Window_size_ms(w) = diff(Window{w});
 end
 
-[BGwin, Nbgwin] = compute_windows(BGTime, BGWindow);
-% 
-% Nbgwin = round(BGTime / BGWindow);
-% BGwin = cell(Nbgwin, 1);
-% for b = 1:Nbgwin
-% 	BGwin{b} = [b-1 b] * BGWindow;
-% end
+[BGwin, Nbgwin] = compute_windows(BGTime, BGWindow)
 
 %-----------------------------------------------------------------------------
 % get # of conditions 
@@ -157,7 +151,7 @@ for c = 1:Nconditions
 	Mout{c} = tmpM;
 end
 
-mfields = fnames;
+Mfields = fnames;
 
 
 

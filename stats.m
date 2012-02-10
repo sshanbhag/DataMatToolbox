@@ -28,7 +28,7 @@ tcolors{CAT}	= 'r';
 % background data parameters
 %-------------------------------------------------------------------
 BGTIME_MS = 5000;
-BGSWEEPTIME_MS = 1000;
+BGSWEEPTIME_MS = 50;
 
 %-------------------------------------------------------------------
 % file paths
@@ -62,8 +62,8 @@ Windows = {	[0 50] ; ...
 BGWindow = 50;
 Clist = [1 2 3];
 
-[Mbbn, Mbbnstruct, Mfields] = build_stat_arrays(bbnData, validBBNList, Clist, Windows, BGTIME_MS, BGSWEEPTIME_MS);
-[Mlfh, Mlfhstruct] = build_stat_arrays(lfhData, validLFHList, Clist, Windows, BGTIME_MS, BGSWEEPTIME_MS);
+[Mbbn, Mbbnstruct, Mfields] = build_stat_arrays(bbnData, validBBNList, Clist, Windows, BGSWEEPTIME_MS, BGTIME_MS);
+[Mlfh, Mlfhstruct] = build_stat_arrays(lfhData, validLFHList, Clist, Windows, BGSWEEPTIME_MS, BGTIME_MS);
 
 save(	'statsdata.mat', 'Mbbn', 'Mbbnstruct', 'Mfields', ...
 		'Mlfh', 'Mlfhstruct', 'Windows', 'BGWindow', 'Clist', '-MAT');
