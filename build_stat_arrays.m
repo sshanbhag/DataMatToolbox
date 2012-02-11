@@ -68,7 +68,7 @@ for w = 1:Nwin
 	Window_size_ms(w) = diff(Window{w});
 end
 
-[BGwin, Nbgwin] = compute_windows(BGTime, BGWindow)
+[BGwin, Nbgwin] = compute_windows(BGTime, BGWindow);
 
 %-----------------------------------------------------------------------------
 % get # of conditions 

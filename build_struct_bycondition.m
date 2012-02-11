@@ -113,6 +113,8 @@ for f = 1:Nlist
 			tmpfname = regexprep(tmpfname, '(_Sheetmaker)', '');
 			% remove the _spksorted from the filename
 			tmpfname = regexprep(tmpfname, '(_spksorted)', '');
+			% remove the _# from the filename
+			tmpfname = tmpfname(1:(end-2));
 			Sout(sindx).file			= tmpfname;
 			Sout(sindx).condition	= D.Info.condition;
 			Sout(sindx).unit			= U.UnitInfo.unit;
