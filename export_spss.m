@@ -1,3 +1,7 @@
+% exports BBN and CSV rate/count data to an SPSS-friendly
+% .csv format
+
+
 % 1		file
 % 2		condition
 % 3		unit

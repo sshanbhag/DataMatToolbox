@@ -68,11 +68,6 @@ Clist = [1 2 3];
 save(	'statsdata.mat', 'Mbbn', 'Mbbnstruct', 'Mfields', ...
 		'Mlfh', 'Mlfhstruct', 'Windows', 'BGWindow', 'Clist', '-MAT');
 
-	
-	
-	
-	
-%
 
 
 
