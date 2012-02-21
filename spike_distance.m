@@ -40,6 +40,8 @@ z = -2;
 % change this value to an appropriate valuse for the data, the hard part is picking
 % an appropriate value for all of the data
 CostVals = [0, 0.001, 0.0025, 0.005, 0.01, 0.025, 0.05, 0.1];
+CostVals = [0:0.001:0.005 0.005:0.005:0.05 0.05:0.01:0.1];
+CostVals = [0:0.001:0.05 0.05:0.01:0.1]
 Ncost = length(CostVals);
 
 % options for metricdist.mex function
@@ -78,6 +80,7 @@ ConditionList = 1:Nconditions
 %------------------------------------------------------------------------
 % loop units
 %------------------------------------------------------------------------
+tic
 for uIndex = 1:Nunits
 	
 	% assign data to M struct for simplicity
@@ -125,6 +128,9 @@ for uIndex = 1:Nunits
 	Dbbn(uIndex).Dclust = Dclust;
 	Dbbn(uIndex).H = H;
 end
+bbntime = toc
+
+pause
 
 
 %------------------------------------------------------------------------
@@ -191,5 +197,6 @@ end
 
 % save to .mat file
 save('spike_distance_output.mat', 'Dbbn', 'Dlfh', 'opts', 'z', '-MAT')
+
 
 
