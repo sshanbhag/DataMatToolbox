@@ -3,7 +3,7 @@
 % create test data
 %------------------------------------------------------------------------
 %------------------------------------------------------------------------
-Ntrials = [4 4 4 8];
+Ntrials = [10 10 10];
 TotalTrials = sum(Ntrials);
 Nconditions = length(Ntrials);
 ConditionList = 1:Nconditions;
@@ -37,8 +37,7 @@ z = -2;
 
 % cost values to test
 CostVals = [0, 0.001, 0.0025, 0.005, 0.01, 0.025, 0.05, 0.1];
-CostVals = [.1 .2 .4 .8];
-CostVals = .1;
+CostVals = [0 0.05 .1];
 Ncost = length(CostVals);
 
 
@@ -200,7 +199,8 @@ end
 spkd_time = toc
 
 % check difference in methods
-sum(sum(sum(Dspike - D)))
+fprintf('D - Dspike:\n')
+disp(sum(sum(sum(Dspike - D))))
 
 %------------------------------------------------------------------------
 %------------------------------------------------------------------------
@@ -274,7 +274,7 @@ for Cindex = 1:Ncost
 												(Ntrials(testCondition) - 1);
 		tmpAve(otherConditions) = tmpSum(otherConditions) ./ ...
 												Ntrials(otherConditions);
-		tmpAve
+
 		%-----------------------------------------------------------------------
 		% undo the exponent adjustment
 		%-----------------------------------------------------------------------
@@ -295,7 +295,7 @@ for Cindex = 1:Ncost
 	fprintf('\tHrand: %f\n', Hrand);
 	fprintf('\tHprob: %f\n', Hprob);
 	fprintf('\tDclust = \n');
-	disp(Dclust);
+	disp(Dclust(:, :, Cindex));
 
 	% store data
 	V.Dclust{Cindex} = Dclust(:, :, Cindex);
@@ -306,8 +306,9 @@ for Cindex = 1:Ncost
 end
 
 
+[dtmp1, htmp1] = metric_cluster(D, CostVals, Categories, z);
 
-
+[dtmp2, htmp2] = metric_cluster(Dspike, CostVals, Categories, z);
 
 % not sure if this cluster routine is viable
 %{
