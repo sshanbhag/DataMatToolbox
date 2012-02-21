@@ -34,25 +34,27 @@ end
 fprintf('File %s, uIndex: %d\n', M(1).file, uIndex);
 fprintf('  Probe %d, Cluster %d\n', M(1).probe, M(1).cluster);
 
-Ntrials = M(1).ntrials;
-Ntrials = 4;
-
 
 CostVals = [0, 0.001, 0.0025, 0.005, 0.01, 0.025, 0.05, 0.1];
 
 CostVals = [0.6];
-opts.shift_cost = 0.001 .* CostVals;
+opts.shift_cost = CostVals;
 opts.metric_family=0;
 
-Times = cell(Ntrials * Nconditions, 1);
-Labels = cell(Ntrials * Nconditions, 1);
-Categories = zeros(Ntrials * Nconditions, 1);
+Ntrials = zeros(Nconditions, 1);
+for c = 1:Nconditions
+	Ntrials(c) = M(c).ntrials;
+end
+TotalTrials = sum(Ntrials);
+Times = cell(TotalTrials, 1);
+Labels = cell(TotalTrials, 1);
+Categories = zeros(TotalTrials, 1);
 
 tindex = 0;
 for c = 1:Nconditions
-	for n = 1:Ntrials
+	for n = 1:Ntrials(c)
 		tindex = tindex + 1;
-		Times{tindex} = 0.001 .* M(c).spikes{n};
+		Times{tindex} = M(c).spikes{n};
 		Labels{tindex} = ones(size(M(c).spikes{n}));
 		Categories(tindex) = c;
 	end
@@ -60,7 +62,7 @@ end
 
 D = metricdist(1, Times, Labels, opts);
 
-CM = metricclust(D, int32(Categories), 3);
+CM = metric_cluster(D, CostVals, Categories, z);
 
 %{
 METRICDIST Compute distances between sets of spike train pairs.

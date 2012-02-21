@@ -1,13 +1,53 @@
+
 %------------------------------------------------------------------------
 %------------------------------------------------------------------------
-% create test data
+% load real data
 %------------------------------------------------------------------------
 %------------------------------------------------------------------------
+load('statsdata.mat')
+Nunits = length(Mlfhstruct{1});
+Nconditions = length(Mlfhstruct);
+ConditionList = 1:Nconditions
+uIndex = 1;
+% assign data to M struct for simplicity
+for condition = 1:Nconditions
+	M(condition) = Mlfhstruct{condition}(uIndex);
+end
+
+fprintf('File %s, uIndex: %d\n', M(1).file, uIndex);
+fprintf('  Probe %d, Cluster %d\n', M(1).probe, M(1).cluster);
+
+Ntrials = zeros(Nconditions, 1);
+for c = 1:Nconditions
+	Ntrials(c) = M(c).ntrials;
+end
+TotalTrials = sum(Ntrials);
+Times = cell(TotalTrials, 1);
+Labels = cell(TotalTrials, 1);
+Categories = zeros(TotalTrials, 1);
+
+tindex = 0;
+for c = 1:Nconditions
+	for n = 1:Ntrials(c)
+		Spikes{c, n} = M(c).spikes{n};		
+		tindex = tindex + 1;
+		Times{tindex} = M(c).spikes{n};
+		Labels{tindex} = ones(size(M(c).spikes{n}));
+		Categories(tindex) = c;
+	end
+end
+
+
+%------------------------------------------------------------------------
+%------------------------------------------------------------------------
+% OR create test synthetic data
+%------------------------------------------------------------------------
+%------------------------------------------------------------------------
+%{
 Ntrials = [10 10 10];
 TotalTrials = sum(Ntrials);
 Nconditions = length(Ntrials);
 ConditionList = 1:Nconditions;
-
 
 Times = cell(TotalTrials, 1);
 Labels = cell(TotalTrials, 1);
@@ -26,6 +66,7 @@ for c = 1:Nconditions
 end
 mexIndex
 TotalTrials
+%}
 
 %------------------------------------------------------------------------
 % analysis parameters
@@ -254,8 +295,9 @@ for Cindex = 1:Ncost
 		% current condition
 		tmpD_bycondition{testCondition} = tmpD(T, conditionIndices{testCondition});
 		% other conditions
-		for c = otherConditions
-			tmpD_bycondition{c} = tmpD(T, conditionIndices{c});
+		for c = 1:length(otherConditions)
+			tmpind = otherConditions(c);
+			tmpD_bycondition{tmpind} = tmpD(T, conditionIndices{tmpind});
 		end
 		
 		%-----------------------------------------------------------------------
@@ -272,9 +314,10 @@ for Cindex = 1:Ncost
 		tmpAve = zeros(1, Nconditions);
 		tmpAve(testCondition) = tmpSum(testCondition) ./ ...
 												(Ntrials(testCondition) - 1);
-		tmpAve(otherConditions) = tmpSum(otherConditions) ./ ...
-												Ntrials(otherConditions);
-
+		for c = 1:length(otherConditions)
+			tmpind = otherConditions(c);
+			tmpAve(tmpind) = tmpSum(tmpind) ./ Ntrials(tmpind);
+		end
 		%-----------------------------------------------------------------------
 		% undo the exponent adjustment
 		%-----------------------------------------------------------------------
