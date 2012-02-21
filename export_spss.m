@@ -175,7 +175,7 @@ for c = 1:3
 	
 	for u = 1:Nunits
 		% make tmp copy of working struct
-		M = Mbbnstruct{c}(u);
+		M = Mlfhstruct{c}(u);
 		
 		% build the string of identification/codes
 		UnitID = sprintf('%s_Unit_%d', M.file, M.unit);
@@ -208,7 +208,7 @@ end
 
 	
 %---------------------------------------------------------------------------
-% Real Data, BBN
+% Real Data, LFH
 %---------------------------------------------------------------------------
 %{
 fprintf(fp, 'UnitID,');
