@@ -1,5 +1,13 @@
 %-------------------------------------------------------------------
-% stats
+%-------------------------------------------------------------------
+% create_statsdata.m
+%-------------------------------------------------------------------
+% takes output from rate_condition_compare.m (BBNrate.mat, 
+% LFHrate.mat) and performs windowing of spikes for use in
+% later analyses (e.g. spike_distance.m)
+% 
+% saves output data in statsdata.mat file
+%-------------------------------------------------------------------
 %-------------------------------------------------------------------
 
 %% -----------------------------------------------------------------
@@ -65,7 +73,7 @@ Clist = [1 2 3];
 [Mbbn, Mbbnstruct, Mfields] = build_stat_arrays(bbnData, validBBNList, Clist, Windows, BGSWEEPTIME_MS, BGTIME_MS);
 [Mlfh, Mlfhstruct] = build_stat_arrays(lfhData, validLFHList, Clist, Windows, BGSWEEPTIME_MS, BGTIME_MS);
 
-save(	'statsdata.mat', 'Mbbn', 'Mbbnstruct', 'Mfields', ...
+save(fullfile(outpath, 'statsdata.mat'), 'Mbbn', 'Mbbnstruct', 'Mfields', ...
 		'Mlfh', 'Mlfhstruct', 'Windows', 'BGWindow', 'Clist', '-MAT');
 
 	
