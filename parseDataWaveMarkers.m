@@ -77,9 +77,10 @@ for n = 1:Nmarkers
 			Marker.(MARKER_TAGS{m}){n} = M(n).string{m};
 		else
 			error('%s: undefined marker type %s', mfilename, MARKER_TYPES{n});
-		end		
+		end
 	end
 	Marker.string{n} = M(n).string;
+	n
 end
 
 % store in Marker struct... might not be necessary, but keep it for now

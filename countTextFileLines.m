@@ -2,7 +2,8 @@ function [nLines, nCols] = countTextFileLines(filename)
 %------------------------------------------------------------------------
 % nLines = countTextFileLines(filename)
 %------------------------------------------------------------------------
-% 
+% DataMatToolbox
+%------------------------------------------------------------------------
 % if <filename> is a text file, counts number of lines in it
 %
 % returns 0 if file is binary or on error
