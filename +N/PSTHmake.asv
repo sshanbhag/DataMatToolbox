@@ -1,0 +1,68 @@
+function ret = PSTHmake(varargin)
+%T_PSTHmake PSTH data bin putter into-er thing. (better description needed)
+%  status = T_PSTHmake opens a dialog asking for the .mat file name of a
+%  data file output by loadDWfile.m.  It creates files for each unit
+%  following the naming convention [aaa_bbb_ccc_ppp_uuu] where aaa =
+%  something, bbb = something else, ccc = another thing, ppp = probe
+%  number and uuu = unit. Each file contains the following structure:
+%  PSTH_bins
+%     sourceFile - .mat file spike times came from
+%     probe
+%     unit
+%     binSums - an array of sums of spike times falling into 1ms bins
+%        where the binSum(1) is the sum from time 0 to 1ms and binSum(end)
+%        is the last bin required to represent the last spike time recorded
+%
+%  status = T_PSTHmake.m(fileName) uses fileName of type char and only
+%  opens a dialog box if the fileName provided does not exist.
+%
+%  status = T_PSTHmake.m(<fileName>, binSize) with or without fileName sums
+%  over bins of size binSize (in seconds) where binSize is of type double.
+
+fileName = '';
+binSize = .001;
+
+if nargin > 0
+   for i = 1:nargin
+      switch class(varargin(i))
+         case char
+            if isequal(fileName, '')
+               if exist(varargin(i),'file')
+                  [pathName, fileName, ext] = fileparts(varargin(i));
+                  if isempty(pathName)
+                     pathName = pwd;
+                  end
+                  fileName = [fileName ext];
+               else
+                  warning('PSTHmake:sillyfname','%s does not exist!',varargin(i));
+               end
+            else
+               error('PSTHmake:multfname','File name assigned multiple times: %s, %s',fileName, varargin(i));
+            end
+         case double
+            if binSize ~= .001
+               error('PSTHmake:multbinsize','Bin size assigned multiple times: %d, %d', binSize, varargin(i));
+            else
+               if (varargin(i)<.0001) || (varargin(i)>.1)
+                  warning('PSTHmake:binszORLY','binSize is in seconds, calculate with %d millisecond bins?',varargin(i)*1000)
+                  if ~yesno
+                     error('PSTHmake:badbin','user abort - wrong binSize');
+                  end
+               end
+               binSize = varargin(i);
+            end
+         otherwise
+            error('PSTHmake:badvars', 'Bad input to PSTHmake, see help PSTHmake');
+      end
+   end
+end
+
+
+if isequal(fileName,'')
+   [fileName, pathName] = uigetfile('*.mat','Open .mat file outupt from loadDWfile');
+   if fileName == 0
+      error('PSTHmake:nochoose','no filename chosen')
+   end
+end
+%Try loading the file and seeing if crashes
+load(fileName, 'D')

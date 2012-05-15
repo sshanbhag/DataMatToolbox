@@ -1,0 +1,2277 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<HTML>
+<HEAD>
+	<META HTTP-EQUIV="CONTENT-TYPE" CONTENT="text/html; charset=windows-1252">
+	<TITLE></TITLE>
+	<META NAME="GENERATOR" CONTENT="OpenOffice.org 3.0  (Win32)">
+	<META NAME="AUTHOR" CONTENT="Sharad Shanbhag">
+	<META NAME="CREATED" CONTENT="20120111;17330000">
+	<META NAME="CHANGEDBY" CONTENT="jgrimsley">
+	<META NAME="CHANGED" CONTENT="20120112;22030000">
+	<META NAME="AppVersion" CONTENT="12.0000">
+	<META NAME="DocSecurity" CONTENT="0">
+	<META NAME="HyperlinksChanged" CONTENT="false">
+	<META NAME="LinksUpToDate" CONTENT="false">
+	<META NAME="ScaleCrop" CONTENT="false">
+	<META NAME="ShareDoc" CONTENT="false">
+	<STYLE TYPE="text/css">
+	<!--
+		@page { margin-left: 1in; margin-right: 0.5in; margin-top: 0.5in; margin-bottom: 0.5in }
+		P { margin-bottom: 0.08in; direction: ltr; color: #000000; widows: 2; orphans: 2 }
+		P.western { font-family: "Palatino Linotype", serif }
+		H1 { margin-top: 0.33in; margin-bottom: 0in; direction: ltr; color: #345a8a; widows: 2; orphans: 2 }
+		H1.western { font-family: "Palatino Linotype", serif; font-size: 16pt }
+		H1.cjk { font-family: "Lucida Sans Unicode"; font-size: 16pt }
+		H1.ctl { font-family: ; font-size: 16pt }
+		H2 { margin-top: 0.14in; margin-bottom: 0in; direction: ltr; color: #4f81bd; widows: 2; orphans: 2 }
+		H2.western { font-family: "Palatino Linotype", serif; font-size: 13pt }
+		H2.cjk { font-family: "Lucida Sans Unicode"; font-size: 13pt }
+		H2.ctl { font-family: ; font-size: 13pt }
+	-->
+	</STYLE>
+</HEAD>
+<BODY LANG="en-US" TEXT="#000000" DIR="LTR">
+<DIV TYPE=HEADER>
+	<P ALIGN=RIGHT STYLE="margin-bottom: 0in; page-break-before: always">
+	<FONT SIZE=1 STYLE="font-size: 8pt">N supplement to DataMat Toolbox</FONT></P>
+	<P ALIGN=RIGHT STYLE="margin-bottom: 0in"><FONT SIZE=1 STYLE="font-size: 8pt">Matlab
+	Data Structures element D of class NeuroTool</FONT></P>
+	<P ALIGN=RIGHT STYLE="margin-bottom: 0in"><FONT SIZE=1 STYLE="font-size: 8pt">based
+	on DataWaveDataStructures version 2.1</FONT></P>
+	<P ALIGN=RIGHT STYLE="margin-bottom: 0in"><FONT SIZE=1 STYLE="font-size: 8pt">fields
+	added by N Toolbox in </FONT><FONT SIZE=1 STYLE="font-size: 8pt"><SPAN STYLE="background: #00ff00">green</SPAN></FONT></P>
+	<P ALIGN=RIGHT STYLE="margin-bottom: 0in"><FONT SIZE=1 STYLE="font-size: 8pt">fields
+	modified by N Toolbox in </FONT><FONT SIZE=1 STYLE="font-size: 8pt"><SPAN STYLE="background: #ffff00">yellow</SPAN></FONT></P>
+	<P ALIGN=RIGHT STYLE="margin-bottom: 0.46in"><FONT SIZE=1 STYLE="font-size: 8pt">fields
+	removed by N Toolbox in </FONT><FONT SIZE=1 STYLE="font-size: 8pt"><SPAN STYLE="background: #ff0000">red</SPAN></FONT></P>
+</DIV>
+<H1 CLASS="western"><I><SPAN STYLE="background: #00ff00">Base class
+&ldquo;NeuroTool&rdquo;</SPAN></I> 
+</H1>
+<P CLASS="western" STYLE="margin-bottom: 0in">(all fields new to N
+toolbox)</P>
+<H2 CLASS="western"><U>Summary of Methods:</U></H2>
+<P CLASS="western" STYLE="margin-bottom: 0in"><BR>
+</P>
+<TABLE WIDTH=725 BORDER=0 CELLPADDING=7 CELLSPACING=0>
+	<COL WIDTH=166>
+	<COL WIDTH=531>
+	<TR>
+		<TD WIDTH=166 HEIGHT=7>
+			<P CLASS="western"><FONT SIZE=2><B>Method Name</B></FONT></P>
+		</TD>
+		<TD WIDTH=531>
+			<P CLASS="western"><FONT SIZE=2><B>Description</B></FONT></P>
+		</TD>
+	</TR>
+	<TR>
+		<TD WIDTH=166 HEIGHT=1>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">calcpsthbins</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=531>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">calculates
+			bins based on psthbinsize and stores in UnitData</FONT></FONT></P>
+		</TD>
+	</TR>
+	<TR>
+		<TD WIDTH=166 HEIGHT=2>
+			<P CLASS="western"><BR>
+			</P>
+		</TD>
+		<TD WIDTH=531>
+			<P CLASS="western"><BR>
+			</P>
+		</TD>
+	</TR>
+</TABLE>
+<H2 CLASS="western"><U>Summary of Fields:</U></H2>
+<P CLASS="western" STYLE="margin-bottom: 0in"><BR>
+</P>
+<TABLE WIDTH=726 BORDER=0 CELLPADDING=7 CELLSPACING=0>
+	<COL WIDTH=166>
+	<COL WIDTH=364>
+	<COL WIDTH=154>
+	<TR>
+		<TD WIDTH=166>
+			<P CLASS="western"><FONT SIZE=2><B>Variable Name</B></FONT></P>
+		</TD>
+		<TD WIDTH=364>
+			<P CLASS="western"><FONT SIZE=2><B>Variable Description</B></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT SIZE=2><B>Variable Type</B></FONT></P>
+		</TD>
+	</TR>
+	<TR>
+		<TD WIDTH=166>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">D</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=364>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">description
+			in following tables</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><BR>
+			</P>
+		</TD>
+	</TR>
+	<TR>
+		<TD WIDTH=166>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">psthbinsize</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=364>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">bin
+			size in seconds for D.UnitData.psthbins</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">double</FONT></FONT></P>
+		</TD>
+	</TR>
+	<TR>
+		<TD WIDTH=166>
+			<P CLASS="western"><BR>
+			</P>
+		</TD>
+		<TD WIDTH=364>
+			<P CLASS="western"><BR>
+			</P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><BR>
+			</P>
+		</TD>
+	</TR>
+</TABLE>
+<H1 CLASS="western"></H1>
+<H1 CLASS="western"><I><SPAN STYLE="background: #00ff00">N.defaults</SPAN></I></H1>
+<H2 CLASS="western"><U>Summary of Fields (user changeable):</U></H2>
+<P CLASS="western" STYLE="margin-bottom: 0in"><BR>
+</P>
+<TABLE WIDTH=726 BORDER=0 CELLPADDING=7 CELLSPACING=0>
+	<COL WIDTH=166>
+	<COL WIDTH=364>
+	<COL WIDTH=154>
+	<TR>
+		<TD WIDTH=166>
+			<P CLASS="western"><FONT SIZE=2><B>Variable Name</B></FONT></P>
+		</TD>
+		<TD WIDTH=364>
+			<P CLASS="western"><FONT SIZE=2><B>Variable Description</B></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT SIZE=2><B>Variable Type</B></FONT></P>
+		</TD>
+	</TR>
+	<TR>
+		<TD WIDTH=166>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">psthbinsize</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=364>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">default
+			binsize</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">double</FONT></FONT></P>
+		</TD>
+	</TR>
+	<TR>
+		<TD WIDTH=166>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">psthbsexpected</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=364>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">expected
+			binsize range(warn happens outside range)</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">[low,
+			high] double</FONT></FONT></P>
+		</TD>
+	</TR>
+	<TR>
+		<TD WIDTH=166>
+			<P CLASS="western"><BR>
+			</P>
+		</TD>
+		<TD WIDTH=364>
+			<P CLASS="western"><BR>
+			</P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><BR>
+			</P>
+		</TD>
+	</TR>
+</TABLE>
+<H2 CLASS="western"><U>Summary of Methods:</U></H2>
+<P CLASS="western" STYLE="margin-bottom: 0in"><BR>
+</P>
+<TABLE WIDTH=725 BORDER=0 CELLPADDING=7 CELLSPACING=0>
+	<COL WIDTH=166>
+	<COL WIDTH=531>
+	<TR>
+		<TD WIDTH=166 HEIGHT=7>
+			<P CLASS="western"><FONT SIZE=2><B>Method Name</B></FONT></P>
+		</TD>
+		<TD WIDTH=531>
+			<P CLASS="western"><FONT SIZE=2><B>Description</B></FONT></P>
+		</TD>
+	</TR>
+	<TR>
+		<TD WIDTH=166 HEIGHT=1>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">N.defaults</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=531>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">returns
+			all defaults stored in file NTdefaults.mat</FONT></FONT></P>
+		</TD>
+	</TR>
+	<TR>
+		<TD WIDTH=166 HEIGHT=2>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">N.defaults(var)</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=531>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">returns
+			default for field, &lsquo;var&rsquo;</FONT></FONT></P>
+		</TD>
+	</TR>
+	<TR>
+		<TD WIDTH=166 HEIGHT=2>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">N.defaults(var,
+			val)</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=531>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">assigns
+			new value, &lsquo;val&rsquo; to field &lsquo;var&rsquo; and saves
+			in NTdefaults.mat</FONT></FONT></P>
+		</TD>
+	</TR>
+</TABLE>
+<P CLASS="western" STYLE="margin-bottom: 0in"><BR>
+</P>
+<P CLASS="western" STYLE="margin-bottom: 0in"><BR>
+</P>
+<P CLASS="western" STYLE="margin-bottom: 0in; page-break-before: always">
+<BR>
+</P>
+<H1 CLASS="western"><I>All following structures are elements of &ldquo;D&rdquo;
+in the root class variable</I></H1>
+<H1 CLASS="western"><I>Stimulus</I> Structure</H1>
+<H2 CLASS="western"><U>Summary of Fields:</U></H2>
+<P CLASS="western" STYLE="margin-bottom: 0in"><BR>
+</P>
+<TABLE WIDTH=726 BORDER=0 CELLPADDING=7 CELLSPACING=0>
+	<COL WIDTH=148>
+	<COL WIDTH=382>
+	<COL WIDTH=154>
+	<TR>
+		<TD WIDTH=148>
+			<P CLASS="western"><FONT SIZE=2><B>Variable Name</B></FONT></P>
+		</TD>
+		<TD WIDTH=382>
+			<P CLASS="western"><FONT SIZE=2><B>Variable Description</B></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT SIZE=2><B>Variable Type</B></FONT></P>
+		</TD>
+	</TR>
+	<TR>
+		<TD WIDTH=148>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">AmplitudeL</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=382>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">L
+			pk-pk amplitude (V)</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">[Nreps
+			x 1 double]</FONT></FONT></P>
+		</TD>
+	</TR>
+	<TR>
+		<TD WIDTH=148>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">AmplitudeR</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=382>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">R
+			pk-pk amplitude (V)</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">[Nreps
+			x 1 double]</FONT></FONT></P>
+		</TD>
+	</TR>
+	<TR>
+		<TD WIDTH=148>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">AttenuationL</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=382>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">L
+			attenuation (dB)</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">[Nreps
+			x 1 double]</FONT></FONT></P>
+		</TD>
+	</TR>
+	<TR>
+		<TD WIDTH=148>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">AttenuationR</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=382>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">R
+			attenuation (dB)</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">[Nreps
+			x 1 double]</FONT></FONT></P>
+		</TD>
+	</TR>
+	<TR>
+		<TD WIDTH=148>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">BBNlowerFreqL</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=382>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">L
+			noise lower frequency limit (Hz)</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">[Nreps
+			x 1 double]</FONT></FONT></P>
+		</TD>
+	</TR>
+	<TR>
+		<TD WIDTH=148>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">BBNlowerFreqR</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=382>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">R
+			noise lower frequency limit (Hz)</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">[Nreps
+			x 1 double]</FONT></FONT></P>
+		</TD>
+	</TR>
+	<TR>
+		<TD WIDTH=148>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">BBNupperFreqL</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=382>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">L
+			noise upper frequency limit (Hz)</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">[Nreps
+			x 1 double]</FONT></FONT></P>
+		</TD>
+	</TR>
+	<TR>
+		<TD WIDTH=148>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">BBNupperFreqR</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=382>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">R
+			noise upper frequency limit (Hz)</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">[Nreps
+			x 1 double]</FONT></FONT></P>
+		</TD>
+	</TR>
+	<TR>
+		<TD WIDTH=148>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">Channel</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=382>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">Output
+			channel (&lsquo;L&rsquo;, &lsquo;R&rsquo;, &lsquo;BOTH&rsquo;}</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">char</FONT></FONT></P>
+		</TD>
+	</TR>
+	<TR>
+		<TD WIDTH=148>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">FirstTimestamp</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=382>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">Time
+			of first instance for this stimulus (</FONT></FONT><FONT FACE="Symbol, serif"><FONT SIZE=2 STYLE="font-size: 9pt">&#61549;</FONT></FONT><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">sec)</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">double</FONT></FONT></P>
+		</TD>
+	</TR>
+	<TR>
+		<TD WIDTH=148>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">FixedDelayL</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=382>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">L
+			delay time for all signals (</FONT></FONT><FONT FACE="Symbol, serif"><FONT SIZE=2 STYLE="font-size: 9pt">&#61549;</FONT></FONT><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">sec)</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">[Nreps
+			x 1 double]</FONT></FONT></P>
+		</TD>
+	</TR>
+	<TR>
+		<TD WIDTH=148>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">FixedDelayR</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=382>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">R
+			delay time for all signals (</FONT></FONT><FONT FACE="Symbol, serif"><FONT SIZE=2 STYLE="font-size: 9pt">&#61549;</FONT></FONT><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">sec)</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">[Nreps
+			x 1 double]</FONT></FONT></P>
+		</TD>
+	</TR>
+	<TR>
+		<TD WIDTH=148>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">HoldTimeL</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=382>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">L
+			duration between onset/offset ramps (</FONT></FONT><FONT FACE="Symbol, serif"><FONT SIZE=2 STYLE="font-size: 9pt">&#61549;</FONT></FONT><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">sec)</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">[Nreps
+			x 1 double]</FONT></FONT></P>
+		</TD>
+	</TR>
+	<TR>
+		<TD WIDTH=148>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">HoldTimeR</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=382>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">R
+			duration between onset/offset ramps (</FONT></FONT><FONT FACE="Symbol, serif"><FONT SIZE=2 STYLE="font-size: 9pt">&#61549;</FONT></FONT><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">sec)</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">[Nreps
+			x 1 double]</FONT></FONT></P>
+		</TD>
+	</TR>
+	<TR>
+		<TD WIDTH=148>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">Indices</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=382>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">Location(s)
+			of stimulus presentation</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">[Nreps
+			x 1 double]</FONT></FONT></P>
+		</TD>
+	</TR>
+	<TR>
+		<TD WIDTH=148>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">LAttenIndices</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=382>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">Locations(s)
+			for each of the LAttenVals</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">{}</FONT></FONT></P>
+		</TD>
+	</TR>
+	<TR>
+		<TD WIDTH=148>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">LAttenVals</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=382>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">Unique
+			L attenuation values, sorted (dB)</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">[]</FONT></FONT></P>
+		</TD>
+	</TR>
+	<TR>
+		<TD WIDTH=148>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">Nreps</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=382>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">#
+			of repetitions of this stimulus</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">double</FONT></FONT></P>
+		</TD>
+	</TR>
+	<TR>
+		<TD WIDTH=148>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">OutputFilename</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=382>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">Path
+			to which original raw data were written</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">[char]</FONT></FONT></P>
+		</TD>
+	</TR>
+	<TR>
+		<TD WIDTH=148>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">OutputTimeWithDelayL</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=382>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">L
+			time of signal onset + delay (</FONT></FONT><FONT FACE="Symbol, serif"><FONT SIZE=2 STYLE="font-size: 9pt">&#61549;</FONT></FONT><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">sec)</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">[Nreps
+			x 1 double]</FONT></FONT></P>
+		</TD>
+	</TR>
+	<TR>
+		<TD WIDTH=148>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">OutputTimeWithDelayR</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=382>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">R
+			time of signal onset + delay (</FONT></FONT><FONT FACE="Symbol, serif"><FONT SIZE=2 STYLE="font-size: 9pt">&#61549;</FONT></FONT><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">sec)</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">[Nreps
+			x 1 double]</FONT></FONT></P>
+		</TD>
+	</TR>
+	<TR>
+		<TD WIDTH=148>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">OutputTimestampL</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=382>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">L
+			time of signal onset (stim. timestamp) (</FONT></FONT><FONT FACE="Symbol, serif"><FONT SIZE=2 STYLE="font-size: 9pt">&#61549;</FONT></FONT><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">sec)</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">[Nreps
+			x 1 double]</FONT></FONT></P>
+		</TD>
+	</TR>
+	<TR>
+		<TD WIDTH=148>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">OutputTimestampR</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=382>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">R
+			time of signal onset (stim. timestamp) (</FONT></FONT><FONT FACE="Symbol, serif"><FONT SIZE=2 STYLE="font-size: 9pt">&#61549;</FONT></FONT><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">sec)</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">[Nreps
+			x 1 double]</FONT></FONT></P>
+		</TD>
+	</TR>
+	<TR>
+		<TD WIDTH=148>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">PA5idL</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=382>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">Id
+			# for L PA5 attenuator</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">[Nreps
+			x 1 double]</FONT></FONT></P>
+		</TD>
+	</TR>
+	<TR>
+		<TD WIDTH=148>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">PA5idR</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=382>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">Id
+			# for R PA5 attenuator</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">[Nreps
+			x 1 double]</FONT></FONT></P>
+		</TD>
+	</TR>
+	<TR>
+		<TD WIDTH=148>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">PhaseDegL</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=382>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">L
+			tone phase (degrees)</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">[Nreps
+			x 1 double]</FONT></FONT></P>
+		</TD>
+	</TR>
+	<TR>
+		<TD WIDTH=148>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">PhaseDegR</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=382>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">R
+			tone phase (degrees)</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">[Nreps
+			x 1 double]</FONT></FONT></P>
+		</TD>
+	</TR>
+	<TR>
+		<TD WIDTH=148>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">RAttenIndices</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=382>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">Locations
+			for each of the RAttenVals</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">{[Nreps
+			x 1 double]}</FONT></FONT></P>
+		</TD>
+	</TR>
+	<TR>
+		<TD WIDTH=148>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">RAttenVals</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=382>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">Unique
+			R attenuation values, sorted (dB)</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">[Natt
+			vals X 1 dbl]</FONT></FONT></P>
+		</TD>
+	</TR>
+	<TR>
+		<TD WIDTH=148>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">RampDownL</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=382>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">L
+			signal offset time (</FONT></FONT><FONT FACE="Symbol, serif"><FONT SIZE=2 STYLE="font-size: 9pt">&#61549;</FONT></FONT><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">sec)</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">[Nreps
+			x 1 double]</FONT></FONT></P>
+		</TD>
+	</TR>
+	<TR>
+		<TD WIDTH=148>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">RampDownR</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=382>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">R
+			signal offset time (</FONT></FONT><FONT FACE="Symbol, serif"><FONT SIZE=2 STYLE="font-size: 9pt">&#61549;</FONT></FONT><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">sec)</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">[Nreps
+			x 1 double]</FONT></FONT></P>
+		</TD>
+	</TR>
+	<TR>
+		<TD WIDTH=148>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">RampUpL</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=382>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">L
+			signal onset time (</FONT></FONT><FONT FACE="Symbol, serif"><FONT SIZE=2 STYLE="font-size: 9pt">&#61549;</FONT></FONT><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">sec)</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">[Nreps
+			x 1 double]</FONT></FONT></P>
+		</TD>
+	</TR>
+	<TR>
+		<TD WIDTH=148>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">RampUpR</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=382>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">R
+			signal onset time (</FONT></FONT><FONT FACE="Symbol, serif"><FONT SIZE=2 STYLE="font-size: 9pt">&#61549;</FONT></FONT><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">sec)</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">[Nreps
+			x 1 double]</FONT></FONT></P>
+		</TD>
+	</TR>
+	<TR>
+		<TD WIDTH=148>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">Spiketimes</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=382>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">Spiketimes
+			for all cells, all sweeps (</FONT></FONT><FONT FACE="Symbol, serif"><FONT SIZE=2 STYLE="font-size: 9pt">&#61549;</FONT></FONT><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">sec)</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">{Nunits
+			x Nreps cell}</FONT></FONT></P>
+		</TD>
+	</TR>
+	<TR>
+		<TD WIDTH=148>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">Spiketimes_PostStim</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=382>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">Spiketimes
+			for next stimulus (</FONT></FONT><FONT FACE="Symbol, serif"><FONT SIZE=2 STYLE="font-size: 9pt">&#61549;</FONT></FONT><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">sec)</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">{Nunits
+			x Nreps cell}</FONT></FONT></P>
+		</TD>
+	</TR>
+	<TR>
+		<TD WIDTH=148>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">Spiketimes_PreStim</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=382>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">Spiketimes
+			for prior stimulus (</FONT></FONT><FONT FACE="Symbol, serif"><FONT SIZE=2 STYLE="font-size: 9pt">&#61549;</FONT></FONT><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">sec)</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">{Nunits
+			x Nreps cell}</FONT></FONT></P>
+		</TD>
+	</TR>
+	<TR>
+		<TD WIDTH=148>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt"><SPAN STYLE="background: #00ff00">psthbins</SPAN></FONT></FONT></P>
+		</TD>
+		<TD WIDTH=382>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt"><SPAN STYLE="background: #00ff00">Spike
+			count per psthbinsize (from Spiketimes)</SPAN></FONT></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt"><SPAN STYLE="background: #00ff00">{Nunits
+			x Nreps cell}</SPAN></FONT></FONT></P>
+		</TD>
+	</TR>
+	<TR>
+		<TD WIDTH=148>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt"><SPAN STYLE="background: #00ff00">psthwindows</SPAN></FONT></FONT></P>
+		</TD>
+		<TD WIDTH=382>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt"><SPAN STYLE="background: #00ff00">Windows
+			calculated with width</SPAN></FONT></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt"><SPAN STYLE="background: #00ff00">{Nunits
+			x Nreps cell}</SPAN></FONT></FONT></P>
+		</TD>
+	</TR>
+	<TR>
+		<TD WIDTH=148>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">Sweepend</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=382>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">Time
+			for end of sweep (</FONT></FONT><FONT FACE="Symbol, serif"><FONT SIZE=2 STYLE="font-size: 9pt">&#61549;</FONT></FONT><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">sec)</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">[Nreps
+			x 1 double]</FONT></FONT></P>
+		</TD>
+	</TR>
+	<TR>
+		<TD WIDTH=148>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">Sweepstart</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=382>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">Time
+			for start of sweep (</FONT></FONT><FONT FACE="Symbol, serif"><FONT SIZE=2 STYLE="font-size: 9pt">&#61549;</FONT></FONT><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">sec)</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">[Nreps
+			x 1 double]</FONT></FONT></P>
+		</TD>
+	</TR>
+	<TR>
+		<TD WIDTH=148>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">Tagstring</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=382>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">Text
+			tags for the marker for this stimulus type</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">[char]</FONT></FONT></P>
+		</TD>
+	</TR>
+	<TR>
+		<TD WIDTH=148>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">TimeShiftL</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=382>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">Stimulus-specific
+			delay for L channel (</FONT></FONT><FONT FACE="Symbol, serif"><FONT SIZE=2 STYLE="font-size: 9pt">&#61549;</FONT></FONT><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">sec)</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">[Nreps
+			x 1 double]</FONT></FONT></P>
+		</TD>
+	</TR>
+	<TR>
+		<TD WIDTH=148>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">TimeShiftR</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=382>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">Stimulus-specific
+			delay for R channel (</FONT></FONT><FONT FACE="Symbol, serif"><FONT SIZE=2 STYLE="font-size: 9pt">&#61549;</FONT></FONT><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">sec)</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">[Nreps
+			x 1 double]</FONT></FONT></P>
+		</TD>
+	</TR>
+	<TR>
+		<TD WIDTH=148>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">Timestamp</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=382>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">Vector
+			of timestamps for stimulus sweeps (</FONT></FONT><FONT FACE="Symbol, serif"><FONT SIZE=2 STYLE="font-size: 9pt">&#61549;</FONT></FONT><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">sec)</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">[Nreps
+			X 1 double]</FONT></FONT></P>
+		</TD>
+	</TR>
+	<TR>
+		<TD WIDTH=148>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">ToneFreqL</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=382>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">L
+			channel tone frequency (tone stim only) (Hz)</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">[Nreps
+			x 1 double]</FONT></FONT></P>
+		</TD>
+	</TR>
+	<TR>
+		<TD WIDTH=148>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">ToneFreqR</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=382>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">R
+			channel tone frequency (Tone stim only) (Hz)</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">[Nreps
+			x 1 double]</FONT></FONT></P>
+		</TD>
+	</TR>
+	<TR>
+		<TD WIDTH=148>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">Type</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=382>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">'NOISE'
+			'WAVFILE' 'TONE' &lsquo;NO_SOUND' 'BACKGROUND' 'UNKNOWN'</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">{char}</FONT></FONT></P>
+		</TD>
+	</TR>
+	<TR>
+		<TD WIDTH=148>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">Var</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=382>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">Var
+			structure</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">[1x2
+			struct]</FONT></FONT></P>
+		</TD>
+	</TR>
+	<TR>
+		<TD WIDTH=148>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">WavFilenameL</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=382>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">.wav
+			file played from L channel (wav stim only)</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">[char]</FONT></FONT></P>
+		</TD>
+	</TR>
+	<TR>
+		<TD WIDTH=148>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">WavFilenameR</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=382>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">.wav
+			file played from R channel (wav stim only)</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">[char]</FONT></FONT></P>
+		</TD>
+	</TR>
+	<TR>
+		<TD WIDTH=148>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">id</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=382>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">DataWave
+			ID code (?)</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">[Nreps
+			x 1 double]</FONT></FONT></P>
+		</TD>
+	</TR>
+	<TR>
+		<TD WIDTH=148>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt"><SPAN STYLE="background: #00ff00">psthbinsum</SPAN></FONT></FONT></P>
+		</TD>
+		<TD WIDTH=382>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt"><SPAN STYLE="background: #00ff00">spike
+			count per time increment of size psthbinsize</SPAN></FONT></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt"><SPAN STYLE="background: #00ff00">[1
+			x # nonempty bins double]</SPAN></FONT></FONT></P>
+		</TD>
+	</TR>
+	<TR>
+		<TD WIDTH=148>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt"><SPAN STYLE="background: #00ff00">psthbins</SPAN></FONT></FONT></P>
+		</TD>
+		<TD WIDTH=382>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt"><SPAN STYLE="background: #00ff00">left
+			bound timestamp for nonempty bins</SPAN></FONT></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt"><SPAN STYLE="background: #00ff00">[1
+			x # nonempty bins double]</SPAN></FONT></FONT></P>
+		</TD>
+	</TR>
+</TABLE>
+<H1 CLASS="western"><I>Var</I> Structure</H1>
+<P CLASS="western" STYLE="margin-bottom: 0in"><BR>
+</P>
+<H2 CLASS="western"><U>Summary of Fields:</U></H2>
+<P CLASS="western" STYLE="margin-bottom: 0in"><BR>
+</P>
+<TABLE WIDTH=726 BORDER=0 CELLPADDING=7 CELLSPACING=0>
+	<COL WIDTH=166>
+	<COL WIDTH=364>
+	<COL WIDTH=154>
+	<TR>
+		<TD WIDTH=166>
+			<P CLASS="western"><FONT SIZE=2><B>Variable Name</B></FONT></P>
+		</TD>
+		<TD WIDTH=364>
+			<P CLASS="western"><FONT SIZE=2><B>Variable Description</B></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT SIZE=2><B>Variable Type</B></FONT></P>
+		</TD>
+	</TR>
+	<TR>
+		<TD WIDTH=166>
+			<P CLASS="western"><BR>
+			</P>
+		</TD>
+		<TD WIDTH=364>
+			<P CLASS="western"><BR>
+			</P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><BR>
+			</P>
+		</TD>
+	</TR>
+	<TR>
+		<TD WIDTH=166>
+			<P CLASS="western"><BR>
+			</P>
+		</TD>
+		<TD WIDTH=364>
+			<P CLASS="western"><BR>
+			</P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><BR>
+			</P>
+		</TD>
+	</TR>
+	<TR>
+		<TD WIDTH=166>
+			<P CLASS="western"><BR>
+			</P>
+		</TD>
+		<TD WIDTH=364>
+			<P CLASS="western"><BR>
+			</P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><BR>
+			</P>
+		</TD>
+	</TR>
+	<TR>
+		<TD WIDTH=166>
+			<P CLASS="western"><BR>
+			</P>
+		</TD>
+		<TD WIDTH=364>
+			<P CLASS="western"><BR>
+			</P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><BR>
+			</P>
+		</TD>
+	</TR>
+	<TR>
+		<TD WIDTH=166>
+			<P CLASS="western"><BR>
+			</P>
+		</TD>
+		<TD WIDTH=364>
+			<P CLASS="western"><BR>
+			</P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><BR>
+			</P>
+		</TD>
+	</TR>
+</TABLE>
+<H1 CLASS="western"><I>Data</I> Structure</H1>
+<P CLASS="western" STYLE="margin-bottom: 0in"><BR>
+</P>
+<H2 CLASS="western"><U>Summary of Fields:</U></H2>
+<P CLASS="western" STYLE="margin-bottom: 0in"><BR>
+</P>
+<TABLE WIDTH=726 BORDER=0 CELLPADDING=7 CELLSPACING=0>
+	<COL WIDTH=166>
+	<COL WIDTH=364>
+	<COL WIDTH=154>
+	<TR>
+		<TD WIDTH=166>
+			<P CLASS="western"><FONT SIZE=2><B>Variable Name</B></FONT></P>
+		</TD>
+		<TD WIDTH=364>
+			<P CLASS="western"><FONT SIZE=2><B>Variable Description</B></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT SIZE=2><B>Variable Type</B></FONT></P>
+		</TD>
+	</TR>
+	<TR>
+		<TD WIDTH=166>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">Info</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=364>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">Info
+			structure</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">Struct</FONT></FONT></P>
+		</TD>
+	</TR>
+	<TR>
+		<TD WIDTH=166>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">Marker</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=364>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">Marker
+			structure</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">Struct</FONT></FONT></P>
+		</TD>
+	</TR>
+	<TR>
+		<TD WIDTH=166>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">MarkerTimes</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=364>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">Vector
+			of Marker timestamps (</FONT></FONT><FONT FACE="Symbol, serif"><FONT SIZE=2 STYLE="font-size: 9pt">&#61549;</FONT></FONT><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">sec)</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">[1
+			X Nmarkers double]</FONT></FONT></P>
+		</TD>
+	</TR>
+	<TR>
+		<TD WIDTH=166>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">Probe</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=364>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">Struct
+			array of Probe structure for spikes</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">[1
+			X Nprobes struct]</FONT></FONT></P>
+		</TD>
+	</TR>
+	<TR>
+		<TD WIDTH=166>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">UnitData</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=364>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">Struct
+			array of </FONT></FONT><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt"><I>UnitData</I></FONT></FONT><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">
+			structures. Contains information about sorted (or unsorted) units</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">[1
+			X Nunits struct]</FONT></FONT></P>
+		</TD>
+	</TR>
+</TABLE>
+<H1 CLASS="western"></H1>
+<P CLASS="western" STYLE="margin-bottom: 0in"><BR>
+</P>
+<H1 CLASS="western" STYLE="page-break-before: always"><I>Info</I>
+Structure</H1>
+<P CLASS="western" STYLE="margin-bottom: 0in"><BR>
+</P>
+<H2 CLASS="western"><U>Summary of Fields:</U></H2>
+<P CLASS="western" STYLE="margin-bottom: 0in"><BR>
+</P>
+<TABLE WIDTH=726 BORDER=0 CELLPADDING=7 CELLSPACING=0>
+	<COL WIDTH=166>
+	<COL WIDTH=364>
+	<COL WIDTH=154>
+	<TR>
+		<TD WIDTH=166>
+			<P CLASS="western"><FONT SIZE=2><B>Variable Name</B></FONT></P>
+		</TD>
+		<TD WIDTH=364>
+			<P CLASS="western"><FONT SIZE=2><B>Variable Description</B></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT SIZE=2><B>Variable Type</B></FONT></P>
+		</TD>
+	</TR>
+	<TR>
+		<TD WIDTH=166>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">MarkerCols</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=364>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">#
+			of marker text columns in DataWave .txt file</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">1</FONT></FONT></P>
+		</TD>
+	</TR>
+	<TR>
+		<TD WIDTH=166>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">MarkerTags</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=364>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">Marker
+			tags from DataWave file</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">{NmarkerCols
+			x 1}</FONT></FONT></P>
+		</TD>
+	</TR>
+	<TR>
+		<TD WIDTH=166>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">NMarkerCols</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=364>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">#
+			of marker columns </FONT></FONT>
+			</P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">33</FONT></FONT></P>
+		</TD>
+	</TR>
+	<TR>
+		<TD WIDTH=166>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">NSpikeCols</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=364>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">#
+			of spike columns</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">4</FONT></FONT></P>
+		</TD>
+	</TR>
+	<TR>
+		<TD WIDTH=166>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">NUnitCols</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=364>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">#
+			of unit columns</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">4</FONT></FONT></P>
+		</TD>
+	</TR>
+	<TR>
+		<TD WIDTH=166>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">Ncols</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=364>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">#
+			of columns in DataWave .txt file</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">45</FONT></FONT></P>
+		</TD>
+	</TR>
+	<TR>
+		<TD WIDTH=166>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">Ndatalines</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=364>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">#
+			of lines with data in .txt file</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">21800</FONT></FONT></P>
+		</TD>
+	</TR>
+	<TR>
+		<TD WIDTH=166>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">Nlines</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=364>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">Total
+			# of lines in .txt file</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">21801</FONT></FONT></P>
+		</TD>
+	</TR>
+	<TR>
+		<TD WIDTH=166>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">Nunits</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=364>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">Total
+			# of units (includes junk, garbage, etc.)</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">11</FONT></FONT></P>
+		</TD>
+	</TR>
+	<TR>
+		<TD WIDTH=166>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">SpikeCols</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=364>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">Columns
+			in data file that contain spike data</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">[NSpikeCols
+			X 1]</FONT></FONT></P>
+		</TD>
+	</TR>
+	<TR>
+		<TD WIDTH=166>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">UnitCols</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=364>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">Columns
+			that contain unit data</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">[NUnitCols
+			X 1]</FONT></FONT></P>
+		</TD>
+	</TR>
+	<TR>
+		<TD WIDTH=166>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">data1</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=364>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">Parsed
+			text array of 1</FONT></FONT><SUP><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">st</FONT></FONT></SUP><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">
+			line of data </FONT></FONT>
+			</P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">{NCols
+			x 1 char}</FONT></FONT></P>
+		</TD>
+	</TR>
+	<TR>
+		<TD WIDTH=166>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">file</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=364>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">DataWave
+			.txt file name</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">[char]</FONT></FONT></P>
+		</TD>
+	</TR>
+	<TR>
+		<TD WIDTH=166>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">filename</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=364>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">DataWave
+			.txt file path and name</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">[char]</FONT></FONT></P>
+		</TD>
+	</TR>
+	<TR>
+		<TD WIDTH=166>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">header</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=364>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">Header
+			structure</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">struct</FONT></FONT></P>
+		</TD>
+	</TR>
+	<TR>
+		<TD WIDTH=166>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">path</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=364>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">path
+			to DataWave .txt file</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">[char]</FONT></FONT></P>
+		</TD>
+	</TR>
+</TABLE>
+<P CLASS="western" STYLE="margin-bottom: 0in"><BR>
+</P>
+<H1 CLASS="western"><I>header</I> Structure (usually element in <I>Info</I>
+struct)</H1>
+<P CLASS="western" STYLE="margin-bottom: 0in"><BR>
+</P>
+<H2 CLASS="western"><U>Summary of Fields:</U></H2>
+<P CLASS="western" STYLE="margin-bottom: 0in"><BR>
+</P>
+<TABLE WIDTH=726 BORDER=0 CELLPADDING=7 CELLSPACING=0>
+	<COL WIDTH=166>
+	<COL WIDTH=364>
+	<COL WIDTH=154>
+	<TR>
+		<TD WIDTH=166>
+			<P CLASS="western"><FONT SIZE=2><B>Variable Name</B></FONT></P>
+		</TD>
+		<TD WIDTH=364>
+			<P CLASS="western"><FONT SIZE=2><B>Variable Description</B></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT SIZE=2><B>Variable Type</B></FONT></P>
+		</TD>
+	</TR>
+	<TR>
+		<TD WIDTH=166>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">line</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=364>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">text
+			of DataWave .txt file header line</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">{char}</FONT></FONT></P>
+		</TD>
+	</TR>
+	<TR>
+		<TD WIDTH=166>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">fields</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=364>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">Field
+			headers from DataWave .txt file</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">{nfields
+			x 1 char}</FONT></FONT></P>
+		</TD>
+	</TR>
+	<TR>
+		<TD WIDTH=166>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">nfields</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=364>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">#
+			of header fields </FONT></FONT>
+			</P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">double</FONT></FONT></P>
+		</TD>
+	</TR>
+</TABLE>
+<P CLASS="western" STYLE="margin-bottom: 0in"><BR>
+</P>
+<P CLASS="western" STYLE="margin-bottom: 0in"><BR>
+</P>
+<H1 CLASS="western" STYLE="page-break-before: always"><I>Marker</I>
+Structure</H1>
+<P CLASS="western" STYLE="margin-bottom: 0in">This is a master list
+of the marker &ldquo;tags&rdquo; that are read in from the DataWave
+.txt output file.</P>
+<H2 CLASS="western"><U>Summary of Fields:</U></H2>
+<P CLASS="western" STYLE="margin-bottom: 0in"><BR>
+</P>
+<TABLE WIDTH=726 BORDER=0 CELLPADDING=7 CELLSPACING=0>
+	<COL WIDTH=166>
+	<COL WIDTH=364>
+	<COL WIDTH=154>
+	<TR>
+		<TD WIDTH=166>
+			<P CLASS="western"><FONT SIZE=2><B>Variable Name</B></FONT></P>
+		</TD>
+		<TD WIDTH=364>
+			<P CLASS="western"><FONT SIZE=2><B>Variable Description</B></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT SIZE=2><B>Variable Type</B></FONT></P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=166>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">AmplitudeL</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=364>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">L
+			channel output signal peak-peak amplitude (mV)</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">[Nmarkers
+			x 1 double]</FONT></FONT></P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=166>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">AmplitudeR</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=364>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">R
+			channel output signal peak-peak amplitude (mV)</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">[Nmarkers
+			x 1 double]</FONT></FONT></P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=166>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">AttenuationL</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=364>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">L
+			PA5 attenuation (dB)</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">[Nmarkers
+			x 1 double]</FONT></FONT></P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=166>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">AttenuationR</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=364>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">R
+			PA5 attenuation (dB)</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">[Nmarkers
+			x 1 double]</FONT></FONT></P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=166>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">BBNlowerFreqL</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=364>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">Broadband
+			Noise, lower freq limit	(Hz)</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">[Nmarkers
+			x 1 double]</FONT></FONT></P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=166>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">BBNlowerFreqR</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=364>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">Broadband
+			Noise, lower freq limit	(Hz)</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">[Nmarkers
+			x 1 double]</FONT></FONT></P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=166>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">BBNupperFreqL</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=364>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">Broadband
+			Noise, upper freq limit (Hz)</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">[Nmarkers
+			x 1 double]</FONT></FONT></P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=166>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">BBNupperFreqR</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=364>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">Broadband
+			Noise, upper freq limit (Hz)</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">[Nmarkers
+			x 1 double]</FONT></FONT></P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=166>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">FixedDelayL</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=364>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">delay
+			time for all signals, all channels (</FONT></FONT><FONT FACE="Symbol, serif"><FONT SIZE=2 STYLE="font-size: 9pt">&#61549;</FONT></FONT><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">sec)</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">[Nmarkers
+			x 1 double]</FONT></FONT></P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=166>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">FixedDelayR</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=364>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">delay
+			time for all signals, all channels (</FONT></FONT><FONT FACE="Symbol, serif"><FONT SIZE=2 STYLE="font-size: 9pt">&#61549;</FONT></FONT><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">sec)</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">[Nmarkers
+			x 1 double]</FONT></FONT></P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=166>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">HoldTimeL</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=364>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">duration
+			of signal between ramps (</FONT></FONT><FONT FACE="Symbol, serif"><FONT SIZE=2 STYLE="font-size: 9pt">&#61549;</FONT></FONT><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">sec)</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">[Nmarkers
+			x 1 double]</FONT></FONT></P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=166>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">HoldTimeR</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=364>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">duration
+			of signal between ramps	(</FONT></FONT><FONT FACE="Symbol, serif"><FONT SIZE=2 STYLE="font-size: 9pt">&#61549;</FONT></FONT><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">sec)</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">[Nmarkers
+			x 1 double]</FONT></FONT></P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=166>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">M</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=364>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">raw
+			marker data (text)</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">[1
+			x Nmarkers struct]</FONT></FONT></P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=166>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">Nmarkers</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=364>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">Total
+			number of markers (# stimuli + 1)</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">double</FONT></FONT></P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=166>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">OutputFilename</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=364>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">DataWave
+			.ddf filename</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">{Nmarkers
+			x 1 cell}</FONT></FONT></P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=166>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">OutputTimeWithDelayL</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=364>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">Time
+			of signal + delay (</FONT></FONT><FONT FACE="Symbol, serif"><FONT SIZE=2 STYLE="font-size: 9pt">&#61549;</FONT></FONT><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">sec)</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">[Nmarkers
+			x 1 double]</FONT></FONT></P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=166>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">OutputTimeWithDelayR</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=364>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">Time
+			of signal + delay (</FONT></FONT><FONT FACE="Symbol, serif"><FONT SIZE=2 STYLE="font-size: 9pt">&#61549;</FONT></FONT><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">sec)</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">[Nmarkers
+			x 1 double]</FONT></FONT></P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=166>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">OutputTimestampL</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=364>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">Time
+			of signal start (</FONT></FONT><FONT FACE="Symbol, serif"><FONT SIZE=2 STYLE="font-size: 9pt">&#61549;</FONT></FONT><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">sec)</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">[Nmarkers
+			x 1 double]</FONT></FONT></P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=166>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">OutputTimestampR</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=364>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">Time
+			of signal start (</FONT></FONT><FONT FACE="Symbol, serif"><FONT SIZE=2 STYLE="font-size: 9pt">&#61549;</FONT></FONT><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">sec)</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">[Nmarkers
+			x 1 double]</FONT></FONT></P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=166>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">PA5idL</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=364>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">id
+			# for PA5 attenuator (0 = Right 1 = Left)</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">[Nmarkers
+			x 1 double]</FONT></FONT></P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=166>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">PA5idR</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=364>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">id
+			# for PA5 attenuator (0 = Right 1 = Left)</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">[Nmarkers
+			x 1 double]</FONT></FONT></P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=166>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">PhaseDegL</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=364>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">L
+			Tone phase (Degrees)</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">[Nmarkers
+			x 1 double]</FONT></FONT></P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=166>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">PhaseDegR</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=364>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">R
+			Tone phase (Degrees)</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">[Nmarkers
+			x 1 double]</FONT></FONT></P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=166>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">RampDownL</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=364>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">L
+			signal offset ramp time (</FONT></FONT><FONT FACE="Symbol, serif"><FONT SIZE=2 STYLE="font-size: 9pt">&#61549;</FONT></FONT><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">sec)</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">[Nmarkers
+			x 1 double]</FONT></FONT></P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=166>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">RampDownR</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=364>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">R
+			signal offset ramp time (</FONT></FONT><FONT FACE="Symbol, serif"><FONT SIZE=2 STYLE="font-size: 9pt">&#61549;</FONT></FONT><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">sec)</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">[Nmarkers
+			x 1 double]</FONT></FONT></P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=166>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">RampUpL</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=364>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">L
+			signal onset ramp time (</FONT></FONT><FONT FACE="Symbol, serif"><FONT SIZE=2 STYLE="font-size: 9pt">&#61549;</FONT></FONT><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">sec)</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">[Nmarkers
+			x 1 double]</FONT></FONT></P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=166>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">RampUpR</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=364>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">R
+			signal onset ramp time (</FONT></FONT><FONT FACE="Symbol, serif"><FONT SIZE=2 STYLE="font-size: 9pt">&#61549;</FONT></FONT><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">sec)</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">[Nmarkers
+			x 1 double]</FONT></FONT></P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=166>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">StimulusTypeL</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=364>
+			<P CLASS="western"><BR>
+			</P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">{Nmarkers
+			x 1 cell}</FONT></FONT></P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=166>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">StimulusTypeR</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=364>
+			<P CLASS="western"><BR>
+			</P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">{Nmarkers
+			x 1 cell}</FONT></FONT></P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=166>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">TimeShiftL</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=364>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">L
+			Stimulus-specific delay for stimulus (</FONT></FONT><FONT FACE="Symbol, serif"><FONT SIZE=2 STYLE="font-size: 9pt">&#61549;</FONT></FONT><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">sec)</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">[Nmarkers
+			x 1 double]</FONT></FONT></P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=166>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">TimeShiftR</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=364>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">R
+			Stimulus-specific delay for stimulus (</FONT></FONT><FONT FACE="Symbol, serif"><FONT SIZE=2 STYLE="font-size: 9pt">&#61549;</FONT></FONT><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">sec)</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">[Nmarkers
+			x 1 double]</FONT></FONT></P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=166>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">Timestamp</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=364>
+			<P CLASS="western"><BR>
+			</P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">{Nmarkers
+			x 1 cell}</FONT></FONT></P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=166>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">ToneFreqL</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=364>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">L
+			Tone frequency (Hz)</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">[Nmarkers
+			x 1 double]</FONT></FONT></P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=166>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">ToneFreqR</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=364>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">R
+			Tone frequency (Hz)</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">[Nmarkers
+			x 1 double]</FONT></FONT></P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=166>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">WavFilenameL</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=364>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">L
+			output .wav file name (with drive:\path)</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">{Nmarkers
+			x 1 cell}</FONT></FONT></P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=166>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">WavFilenameR</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=364>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">R
+			output .wav file name (with drive:\path)</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">{Nmarkers
+			x 1 cell}</FONT></FONT></P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=166>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">id</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=364>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">???</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">[Nmarkers
+			x 1 double]</FONT></FONT></P>
+		</TD>
+	</TR>
+	<TR>
+		<TD WIDTH=166 VALIGN=TOP>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">string</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=364>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">'NOISE'
+			'WAVFILE' 'TONE' &lsquo;NO_SOUND' 'BACKGROUND' 'UNKNOWN'</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=154 VALIGN=TOP>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">[Nmarkers
+			x 1 cell}</FONT></FONT></P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=166>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">wavFilesL</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=364>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">unique
+			L output .wav file names</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">[#
+			x 1 struct]</FONT></FONT></P>
+		</TD>
+	</TR>
+	<TR VALIGN=TOP>
+		<TD WIDTH=166>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">wavFilesR</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=364>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">unique
+			R output .wav file names</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">[#
+			x 1 struct]</FONT></FONT></P>
+		</TD>
+	</TR>
+</TABLE>
+<H1 CLASS="western"></H1>
+<P CLASS="western" STYLE="margin-bottom: 0in"><BR>
+</P>
+<H1 CLASS="western"><I>M</I> Structure (usually in <I>Marker</I>
+struct)</H1>
+<P CLASS="western" STYLE="margin-bottom: 0in"><BR>
+</P>
+<H2 CLASS="western"><U>Summary of Fields:</U></H2>
+<P CLASS="western" STYLE="margin-bottom: 0in"><BR>
+</P>
+<TABLE WIDTH=726 BORDER=0 CELLPADDING=7 CELLSPACING=0>
+	<COL WIDTH=166>
+	<COL WIDTH=364>
+	<COL WIDTH=154>
+	<TR>
+		<TD WIDTH=166>
+			<P CLASS="western"><FONT SIZE=2><B>Variable Name</B></FONT></P>
+		</TD>
+		<TD WIDTH=364>
+			<P CLASS="western"><FONT SIZE=2><B>Variable Description</B></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT SIZE=2><B>Variable Type</B></FONT></P>
+		</TD>
+	</TR>
+	<TR>
+		<TD WIDTH=166>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">t</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=364>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">timestamp
+			(</FONT></FONT><FONT FACE="Symbol, serif"><FONT SIZE=2 STYLE="font-size: 9pt">&#61549;</FONT></FONT><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">sec)</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">double</FONT></FONT></P>
+		</TD>
+	</TR>
+	<TR>
+		<TD WIDTH=166>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">string</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=364>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">text
+			values of Marker information</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">{#
+			marker fields x 1}</FONT></FONT></P>
+		</TD>
+	</TR>
+</TABLE>
+<P CLASS="western" STYLE="margin-bottom: 0in"><BR>
+</P>
+<H1 CLASS="western"><I>wavFiles(L/R)</I> Structure</H1>
+<P CLASS="western" STYLE="margin-bottom: 0in"><BR>
+</P>
+<H2 CLASS="western"><U>Summary of Fields:</U></H2>
+<P CLASS="western" STYLE="margin-bottom: 0in"><BR>
+</P>
+<TABLE WIDTH=726 BORDER=0 CELLPADDING=7 CELLSPACING=0>
+	<COL WIDTH=166>
+	<COL WIDTH=364>
+	<COL WIDTH=154>
+	<TR>
+		<TD WIDTH=166>
+			<P CLASS="western"><FONT SIZE=2><B>Variable Name</B></FONT></P>
+		</TD>
+		<TD WIDTH=364>
+			<P CLASS="western"><FONT SIZE=2><B>Variable Description</B></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT SIZE=2><B>Variable Type</B></FONT></P>
+		</TD>
+	</TR>
+	<TR>
+		<TD WIDTH=166>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">uniqueNames</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=364>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">unique
+			.wav file name</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">[1
+			X N double]</FONT></FONT></P>
+		</TD>
+	</TR>
+	<TR>
+		<TD WIDTH=166>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">uniqueIndices</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=364>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">indices
+			(in master, Marker indices) of the unique stimuli</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">double</FONT></FONT></P>
+		</TD>
+	</TR>
+	<TR>
+		<TD WIDTH=166>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">Nunique</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=364>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">#
+			unique filenames</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">double</FONT></FONT></P>
+		</TD>
+	</TR>
+</TABLE>
+<P CLASS="western" STYLE="margin-bottom: 0in"><BR>
+</P>
+<P CLASS="western" STYLE="margin-bottom: 0in"><BR>
+</P>
+<H1 CLASS="western" STYLE="page-break-before: always"><A NAME="_GoBack"></A>
+<I>Probe</I> Structure</H1>
+<P CLASS="western" STYLE="margin-bottom: 0in"><BR>
+</P>
+<H2 CLASS="western"><U>Summary of Fields:</U></H2>
+<P CLASS="western" STYLE="margin-bottom: 0in"><BR>
+</P>
+<TABLE WIDTH=726 BORDER=0 CELLPADDING=7 CELLSPACING=0>
+	<COL WIDTH=166>
+	<COL WIDTH=364>
+	<COL WIDTH=154>
+	<TR>
+		<TD WIDTH=166>
+			<P CLASS="western"><FONT SIZE=2><B>Variable Name</B></FONT></P>
+		</TD>
+		<TD WIDTH=364>
+			<P CLASS="western"><FONT SIZE=2><B>Variable Description</B></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT SIZE=2><B>Variable Type</B></FONT></P>
+		</TD>
+	</TR>
+	<TR>
+		<TD WIDTH=166>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">cluster</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=364>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">cluster
+			ID values (id number 0-nclusters, 0 corresponds to &ldquo;junk&rdquo;
+			category)</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">[1
+			X N double]</FONT></FONT></P>
+		</TD>
+	</TR>
+	<TR>
+		<TD WIDTH=166>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">nclusters</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=364>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">#
+			of clusters for this probe (from Plexon)</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">double</FONT></FONT></P>
+		</TD>
+	</TR>
+	<TR>
+		<TD WIDTH=166>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">t</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=364>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">timestamps
+			for each spike (</FONT></FONT><FONT FACE="Symbol, serif"><FONT SIZE=2 STYLE="font-size: 9pt">&#61549;</FONT></FONT><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">sec)</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">[1
+			X N double]</FONT></FONT></P>
+		</TD>
+	</TR>
+</TABLE>
+<H1 CLASS="western"><I>MarkerTimes</I> Array</H1>
+<P CLASS="western" STYLE="margin-bottom: 0in">	[1 X Nmarkers] array
+of marker timestamps (in  microseconds) 
+</P>
+<H1 CLASS="western"><I>UnitData</I> Structure array</H1>
+<P CLASS="western" STYLE="margin-bottom: 0in">[1 X # of units] 
+struct array, containing information about spike timestamps,
+organized</P>
+<P CLASS="western" STYLE="margin-bottom: 0in">by unit # (units from
+probe 1 are first, then probe 2, etc.)</P>
+<H2 CLASS="western"><U>Summary of Fields:</U></H2>
+<P CLASS="western" STYLE="margin-bottom: 0in"><BR>
+</P>
+<TABLE WIDTH=726 BORDER=0 CELLPADDING=7 CELLSPACING=0>
+	<COL WIDTH=166>
+	<COL WIDTH=364>
+	<COL WIDTH=154>
+	<TR>
+		<TD WIDTH=166>
+			<P CLASS="western"><FONT SIZE=2><B>Variable Name</B></FONT></P>
+		</TD>
+		<TD WIDTH=364>
+			<P CLASS="western"><FONT SIZE=2><B>Variable Description</B></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT SIZE=2><B>Variable Type</B></FONT></P>
+		</TD>
+	</TR>
+	<TR>
+		<TD WIDTH=166>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">indices</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=364>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">indices
+			into </FONT></FONT><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt"><I>Probe</I></FONT></FONT><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">
+			structure arrays</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">[1
+			x # spikes double]</FONT></FONT></P>
+		</TD>
+	</TR>
+	<TR>
+		<TD WIDTH=166>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">probe</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=364>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">electrode/tetrode
+			number</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">double</FONT></FONT></P>
+		</TD>
+	</TR>
+	<TR>
+		<TD WIDTH=166>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">sorted</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=364>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">0
+			if unsorted, 1 if sorted</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">double</FONT></FONT></P>
+		</TD>
+	</TR>
+	<TR>
+		<TD WIDTH=166>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">timestamp</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=364>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">vector
+			of timestamps for each spike</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">[1
+			x # spikes double]</FONT></FONT></P>
+		</TD>
+	</TR>
+	<TR>
+		<TD WIDTH=166>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">unit</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=364>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">unit
+			id value (0 = unsorted/junk, 1&hellip;n)</FONT></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt">double</FONT></FONT></P>
+		</TD>
+	</TR>
+	<TR>
+		<TD WIDTH=166>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt"><SPAN STYLE="background: #00ff00">psthbinsum</SPAN></FONT></FONT></P>
+		</TD>
+		<TD WIDTH=364>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt"><SPAN STYLE="background: #00ff00">spike
+			count per time increment of size psthbinsize</SPAN></FONT></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt"><SPAN STYLE="background: #00ff00">[1
+			x # nonempty bins double]</SPAN></FONT></FONT></P>
+		</TD>
+	</TR>
+	<TR>
+		<TD WIDTH=166>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt"><SPAN STYLE="background: #00ff00">psthbins</SPAN></FONT></FONT></P>
+		</TD>
+		<TD WIDTH=364>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt"><SPAN STYLE="background: #00ff00">left
+			bound timestamp for nonempty bins</SPAN></FONT></FONT></P>
+		</TD>
+		<TD WIDTH=154>
+			<P CLASS="western"><FONT FACE="Courier New, serif"><FONT SIZE=2 STYLE="font-size: 9pt"><SPAN STYLE="background: #00ff00">[1
+			x # nonempty bins double]</SPAN></FONT></FONT></P>
+		</TD>
+	</TR>
+</TABLE>
+<P CLASS="western" STYLE="margin-bottom: 0in"><BR>
+</P>
+<P CLASS="western" STYLE="margin-bottom: 0in"><BR>
+</P>
+<DIV TYPE=FOOTER>
+	<P STYLE="margin-right: 0.25in; margin-top: 0.46in; margin-bottom: 0in; page-break-before: always">
+	<SPAN ID="Frame2" DIR="LTR" STYLE="position: absolute; top: 0in; left: 0in; width: 3.94in; border: none; padding: 0in; background: #ffffff">
+		<P STYLE="margin-bottom: 0in; border: none; padding: 0in"><SDFIELD TYPE=PAGE SUBTYPE=RANDOM FORMAT=PAGE>6</SDFIELD></P>
+	</SPAN><BR>
+	</P>
+</DIV>
+</BODY>
+</HTML>
