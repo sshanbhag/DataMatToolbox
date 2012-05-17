@@ -169,7 +169,7 @@ function varargout = loadDWfile(varargin)
 
 %------------------------------------------------------------------------
 % Sharad J. Shanbhag
-% sshanbhag@neoucom.edu
+% sshanbhag@neomed.edu
 %------------------------------------------------------------------------
 % Created: 24 January, 2011 (SJS)
 %
@@ -187,6 +187,7 @@ function varargout = loadDWfile(varargin)
 % 		-	added Background retrieval and item to outputs
 % 		-	removed path name as input
 %	26 January, 2012 (SJS): added 'OutputPath' option
+%	17 May, 2012 (SJS): working on objectifying
 %------------------------------------------------------------------------
 % TO DO:
 %------------------------------------------------------------------------
