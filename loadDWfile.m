@@ -31,6 +31,9 @@ function varargout = loadDWfile(varargin)
 % 											
 % 								If option is not provided, the program will ask if
 % 								plots should be displayed
+% 
+% 		'SkipMarker'		'Yes' (default)	-> skips last marker
+% 								'No'					-> retains all markers
 % 								
 % Output Arguments:
 % 	D			output structure
@@ -184,22 +187,81 @@ function varargout = loadDWfile(varargin)
 %	5 July, 2011 (SJS): documenting and commenting
 %	28 July, 2011 (SJS): added Hout to outputs
 %	4 August, 2011 (SJS): 
-% 		-	added Background retrieval and item to outputs
-% 		-	removed path name as input
+%	 -	added Background retrieval and item to outputs
+% 	 -	removed path name as input
 %	26 January, 2012 (SJS): added 'OutputPath' option
-%	17 May, 2012 (SJS): working on objectifying
+%	17 May, 2012 (SJS): 
+% 	 -	working on objectifying
+% 	 -	added comments/analysis cookbook
+%		
 %------------------------------------------------------------------------
 % TO DO:
 %------------------------------------------------------------------------
+%% ----------------------------------------------------------------------------
+% 
+% 	Overall procedure for reading in Markers and Data 
+% 	(as of 21 May, 2012)
+% 
+% 	(1)	Get information about fields/DW text file using readDataWaveTextInfo 
+% 
+% 				-	returns a struct (dwinfo) that has fields
+% 
+% 					file						filename
+% 					path						path to file = pname;
+% 					Nlines					# of lines (including header) in file
+% 					header					header structure
+% 													line			cell vector of header line text
+% 													fields		cell vector of field names
+% 													nfields		# of tab-delimited fields in each header line
+% 
+% 					data1						text from data line 1
+% 					ndata1					# of fields in data line 1
+% 					UnitTimestampCols		list of data columns with time stamp data
+% 					MarkerTimestampCols	list of data columns with marker stime stamp data
+% 					MarkerTags				variable names in Marker data
+% 
+% 	(2)	Parse information from header using parseDataWaveTextHeader
+% 				takes as input the dwinfo struct from readDataWaveTextInfo and then
+% 				performs some manipulations on data within dwinfo.
+% 
+% 				-	returns modified dwinfo struct:
+% 
+% 					MarkerCols			indices of marker columns
+% 					NMarkerCols			# of marker columns
+% 					SpikeCols			indices of spike timestamp columns
+% 					NSpikeCols			# of spike columns
+% 					UnitCols				indices to unit id columns
+% 					NUnitCols			# unit id columns (length(UnitCols))
+% 					Ndatalines			# of data lines (adjusted for # of header lines)
+% 											dwinfo.Nlines - N_HEADER_LINES
+% 					MarkerTags			updated MarkerTags
+% 
+% 	(3)	reads data from file using readDataWaveTextFile
+% 
+% 
+% 	(4)	pull in Marker and probe data
+% 
+% 
+% 	(5)	parse probe data using parse DataWaveProbes.m
+% 
+% 
+% 	(6)	build data structures for output
+%% ----------------------------------------------------------------------------
+
+
 
 %-----------------------------------------------------------
 % load defaults
 %-----------------------------------------------------------
 DataWaveDefaults;
 
+skipMarkerFlg = 1;
+
 %-----------------------------------------------------------
 % check input arguments, act depending on inputs
 %-----------------------------------------------------------
+
+% no input arguments?  open ui file selector
 if nargin == 0
 	% no filename or path provided
 	% open ui panel to get filename and path from user
@@ -217,7 +279,8 @@ if nargin == 0
 	end
 end
 
-if nargin > 0
+% 1 input argument -> assume that this is filename
+if nargin == 1
 	% only filename was provided, assume path is included or that file is
 	% in current directory 
 	[pname, fname, ext] = fileparts(varargin{1});
@@ -227,7 +290,7 @@ if nargin > 0
 	fname = [fname ext];
 end
 
-
+% some options given
 if nargin >= 2
 	chkargs = varargin(2:end);
 	for n = 1:length(chkargs)
@@ -250,14 +313,20 @@ if nargin >= 2
 			elseif strcmpi(chkargs{n}, 'OutputPath')
 				if ischar(chkargs{n+1})
 					OutputPath = chkargs{n+1};
-				end				
+				end
+			elseif strcmpi(chkargs{n}, 'SkipMarker')
+				if strncmpi(chkargs{n+1}, 'Y', 1)
+					skipMarkerFlg = 1;
+				else
+					skipMarkerFlg = 0;
+				end
 			end
 		end
 	end
 end
 
 %-----------------------------------------------------------
-% get file info, read header
+% get file info and read header
 %-----------------------------------------------------------
 disp(['Reading information from file ' fname ' ...']);
 [dwinfo, errFlg] = readDataWaveTextInfo(fname, pname);
@@ -339,11 +408,13 @@ for L = 1:dwinfo.Ndatalines
 	end
 end
 
-% Toss out late Marker Line as it is only a place holder
+% Toss out last Marker Line as it is only a place holder
 %	(added 1/26/2012, SJS)
-MarkerData = MarkerData(1:(markerCount - 1));
-MarkerTimes = MarkerTimes(1:(markerCount - 1));
-markerCount = markerCount - 1;
+if skipMarkerFlg
+	MarkerData = MarkerData(1:(markerCount - 1));
+	MarkerTimes = MarkerTimes(1:(markerCount - 1));
+	markerCount = markerCount - 1;
+end
 
 % process marker information into arrays
 [Marker, errFlg] = parseDataWaveMarkers(MarkerData, dwinfo);

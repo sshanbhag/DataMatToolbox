@@ -11,16 +11,19 @@ function [out, errFlg] = parseDataWaveTextHeader(dwinfo)
 % 
 % Output Arguments:
 %
-% out.dwinfo;
-% out.MarkerCols = MarkerCols;
-% out.NMarkerCols = NMarkerCols;
-% out.SpikeCols = SpikeCols;
-% out.NSpikeCols = NSpikeCols;
-% out.UnitCols = UnitCols;
-% out.NUnitCols = NUnitCols;
-% out.Ndatalines = dwinfo.Nlines - N_HEADER_LINES;
-% out.MarkerTags = MarkerTags;
-
+% 	out is a modified version of input dwinfo struct with following modifications
+% 	and additions:
+% 
+% 	MarkerCols			indices of marker columns
+% 	NMarkerCols			# of marker columns
+% 	SpikeCols			indices of spike timestamp columns
+% 	NSpikeCols			# of spike columns
+% 	UnitCols				indices to unit id columns
+% 	NUnitCols			# unit id columns (length(UnitCols))
+% 	Ndatalines			# of data lines (adjusted for # of header lines)
+% 							dwinfo.Nlines - N_HEADER_LINES
+% 	MarkerTags			updated MarkerTags
+% 
 % 	errFlg	Error flag
 % 					0		no error
 % 					1		user cancelled file opening
@@ -28,7 +31,7 @@ function [out, errFlg] = parseDataWaveTextHeader(dwinfo)
 % 					3		file not found
 %
 %------------------------------------------------------------------------
-% See: readDataWaveHeader 
+% See: readDataWaveHeader, loadDWfile
 %------------------------------------------------------------------------
 
 %------------------------------------------------------------------------
@@ -39,6 +42,9 @@ function [out, errFlg] = parseDataWaveTextHeader(dwinfo)
 % 	- uses code snipped from readDataWaveTextInfo.m
 %
 % Revisions:
+%	21 May, 2012 (SJS)
+% 	 -	updated comments/documentation as move to obj. oriented design 
+% 		progresses
 %------------------------------------------------------------------------
 % TO DO:
 %------------------------------------------------------------------------
