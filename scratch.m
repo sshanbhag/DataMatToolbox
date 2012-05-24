@@ -5,15 +5,10 @@
 clear all
 
 % create instance
-d = N.DWinfo
+d = DW.DWinfo
 
 % set file
-d = d.setFile('BATtest.txt')
-
-% set public property
-
-d.testprop = 142
+d.set.File('BATtest.txt')
 
 
 d
-
