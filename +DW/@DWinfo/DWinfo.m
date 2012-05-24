@@ -9,12 +9,13 @@
 % 		path						path to file = pname;
 % 		Nlines					# of lines (including header) in file
 % 		header					header structure
-%										line		cell vector of header line text
-%										fields	cell vector of field names
-%										nfields	# of tab-delimited fields in each 
-% 													header line
-% 		data1						text from data line 1
-% 		ndata1					# of fields in data line 1
+%				line					cell vector of header line text
+%				fields				cell vector of field names
+%				nfields				# of tab-delimited fields in each header line
+%		firstline				struct to store first line of data - used to
+%									determine fields, spikes, etc.
+%				data					text from data line 1
+%				ndata					# of fields in data line 1
 %		UnitTimestampCols		list of data columns with time stamp data
 %		MarkerTimestampCols	list of data columns with marker stime stamp data
 % 		MarkerTags				variable names in Marker data
@@ -48,32 +49,30 @@ classdef (ConstructOnLoad = true) DWinfo < handle
 	% Define protected properties
 	%------------------------------------------------------------------------
 	%------------------------------------------------------------------------
-	properties (SetAccess = private, GetAccess = public)
-		file;
-		path;
-		Nlines;
-		header;
-		data1;
-		ndata1;
-		UnitTimestampCols;
-		MarkerTimestampCols;
-		MarkerTags;
-		MarkerCols;
-		NMarkerCols;
-		SpikeCols;
-		NSpikeCols;
-		UnitColsL;
-		NUnitCols;
-		Ndatalines;
-	end
+
 	
 	%------------------------------------------------------------------------
 	%------------------------------------------------------------------------
 	% Define public properties
 	%------------------------------------------------------------------------
 	%------------------------------------------------------------------------
-	properties
-		testprop;
+	properties (SetAccess = public, GetAccess = public)
+		file
+		path
+		Nlines
+		header
+		firstline = struct('data', {}, 'ndata', []);
+		UnitTimestampCols
+		MarkerTimestampCols
+		MarkerTags
+		MarkerCols
+		Ncols
+		NMarkerCols
+		SpikeCols
+		NSpikeCols
+		UnitCols
+		NUnitCols
+		Ndatalines
 	end
 	
 	%------------------------------------------------------------------------
@@ -102,7 +101,7 @@ classdef (ConstructOnLoad = true) DWinfo < handle
 			Nstdarg = nargin - Noptarg;
 
 			obj.file = '';
-			obj.set.path('');
+			obj.path = '';
 			LOAD_FLAG = 0;
 
 			%parse input and verify
@@ -162,35 +161,21 @@ classdef (ConstructOnLoad = true) DWinfo < handle
 
 		%------------------------------------------------------------------------
 		%------------------------------------------------------------------------
-	% 	function obj = setFile(obj, varargin)
 		function set.file(obj, val)
-
 			% check if no filename or path provided
 			if isempty(val)			
-				% open ui panel to get filename and path from user
-				[fname, pname] = uigetfile('*.txt', 'Select Datawave Exported Text File');
-				% return if user pressed cancel button
-				if isequal(fname, 0) || isequal(pname,0)
-					disp('Cancelled...')
-					obj.file = '';
-					return
-				else
-					[~, fname, ext] = fileparts(fname);
-				end
-			else 
+				obj.file = '';
+				return
+			elseif isnumeric(val)
+				warning('%s: file must be a string; file property unchanged', mfilename);
+				return
+			else
 				% assume path is included or that file is in current directory
 				[pname, fname, ext] = fileparts(val);
+				% set values for path and file
+				obj.path = pname;
+				obj.file = [fname ext];
 			end
-
-			if isempty(pname)
-				% no path, assume current dir.
-				obj.set.path(pwd);
-			else
-				obj.set.path(pname);
-			end
-			obj.file = [fname ext];
-
-			obj
 		end
 		%------------------------------------------------------------------------
 		%------------------------------------------------------------------------
@@ -198,37 +183,23 @@ classdef (ConstructOnLoad = true) DWinfo < handle
 		%------------------------------------------------------------------------
 		%------------------------------------------------------------------------
 		function set.path(obj, val)
-
 			% check if no filename or path provided
 			if isempty(val)			
-				% open ui panel to get filename and path from user
-				pname = uigetdir('Select Datawave Data Directory');
-				% return if user pressed cancel button
-				if isequal(pname,0)
-					disp('Cancelled...')
-					return
-				end
+				obj.path = '';
+				return
+			elseif isnumeric(val)
+				warning('%s: path must be a string; path property unchanged', mfilename);
+				return
 			else
 				% user provided path string
-				pname = varargin{1};
+				obj.path = val;
 			end
-
-			if isempty(pname)
-				% no path, assume current dir.
-				obj.path = '';
-			else
-				obj.path = pname;
-			end
-	% 		obj.set.file([fname ext]);
-
-			obj
 		end
 		%------------------------------------------------------------------------
 		%------------------------------------------------------------------------
 
 		%------------------------------------------------------------------------
 		%------------------------------------------------------------------------
-	% 	function obj = setFile(obj, varargin)
 		function obj = openFile(obj, varargin)
 
 			% check if no filename
@@ -250,11 +221,9 @@ classdef (ConstructOnLoad = true) DWinfo < handle
 			end
 
 			% set the path
-			obj.set.path(pname);
+			obj.path = pname;
 			% save filename
-			obj.set.file([fname ext]);
-
-			obj
+			obj.file = [fname ext];
 		end
 		%------------------------------------------------------------------------
 		%------------------------------------------------------------------------
@@ -277,19 +246,22 @@ classdef (ConstructOnLoad = true) DWinfo < handle
 				pname = varargin{1};
 			end
 
-			obj.set.path(pname);
-
-			obj
+			obj.path = pname;
 		end
+		
+		
 		%------------------------------------------------------------------------
 		%------------------------------------------------------------------------		
 		%------------------------------------------------------------------------
 		%------------------------------------------------------------------------
-		function obj = readDataWaveTextInfo(obj)
-
+		function [obj, errFlg] = readHeader(obj)
+			errFlg = 0;
+			
 			% first check to make sure filename is set
 			if isempty(obj.file)
-				error('%s: file is undefined', mfilename)
+				warning('%s: file is undefined', mfilename);
+				errFlg = 1;
+				return
 			end
 
 			% load defaults
@@ -303,7 +275,7 @@ classdef (ConstructOnLoad = true) DWinfo < handle
 			% count the number of lines in the file
 			filename = fullfile(obj.path, obj.file);
 			obj.Nlines = countTextFileLines(filename);
-			disp(['... found ' num2str(obj.Nlines) ' lines in file ' filename ' (including header).']);
+			fprintf('... found %d lines (including header) in file:\n %s \n', obj.Nlines, filename);
 
 			% Open file for reading as text
 			fp = fopen(filename, 'rt');
@@ -329,14 +301,22 @@ classdef (ConstructOnLoad = true) DWinfo < handle
 			%-----------------------------------------------------------
 			tmpline = fgetl(fp);
 			tmp = textscan(tmpline, '%s', 'Delimiter', '\t');
-			obj.data1 = tmp{1};
-			obj.ndata1 = length(obj.data1);
-			obj.Ncols = ndata1;
+			obj.firstline(1).data = tmp{1};
+			obj.firstline.ndata = length(obj.firstline.data);
+			obj.Ncols = obj.firstline.ndata;
 
 			%-----------------------------------------------------------
 			% close file
 			%-----------------------------------------------------------
 			fclose(fp);
+			
+			% parse header if no error
+			if ~errFlg
+				[~, tmp] = obj.parseHeader;
+				if tmp
+					errFlg = 3;
+				end
+			end
 
 		end
 		%------------------------------------------------------------------------
@@ -345,9 +325,105 @@ classdef (ConstructOnLoad = true) DWinfo < handle
 
 		%------------------------------------------------------------------------
 		%------------------------------------------------------------------------
-		function parseString(obj)
+		function [obj, errFlg] = parseHeader(obj)
+		%------------------------------------------------------------------------
+		% [obj, errFlg] = parseHeader
+		%------------------------------------------------------------------------
+		% 	Parses information from header to find:
+		%		MarkerCols			indices of marker columns
+		%		NMarkerCols			# of marker columns
+		%		SpikeCols			indices of spike timestamp columns
+		%		NSpikeCols			# of spike columns
+		%		UnitCols				indices to unit id columns
+		%		NUnitCols			# unit id columns (length(UnitCols))
+		%		Ndatalines			# of data lines (adjusted for # of header lines)
+		%								dwinfo.Nlines - N_HEADER_LINES
+		%		MarkerTags			updated MarkerTags
+		% 
+		%------------------------------------------------------------------------
+		% Input Arguments:
+		%	none
+		% 
+		% Output Arguments:
+		%	obj		self
+		% 
+		% 	errFlg	Error flag
+		% 					0		no error
+		% 					1		user cancelled file opening
+		% 					2		no fields found in header lines
+		% 					3		file not found
+		%------------------------------------------------------------------------
+		% See: readDataWaveTextInfo, loadDWfile
+		%------------------------------------------------------------------------
+			errFlg = 0;
+			%-----------------------------------------------------------
+			% load defaults
+			%-----------------------------------------------------------
+			DataWaveDefaults;
 
-		end	%parseString
+			%--------------------------------------------------------------------
+			% find spike timestamp header tags
+			%--------------------------------------------------------------------
+			% algorithm: search text fields in header using strncmp, then locate
+			%  non-zero elements in returned vector using find
+			%--------------------------------------------------------------------
+			timestamp_cols = strncmp(obj.header.fields{1}, 'timestamp', length('timestamp'));
+			obj.SpikeCols = find(timestamp_cols);
+			% make sure something was found
+			if isempty(obj.SpikeCols)
+				% if empty, return error
+				errFlg = 2;
+				return
+			end
+			obj.NSpikeCols = length(obj.SpikeCols);
+
+			%--------------------------------------------------------------------
+			% find unit header tags in header
+			%--------------------------------------------------------------------
+			tmp = strncmp(obj.header.fields{1}, 'cluster', 1);
+			obj.UnitCols = find(tmp);
+			% make sure something was found
+			if isempty(obj.UnitCols)
+				% if empty, warn user
+				warning('DWFILE:TSTAMP', '%s: no unit/probe timestamp fields found in file %s header', ...
+												mfilename, obj.filename);
+			end
+			obj.NUnitCols = length(obj.UnitCols);
+
+			%--------------------------------------------------------------------
+			% find marker Timestamp header tags
+			%--------------------------------------------------------------------
+			% There are several ways to do this.  
+			% one that makes very few assumptions is to AND together the unit and spike
+			% timestamp cols, NOT them and those should be the marker cols.
+			%--------------------------------------------------------------------
+			tmp = strncmp(obj.header.fields{1}, 'Timestamp', length('Timestamp'));
+			obj.MarkerCols = find(tmp);
+			% make sure something was found
+			if isempty(obj.MarkerCols)
+				% if empty, warn user
+				warning('DWFILE:MARKER', '%s: no Marker timestamp fields found in file %s header', ...
+												mfilename, obj.filename);
+			elseif length(obj.MarkerCols) > 1
+				% if unpredicted length, warn user
+				warning('DWFILE:MARKER', '%s: %d Marker timestamp  fields found in file %s header', ...
+												mfilename, length(obj.MarkerCols), obj.filename);
+			else
+				% 3 of columns for marker information is the value of the first
+				% spike timestamp column - 1 (all spike timestamps are written after
+				% the marker information)
+				obj.NMarkerCols = obj.SpikeCols(1) - 1;
+			end
+
+			%-----------------------------------------------------------
+			% get marker tags
+			%-----------------------------------------------------------
+			obj.MarkerTags = obj.header.fields{1}(1:obj.NMarkerCols);
+
+			obj.Ndatalines = obj.Nlines - N_HEADER_LINES;
+
+
+		end	%parseHeader
 		%------------------------------------------------------------------------
 		%------------------------------------------------------------------------
 

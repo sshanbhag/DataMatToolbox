@@ -7,7 +7,8 @@ function [rawdata, errFlg] = readDataWaveTextFile(dwinfo)
 % 
 %------------------------------------------------------------------------
 % Input Arguments:
-% 	dwinfo	DataWave file information structure (from 		name of DataWave exported text file (usually with .txt file
+% 	dwinfo	DataWave file information object 
+% 				(from name of DataWave exported text file (usually with .txt file
 % 				extension)
 %				If fname is not provided, a GUI window will open to select file.
 % 

@@ -5,10 +5,17 @@
 clear all
 
 % create instance
-d = DW.DWinfo
-
-% set file
-d.set.File('BATtest.txt')
+d = DW.DWdata([pwd filesep 'BATtest.txt']);
 
 
-d
+[~, r, errflg] = d.readRawData;
+
+d.parseMarkers(r);
+
+% % set file
+% d.file = [pwd filesep 'BATtest.txt'];
+% 
+% 
+% [~, errFlg] = d.readDataWaveTextInfo;
+% 
+% [~, errFlg] = d.parseHeader
