@@ -197,6 +197,10 @@ classdef (ConstructOnLoad = true) DWdata < handle
 		% formerly readDataWaveTextFile
 		% Reads raw text information from Datawave Text file
 		% 
+		% returns raw text in a 2-D cell array.
+		%
+		% it is a big hog of memory to store this in the
+		% DWdata object itself
 		%------------------------------------------------------------------------
 		% Output Arguments:
 		%
@@ -207,43 +211,36 @@ classdef (ConstructOnLoad = true) DWdata < handle
 		% See: readDataWaveHeader, parseDataWaveTextHeader
 		%------------------------------------------------------------------------
 
+			%-----------------------------------------------------------
+			% initial things
+			%-----------------------------------------------------------
 			errFlg = 0;
-			%-----------------------------------------------------------
 			% load defaults
-			%-----------------------------------------------------------
 			DataWaveDefaults;
 
-			%-----------------------------------------------------------
 			% check input arguments, act depending on inputs
-			%-----------------------------------------------------------
 			if nargin == 0
 				% no filename or path provided
 				error('%s: input argument error', mfilename);
 			end
 
-			%-----------------------------------------------------------
 			% allocate data cell array  
 			% * N_HEADER_LINES defined in DataWaveDefaults.m file
-			%-----------------------------------------------------------
 			rawdata = cell(obj.Info.Nlines - N_HEADER_LINES, 1);
 
 			%-----------------------------------------------------------
-			% open file for text reading
+			% Read data file
 			%-----------------------------------------------------------
+			% open file for text reading
 			fp = fopen(obj.fullfname, 'rt');
 
-			%-----------------------------------------------------------
 			% skip past header lines
-			%-----------------------------------------------------------
 			for n = 1:N_HEADER_LINES
 				fgetl(fp);
 			end
 
-			%-----------------------------------------------------------
-			% read in raw data using textscan - this will load
-			% the entire file into a cell array
-			%-----------------------------------------------------------
 			disp(['Reading Data from ' obj.fullfname ' ... ']);
+
 			% loop through rawdata lines, starting line after header lines
 			% (first rawdata line)
 			for line_index = 1:(obj.Info.Nlines - N_HEADER_LINES)
@@ -255,11 +252,8 @@ classdef (ConstructOnLoad = true) DWdata < handle
 				rawdata{line_index} = tmp{1};
 			end
 
-			%-----------------------------------------------------------
 			% close file
-			%-----------------------------------------------------------
 			fclose(fp);
-
 			% no error(s) encountered
 			errFlg = 0;
 		end
@@ -270,10 +264,13 @@ classdef (ConstructOnLoad = true) DWdata < handle
 		%------------------------------------------------------------------------
 		%------------------------------------------------------------------------
 		function parseMarkers(obj, rawdata)
+		%------------------------------------------------------------------------
+		%------------------------------------------------------------------------
+		
+			%-----------------------------------------------------------
+			% Initial setup
+			%-----------------------------------------------------------
 			errFlg = 0;
-			%-----------------------------------------------------------
-			% load defaults
-			%-----------------------------------------------------------
 			DataWaveDefaults;
 
 			%-----------------------------------------------------------

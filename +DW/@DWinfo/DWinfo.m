@@ -418,10 +418,12 @@ classdef (ConstructOnLoad = true) DWinfo < handle
 			%-----------------------------------------------------------
 			% get marker tags
 			%-----------------------------------------------------------
+			% marker tags are fields in 1st line up to NMarkerCols
 			obj.MarkerTags = obj.header.fields{1}(1:obj.NMarkerCols);
-
+			% # of data lines are total number of lines in the 
+			% file minus the # of header lines specified in DataWaveDefaults
+			% file
 			obj.Ndatalines = obj.Nlines - N_HEADER_LINES;
-
 
 		end	%parseHeader
 		%------------------------------------------------------------------------

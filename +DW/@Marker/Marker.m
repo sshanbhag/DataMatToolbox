@@ -4,7 +4,7 @@
 % DataMat Toolbox
 % Class Definition
 %-----------------------------------------------------------------------------
-% 			string						raw string from text file
+%		marker "tags":
 % 			Timestamp					time of event, in microseconds
 % 			id								?
 % 			OutputFilename				output data file name
@@ -38,6 +38,9 @@
 % 			WavFilenameL
 % 			ToneFreqL
 % 			PhaseDegL
+%			
+%		Added values
+% 			string						raw string from text file (¿redundant?)
 % 			M
 % 			StimulusTypeR
 % 			StimulusTypeL
@@ -59,14 +62,14 @@
 %-----------------------------------------------------------------------------
 
 classdef (ConstructOnLoad = true) Marker
-	
+	%%
 	%------------------------------------------------------------------------
 	%------------------------------------------------------------------------
 	% Define protected properties
 	%------------------------------------------------------------------------
 	%------------------------------------------------------------------------
 	properties (SetAccess = protected)
-		string
+		% tags
 		Timestamp
 		id
 		OutputFilename
@@ -100,39 +103,56 @@ classdef (ConstructOnLoad = true) Marker
 		WavFilenameL
 		ToneFreqL
 		PhaseDegL
-		M
+		% other
+		string
 		StimulusTypeR
 		StimulusTypeL
 		wavFilesR
 		wavFilesL
 	end
 	
+	%%
 	%------------------------------------------------------------------------
 	%------------------------------------------------------------------------
 	% Define methods
 	%------------------------------------------------------------------------
 	%------------------------------------------------------------------------
-	methods
-	
+	methods	
 		
-	%% ------------------------------------------------------------------------
-	function obj = Marker(varargin)
-	%---------------------------------------------------------------------	
-	%	Marker(<fileName>) 
-	%	Constructor method
-	%---------------------------------------------------------------------	
+		%---------------------------------------------------------------------	
+		%---------------------------------------------------------------------	
+		function obj = Marker(varargin)
+		%---------------------------------------------------------------------	
+		%	Marker(<fileName>) 
+		%	Constructor method
+		%---------------------------------------------------------------------	
 
-		%parse input and verify
-		obj.string = '';
-		if nargin == 1
-			obj.string = varargin{1};
-		end
-	end		%Marker
-	
-%% ------------------------------------------------------------------------
-	function parseString(obj)
-	
-	end	%parseString
+			%parse input and verify
+			obj.string = '';
+			if nargin == 1
+				obj.string = varargin{1};
+			end
+		end		%Marker
+		%---------------------------------------------------------------------	
+		%---------------------------------------------------------------------	
+
+		%---------------------------------------------------------------------	
+		%---------------------------------------------------------------------	
+		function parseString(obj)
+			% loop through markers (in M() struct array), pulling out text and value
+			for m = 1:MARKER_NMARKERS
+				if any(strcmp(MARKER_TYPES{m}, {'int', 'float', 'double'}))
+					obj.(MARKER_TAGS{m}) = str2num(string{m});
+				elseif strcmp(MARKER_TYPES{m}, 'char')
+					obj.(MARKER_TAGS{m}) = string{m};
+				else
+					error('%s: undefined marker type %s', mfilename, MARKER_TYPES{n});
+				end
+			end
+
+		end	%parseString
+		%---------------------------------------------------------------------	
+		%---------------------------------------------------------------------	
 		
 	% End of methods
 	end
