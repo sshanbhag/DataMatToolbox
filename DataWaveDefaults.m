@@ -1,3 +1,4 @@
+function DataWaveDefaults(varargin)
 %------------------------------------------------------------------------
 % DataWaveDefaults
 %------------------------------------------------------------------------
@@ -77,20 +78,27 @@
 %
 % Revisions:
 % 	8 August, 2011 (SJS):
-%		-	added pre/post time
-%	30 May, 2012 (SJS). updated comments/docs
+%	 -	added pre/post time
+%	30 May, 2012 (SJS):
+% 	 -	updated comments/docs
+% 	 - functionalized
 %------------------------------------------------------------------------
 % TO DO:
 %------------------------------------------------------------------------
 
 
 %-----------------------------------------------------------
-% see if mat file exists; if so, load that and return
+% figure out what to do
 %-----------------------------------------------------------
-if exist('DataWaveDefaults.mat', 'file')
-	load('DataWaveDefaults.mat');
-	return
+if ~length(varargin)
+	% see if mat file exists; if so, load that (in caller's
+	% workspace) and return
+	if exist('DataWaveDefaults.mat', 'file')
+		evalin('caller', ['load(''DataWaveDefaults.mat'')'])
+		return
+	end
 end
+% otherwise, go ahead and create the default vars.
 
 %-----------------------------------------------------------
 % default # of header lines
@@ -332,7 +340,10 @@ STIMULUS_STRUCT_FIELDS = {	...
 % merge in the marker tags
 STIMULUS_STRUCT_FIELDS = [STIMULUS_STRUCT_FIELDS MARKER_TAGS];
 
-
+%-----------------------------------------------------------
+% save the variables in mat file
+%-----------------------------------------------------------
+fprintf('Saving file DataWaveDefaults.mat...')
 save('DataWaveDefaults.mat', ...
 	'N_HEADER_LINES', ...
 	'N_CHANNELS', ...
@@ -355,6 +366,9 @@ save('DataWaveDefaults.mat', ...
 	'-MAT' ...
 );
 
+% and load into caller's workspace
+fprintf('...and loading variables\n');
 
+evalin('caller', ['load(''DataWaveDefaults.mat'')'])
 
 
