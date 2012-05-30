@@ -51,8 +51,7 @@ classdef (ConstructOnLoad = true) DWdata < handle
 		Background;	%really this should be a class too...
 		D;				%really this should be a class too...
 		Stimulus;		%really this should be a class too...
-		MarkerData
-		Marker
+		Markers
 	end
 	
 	%% ------------------------------------------------------------------------
@@ -287,96 +286,32 @@ classdef (ConstructOnLoad = true) DWdata < handle
 			%-----------------------------------------------------------
 			disp( 'Processing Marker information ...')
 
-			% check for markers
-			if ~obj.Info.NMarkerCols
-				% if no marker cols, error!
-				error('%s: no markers detected in file', mfilename)
-			end
+			% get # of markers (# of rawdata values)
+			Nmarkers = length(rawdata);
+			fprintf('%d markers in data\n', Nmarkers)
 
-			% Pull in Marker data
-			disp('Reading Marker Data...')
-
-			% first and last columns of Marker information
-			mStartCol = obj.Info.MarkerCols(1);
-			mEndCol = obj.Info.NMarkerCols;
-
-			% initialize marker Counter variable
+			% initialize variables
 			markerCount = 0;
-
+			obj.Markers = DW.Marker;
+			
 			% loop, using # of data lines as upper bound
-			for L = 1:obj.Info.Ndatalines
+			for L = 1:Nmarkers
 				% check if marker information is present
-				if isempty(rawdata{L}{mStartCol})
+				if isempty(rawdata{L})
 					% if not, break
 					disp(['found end of Marker Data, line ' num2str(L)])
 					break;
 				else
-					% store marker information
-
 					% increment marker index
-					markerCount = markerCount + 1;
-
-					% save time stamp as number
-					obj.MarkerData(markerCount).t = str2double(rawdata{L}{mStartCol});
-					% save times in stand-alone vector
-					MarkerTimes(markerCount) = obj.MarkerData(markerCount).t;
-
-					% initialize fields for marker data
-					% I am assuming two potential types of data
-					%	text		some sort of string, e.g. .wav file name
-					%	value		a numeric value (e.g., attenuation value)
-					obj.MarkerData(markerCount).string = rawdata{L}(mStartCol:mEndCol);
+					markerCount = markerCount + 1
+					% parse and store marker information
+					obj.Markers(markerCount) = DW.Marker(rawdata{L});
+					% assign marker #
+					obj.Markers(markerCount).N = markerCount;
 				end
 			end
-
-			%-----------------------------------------------------------------------------
-			% retrieve time stamps, values and text as arrays (or cell arrays)
-			%-----------------------------------------------------------------------------
-			%	Nmarkers								number of Datawave markers in .txt file
-			%	Marker.t(1:Nmarkers)				vector of Datawave marker timestamps
-			%	Marker.string{1:Nmarkers}		cell vector of marker strings
-			%	Marker.<tag name>(marker #)	numeric or cell vector that holds marker data
-			%-----------------------------------------------------------------------------
-
-			% check and store length of M struct array
-			Nmarkers = length(obj.MarkerData);
-			if ~Nmarkers
-				error('%s: no markers in marker struct array', mfilename);
-			end
-
-			% allocate arrays
-			Marker.string = cell(Nmarkers, 1);
-
-			for m = 1:MARKER_NMARKERS
-				if any(strcmp(MARKER_TYPES{m}, {'int', 'float', 'double'}))
-					Marker.(MARKER_TAGS{m}) = zeros(Nmarkers, 1);
-				elseif strcmp(MARKER_TYPES{m}, 'char')
-					Marker.(MARKER_TAGS{m}) = cell(Nmarkers, 1);
-				else
-					error('%s: undefined marker type %s', mfilename, MARKER_TYPES{n});
-				end
-			end
-
-			% loop through markers (in obj.MarkerData() struct array), pulling out text and value
-			for n = 1:Nmarkers
-				for m = 1:MARKER_NMARKERS
-					if any(strcmp(MARKER_TYPES{m}, {'int', 'float', 'double'}))
-						Marker.(MARKER_TAGS{m})(n) = str2num(obj.MarkerData(n).string{m});
-					elseif strcmp(MARKER_TYPES{m}, 'char')
-						Marker.(MARKER_TAGS{m}){n} = obj.MarkerData(n).string{m};
-					else
-						error('%s: undefined marker type %s', mfilename, MARKER_TYPES{n});
-					end
-				end
-				Marker.string{n} = obj.MarkerData(n).string;
-			end
-
-			% store in obj.Marker struct... might not be necessary, but keep it for now
-% 			Marker.M = obj.MarkerData;
-
-			% Identify Stimulus types, store in obj.Marker structure
-			obj.Marker = identifyStimulus(Marker, obj.Info);
-
+			
+			%{
 			%-----------------------------------------------------------------------------
 			% Now check for different .wav file stimulus files
 			%-----------------------------------------------------------------------------
@@ -388,7 +323,7 @@ classdef (ConstructOnLoad = true) DWdata < handle
 			% if list of names is empty, leave wavFiles struct empty
 			%-----------------------------------------------------------------------------
 			% R channel
-			[names, indices, N] = findUniqueText(obj.Marker.WavFilenameR);
+			[names, indices, N] = findUniqueText(obj.WavFilenameR);
 			% check if names is empty
 			if ~isempty(names)
 				obj.Marker.wavFilesR = struct(	'uniqueNames', names, ...
@@ -404,6 +339,7 @@ classdef (ConstructOnLoad = true) DWdata < handle
 													'Nunique', N ...
 													);
 			end
+			%}			
 		
 		end
 		%------------------------------------------------------------------------

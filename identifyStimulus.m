@@ -21,11 +21,12 @@ function [out, errFlg] = identifyStimulus(Marker, dwinfo)
 
 %------------------------------------------------------------------------
 % Sharad J. Shanbhag
-% sshanbhag@neoucom.edu
+% sshanbhag@neomed.edu
 %------------------------------------------------------------------------
 % Created: 9 June, 2011 (SJS)
 %
 % Revisions:
+%	30 May, 2012 (SJS): minor tweaks as Marker Object is built
 %------------------------------------------------------------------------
 % TO DO:
 %------------------------------------------------------------------------

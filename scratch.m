@@ -11,8 +11,9 @@ d = DW.DWdata([pwd filesep 'BATtest.txt']);
 % DWdata object itself
 [~, r, errflg] = d.readRawData;
 
-m = DW.Marker;
+m = DW.Marker(r{1});
 
+d.parseMarkers(r)
 
 % d.parseMarkers(r);
 
