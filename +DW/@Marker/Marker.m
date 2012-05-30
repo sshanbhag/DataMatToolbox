@@ -61,7 +61,7 @@
 % TO DO:
 %-----------------------------------------------------------------------------
 
-classdef (ConstructOnLoad = true) Marker
+classdef (ConstructOnLoad = true) Marker < handle
 	%%
 	%------------------------------------------------------------------------
 	%------------------------------------------------------------------------
@@ -109,6 +109,8 @@ classdef (ConstructOnLoad = true) Marker
 		StimulusTypeL
 		wavFilesR
 		wavFilesL
+		
+	% end of properties
 	end
 	
 	%%
@@ -119,35 +121,47 @@ classdef (ConstructOnLoad = true) Marker
 	%------------------------------------------------------------------------
 	methods	
 		
-		%---------------------------------------------------------------------	
-		%---------------------------------------------------------------------	
+		%---------------------------------------------------------------------
+		%---------------------------------------------------------------------
 		function obj = Marker(varargin)
-		%---------------------------------------------------------------------	
+		%---------------------------------------------------------------------
 		%	Marker(<fileName>) 
 		%	Constructor method
-		%---------------------------------------------------------------------	
+		%---------------------------------------------------------------------
 
 			%parse input and verify
 			obj.string = '';
 			if nargin == 1
 				obj.string = varargin{1};
+				obj.parseString;
 			end
 		end		%Marker
-		%---------------------------------------------------------------------	
-		%---------------------------------------------------------------------	
+		%---------------------------------------------------------------------
+		%---------------------------------------------------------------------
 
-		%---------------------------------------------------------------------	
-		%---------------------------------------------------------------------	
+		%---------------------------------------------------------------------
+		%---------------------------------------------------------------------
 		function parseString(obj)
-			% loop through markers (in M() struct array), pulling out text and value
+		%---------------------------------------------------------------------
+		%---------------------------------------------------------------------
+
+			% load defaults
+			DataWaveDefaults;
+			
+			% loop through markers, pulling out text and value
 			for m = 1:MARKER_NMARKERS
+				% check if current marker is a number
 				if any(strcmp(MARKER_TYPES{m}, {'int', 'float', 'double'}))
-					obj.(MARKER_TAGS{m}) = str2num(string{m});
+					% if number, store value in vector 
+					obj.(MARKER_TAGS{m}) = str2num(obj.string{m});
 				elseif strcmp(MARKER_TYPES{m}, 'char')
-					obj.(MARKER_TAGS{m}) = string{m};
+					% otherwise, if string, store in 1-D cell array
+					obj.(MARKER_TAGS{m}) = obj.string{m};
 				else
+					% unknown type, throw error
 					error('%s: undefined marker type %s', mfilename, MARKER_TYPES{n});
 				end
+				obj.(MARKER_TAGS{m})
 			end
 
 		end	%parseString
