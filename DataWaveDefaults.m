@@ -5,6 +5,66 @@
 %------------------------------------------------------------------------
 % script that defines default values for DataWave Text files
 % 
+% Values defined:
+% 
+% 	MARKER_TAGS			are the column headers within the exported
+% 							DataWave text files
+% 		Values:
+% 			'Timestamp'							microsecond timestamp for marker
+% 			'id'									?
+% 			'OutputFilename'
+% 			'AttenuationR'
+% 			'BBNlowerFreqR'
+% 			'BBNupperFreqR'
+% 			'AmplitudeR'
+% 			'TimeShiftR'
+% 			'RampUpR'
+% 			'HoldTimeR'
+% 			'RampDownR'
+% 			'OutputTimestampR'
+% 			'OutputTimeWithDelayR'
+% 			'FixedDelayR'
+% 			'PA5idR'
+% 			'WavFilenameR'
+% 			'ToneFreqR'
+% 			'PhaseDegR'
+% 			'AttenuationL'
+% 			'BBNlowerFreqL'
+% 			'BBNupperFreqL'
+% 			'AmplitudeL'
+% 			'TimeShiftL'
+% 			'RampUpL'
+% 			'HoldTimeL'
+% 			'RampDownL'
+% 			'OutputTimestampL'
+% 			'OutputTimeWithDelayL'
+% 			'FixedDelayL'
+% 			'PA5idL'
+% 			'WavFilenameL'
+% 			'ToneFreqL'
+% 			'PhaseDegL'
+% 
+% 	MARKER_TYPES		specifies the type of marker information -
+% 		Values:
+% 			'char'			character or string
+% 			'int'				integer
+% 			'float'			floating point
+% 
+% 	MARKER_UNITS		specifies units of marker information.
+% 		Values:
+% 			'usec'			microseconds
+% 			'dB'				decibels
+% 			'Hz'				Hertz
+% 			'mV'				millivolts
+% 			'Degrees'		degrees (angle)
+% 			''					blank/dimensionless
+% 
+% 	MARKER_NMARKERS	is # of marker elements 
+% 							(number of MARKER_TAGS, TYPES and UNITS)
+% 
+% 	MARKER_INFO			is a [MARKER_NMARKERS X 3] cell array of values with columns
+% 							corresponding to MARKER_TAGS, MARKER_TYPES, and MARKER_UNITS
+% 							i.e., MARKER_INFO = [MARKER_TAGS' MARKER_TYPES' MARKER_UNITS']
 %------------------------------------------------------------------------
 % See: readDataWaveHeader 
 %------------------------------------------------------------------------
@@ -16,32 +76,46 @@
 % Created: 25 May, 2011 (SJS)
 %
 % Revisions:
-% 	8 August, 20100 (SJS):
+% 	8 August, 2011 (SJS):
 %		-	added pre/post time
+%	30 May, 2012 (SJS). updated comments/docs
 %------------------------------------------------------------------------
 % TO DO:
 %------------------------------------------------------------------------
 
 
 %-----------------------------------------------------------
+% see if mat file exists; if so, load that and return
+%-----------------------------------------------------------
+if exist('DataWaveDefaults.mat', 'file')
+	load('DataWaveDefaults.mat');
+	return
+end
+
+%-----------------------------------------------------------
 % default # of header lines
 %-----------------------------------------------------------
 N_HEADER_LINES = 1;
 
+%-----------------------------------------------------------
 % # of output channels
+%-----------------------------------------------------------
 N_CHANNELS = 2;
 
 %-----------------------------------------------------------
 % default plot options
 %-----------------------------------------------------------
-% time before and after sweep to plot 
+% time before 
 PRE_PLOTTIME = 250;
+% and after sweep to plot 
 POST_PLOTTIME = 250;
 
 %-----------------------------------------------------------
 % Marker format information
 %-----------------------------------------------------------
 
+% MARKER_TAGS are the column headers within the exported
+% DataWave text files
 MARKER_TAGS = { ...
 	'Timestamp', ...
 	'id', ...
@@ -78,6 +152,10 @@ MARKER_TAGS = { ...
 	'PhaseDegL' ...
 };
 
+% MARKER_TYPES specifies the type of marker information -
+%	'char'		character or string
+%	'int'			integer
+%	'float'		floating point
 MARKER_TYPES = { ...
 	'char', ...
 	'int', ...
@@ -114,6 +192,13 @@ MARKER_TYPES = { ...
 	'float', ...
 };
 
+% MARKER_UNITS specifies units of marker information.
+%	'usec'			microseconds
+% 	'dB'				decibels
+% 	'Hz'				Hertz
+% 	'mV'				millivolts
+% 	'Degrees'		degrees (angle)
+% 	''					blank/dimensionless	
 MARKER_UNITS = { ...
 	'usec', ...
 	'', ...
@@ -150,9 +235,13 @@ MARKER_UNITS = { ...
 	'Degrees' ...
 };
 
-MARKER_INFO = [MARKER_TAGS' MARKER_TYPES' MARKER_UNITS'];
-
+% MARKER_NMARKERS is # of marker elements 
+% (number of MARKER_TAGS, TYPES and UNITS)
 MARKER_NMARKERS = length(MARKER_TAGS);
+
+% MARKER_INFO is a [MARKER_NMARKERS X 3] cell array of values with columns 
+% corresponding to MARKER_TAGS, MARKER_TYPES, and MARKER_UNITS
+MARKER_INFO = [MARKER_TAGS' MARKER_TYPES' MARKER_UNITS'];
 
 %-----------------------------------------------------------
 %-----------------------------------------------------------
@@ -243,6 +332,28 @@ STIMULUS_STRUCT_FIELDS = {	...
 % merge in the marker tags
 STIMULUS_STRUCT_FIELDS = [STIMULUS_STRUCT_FIELDS MARKER_TAGS];
 
+
+save('DataWaveDefaults.mat', ...
+	'N_HEADER_LINES', ...
+	'N_CHANNELS', ...
+	'PRE_PLOTTIME', ...
+	'POST_PLOTTIME', ...
+	'MARKER_TAGS', ...
+	'MARKER_TYPES', ...
+	'MARKER_UNITS', ...
+	'MARKER_INFO', ...
+	'MARKER_NMARKERS', ...
+	'STIMULUS_TYPES', ...
+	'TEST_TYPES', ...
+	'STIMULUS_TAGS', ...
+	'STIMULUS_SEARCH_TAGS', ...
+	'NTAGS_PER_CHANNEL', ...
+	'TONE_VAR_TAGS', ...
+	'NOISE_VAR_TAGS', ...
+	'WAV_VAR_TAGS', ...
+	'STIMULUS_STRUCT_FIELDS', ...
+	'-MAT' ...
+);
 
 
 

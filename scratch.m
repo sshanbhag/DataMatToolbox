@@ -7,7 +7,8 @@ clear all
 % create instance
 d = DW.DWdata([pwd filesep 'BATtest.txt']);
 
-
+% read in raw text data.  Don't want to store this in the
+% DWdata object itself
 [~, r, errflg] = d.readRawData;
 
 d.parseMarkers(r);
