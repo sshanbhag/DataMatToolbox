@@ -80,7 +80,6 @@ for n = 1:Nmarkers
 		end
 	end
 	Marker.string{n} = M(n).string;
-	n
 end
 
 % store in Marker struct... might not be necessary, but keep it for now

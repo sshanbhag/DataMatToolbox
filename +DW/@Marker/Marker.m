@@ -124,13 +124,23 @@ classdef (ConstructOnLoad = true) Marker < handle
 		%---------------------------------------------------------------------
 		%---------------------------------------------------------------------
 		function obj = Marker(varargin)
+		%---------------------------------------------------------------------	
+		% Marker
+		% Constructor method
 		%---------------------------------------------------------------------
-		%	Marker(<fileName>) 
-		%	Constructor method
+		% Marker(dwstring)	where dwstring is a row of text, in cell form, 
+		%							from a datawave text file, will create an
+		%							initialized/parsed Marker object
+		%							
+		%							when called with no arguments, returns empty
+		%							Marker object
 		%---------------------------------------------------------------------
 
+			%--------------------------------------------------------
 			%parse input and verify
+			%--------------------------------------------------------
 			obj.string = '';
+			
 			if nargin == 1
 				obj.string = varargin{1};
 				obj.parseString;
@@ -141,12 +151,19 @@ classdef (ConstructOnLoad = true) Marker < handle
 
 		%---------------------------------------------------------------------
 		%---------------------------------------------------------------------
-		function parseString(obj)
+		function parseString(obj, varargin)
 		%---------------------------------------------------------------------
+		% parseString(obj)
+		%---------------------------------------------------------------------
+		% parses string into individual properties for Marker object
 		%---------------------------------------------------------------------
 
 			% load defaults
 			DataWaveDefaults;
+			
+			if length(varargin) == 1
+				obj.string = varargin{1};
+			end
 			
 			% loop through markers, pulling out text and value
 			for m = 1:MARKER_NMARKERS

@@ -272,7 +272,16 @@ classdef (ConstructOnLoad = true) DWdata < handle
 			%-----------------------------------------------------------
 			errFlg = 0;
 			DataWaveDefaults;
-
+			
+			%-----------------------------------------------------------
+			% check inputs
+			%-----------------------------------------------------------
+			if isempty(rawdata)
+				error('%s: rawdata is empty!', mfilename)
+			elseif ~iscell(rawdata)
+				error('%s: improper format for rawdata; must be cell array or vector', mfilename);
+			end
+			
 			%-----------------------------------------------------------
 			% get Marker information and retrieve markers from data
 			%-----------------------------------------------------------
