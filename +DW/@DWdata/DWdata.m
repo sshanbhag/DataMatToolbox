@@ -47,7 +47,7 @@ classdef (ConstructOnLoad = true) DWdata < handle
 		fpath;			%path to file
 		fname;			%name of file
 		fext;			%file extension
-		Info = DW.DWinfo;			
+		Info;			
 		Background;	%really this should be a class too...
 		D;				%really this should be a class too...
 		Stimulus;		%really this should be a class too...
@@ -70,6 +70,7 @@ classdef (ConstructOnLoad = true) DWdata < handle
 	%------------------------------------------------------------------------
 	methods
 	
+		%% Constructor
 		
 		%------------------------------------------------------------------------
 		%------------------------------------------------------------------------
@@ -104,9 +105,9 @@ classdef (ConstructOnLoad = true) DWdata < handle
 				[~, obj.fname, obj.fext] = fileparts(fileName);
 			end
 
-			obj.Info.file = obj.fullfname;
-			obj.Info.readHeader;
-		
+			fprintf('Initializing from file %s...\n\n', obj.fullfname);
+			
+			obj.Info = DW.DWinfo('File', obj.fullfname, 'Load');
 			
 			%{
 			%Try loading the file and see if crashes
@@ -123,45 +124,8 @@ classdef (ConstructOnLoad = true) DWdata < handle
 		%------------------------------------------------------------------------
 		%------------------------------------------------------------------------
 
-
-		%------------------------------------------------------------------------
-		%------------------------------------------------------------------------
-		function set.fname(obj, val)
-			% check if no filename or path provided
-			if isempty(val)			
-				obj.fname = '';
-				return
-			elseif isnumeric(val)
-				warning('%s: fname must be a string; file property unchanged', mfilename);
-				return
-			else
-				% assume path is included or that file is in current directory
-				[obj.fpath, obj.fname, obj.fext] = fileparts(val);
-				obj.fullfname = fullfile(obj.fpath, [obj.fname obj.fext]);
-			end
-		end
-		%------------------------------------------------------------------------
-		%------------------------------------------------------------------------
-
-		%------------------------------------------------------------------------
-		%------------------------------------------------------------------------
-		function set.fpath(obj, val)
-			% check if no filename or path provided
-			if isempty(val)			
-				obj.fpath = '';
-				return
-			elseif isnumeric(val)
-				warning('%s: fpath must be a string; path property unchanged', mfilename);
-				return
-			else
-				% user provided path string
-				obj.fpath = val;
-			end
-		end
-		%------------------------------------------------------------------------
-		%------------------------------------------------------------------------
-
-
+		%% General Methods
+		
 		%------------------------------------------------------------------------
 		%------------------------------------------------------------------------
 		function disp(obj)
@@ -176,16 +140,7 @@ classdef (ConstructOnLoad = true) DWdata < handle
 			fprintf('\tD:\n\t\t%ix%i %s\n',size(obj.D,1),size(obj.D,2),class(obj.D))
 		end	%disp
 		%------------------------------------------------------------------------
-		%------------------------------------------------------------------------
-
-		%------------------------------------------------------------------------
-		%------------------------------------------------------------------------
-		function ret = get.fullfname(obj)
-			ret = fullfile(obj.fpath, [obj.fname obj.fext]);
-		end	%get.fullfname
-		%------------------------------------------------------------------------
-		%------------------------------------------------------------------------
-		
+		%------------------------------------------------------------------------		
 		
 		%------------------------------------------------------------------------
 		%------------------------------------------------------------------------
@@ -259,10 +214,37 @@ classdef (ConstructOnLoad = true) DWdata < handle
 		%------------------------------------------------------------------------
 		%------------------------------------------------------------------------
 
+		%------------------------------------------------------------------------
+		%------------------------------------------------------------------------
+		function loadMarkers(obj)
+		%------------------------------------------------------------------------
+		%------------------------------------------------------------------------
+
+			%-----------------------------------------------------------
+			% Initial setup
+			%-----------------------------------------------------------
+			errFlg = 0;
+			DataWaveDefaults;
+			
+			%-----------------------------------------------------------
+			% read raw data
+			%-----------------------------------------------------------
+			[~, rawdata, errFlag] = obj.readRawData;
 		
+			if errFlag
+				warning('%s: error %d', mfilename, errFlag);
+				return
+			end
+			
+			obj.parseMarkersFromData(rawdata);
+			
+		end	%END loadMarkers
 		%------------------------------------------------------------------------
 		%------------------------------------------------------------------------
-		function parseMarkers(obj, rawdata)
+
+		%------------------------------------------------------------------------
+		%------------------------------------------------------------------------
+		function parseMarkersFromData(obj, rawdata)
 		%------------------------------------------------------------------------
 		%------------------------------------------------------------------------
 		
@@ -282,68 +264,185 @@ classdef (ConstructOnLoad = true) DWdata < handle
 			end
 			
 			%-----------------------------------------------------------
-			% get Marker information and retrieve markers from data
+			% build list of Marker objects
 			%-----------------------------------------------------------
-			disp( 'Processing Marker information ...')
+			disp( 'Building Marker list ...')
 
 			% get # of markers (# of rawdata values)
-			Nmarkers = length(rawdata);
-			fprintf('%d markers in data\n', Nmarkers)
+			fprintf('%d markers in data\n', obj.Info.Nmarkers)
 
-			% initialize variables
-			markerCount = 0;
+			% intialize Marker
 			obj.Markers = DW.Marker;
 			
 			% loop, using # of data lines as upper bound
-			for L = 1:Nmarkers
-				% check if marker information is present
-				if isempty(rawdata{L})
-					% if not, break
-					disp(['found end of Marker Data, line ' num2str(L)])
-					break;
+			for L = 1:obj.Info.Nmarkers
+				obj.Markers(L) = DW.Marker(rawdata{L});
+				% assign marker #
+				obj.Markers(L).N = L;
+			end
+	
+		end	% END parseMarkersFromData()
+		%------------------------------------------------------------------------
+		%------------------------------------------------------------------------
+		
+		
+		%------------------------------------------------------------------------
+		%------------------------------------------------------------------------
+		function parseProbesFromData(obj, rawdata)
+		%------------------------------------------------------------------------
+		% parseProbesFromData(obj, rawdata)
+		%------------------------------------------------------------------------
+		
+			%-----------------------------------------------------------
+			% Initial setup
+			%-----------------------------------------------------------
+			errFlg = 0;
+			DataWaveDefaults;
+			
+			%-----------------------------------------------------------
+			% check inputs
+			%-----------------------------------------------------------
+			if isempty(rawdata)
+				error('%s: rawdata is empty!', mfilename)
+			elseif ~iscell(rawdata)
+				error('%s: improper format for rawdata; must be cell array or vector', mfilename);
+			end			
+			
+			
+		end
+		
+		
+		
+		%------------------------------------------------------------------------
+		%------------------------------------------------------------------------
+		
+		%------------------------------------------------------------------------
+		%------------------------------------------------------------------------
+		function arrOut = getUniqueWavNames(obj, channel)
+		%------------------------------------------------------------------------
+		% arrOut = getUniqueWavNames(obj, channel)
+		%------------------------------------------------------------------------
+		% checks for different .wav file stimulus files
+		%	Nunique			# of unique strings in Marker.text
+		%	uniqueNames		unique values of strings in Marker.text, cell array
+		%	uniqueIndices	indices where each of the unique strings are found in
+		%						Marker.WavFilename(L/R)
+		%
+		% if list of names is empty, leave wavFiles struct empty
+		%------------------------------------------------------------------------
+			if isnumeric(channel)
+				if channel == 1
+					fieldname = 'WavFilenameL';
 				else
-					% increment marker index
-					markerCount = markerCount + 1
-					% parse and store marker information
-					obj.Markers(markerCount) = DW.Marker(rawdata{L});
-					% assign marker #
-					obj.Markers(markerCount).N = markerCount;
+					fieldname = 'WavFilenameR';
 				end
+			else
+				fieldname = ['WavFilename' upper(channel)]
 			end
 			
-			%{
-			%-----------------------------------------------------------------------------
-			% Now check for different .wav file stimulus files
-			%-----------------------------------------------------------------------------
-			% Nunique			# of unique strings in Marker.text
-			% uniqueNames		unique values of strings in Marker.text, cell array
-			% uniqueIndices	indices where each of the unique strings are found in
-			%						Marker.WavFilename(L/R)
-			%
-			% if list of names is empty, leave wavFiles struct empty
-			%-----------------------------------------------------------------------------
-			% R channel
-			[names, indices, N] = findUniqueText(obj.WavFilenameR);
-			% check if names is empty
+			allwavnames = obj.getMarkerFieldAsArray(fieldname);
+			
+			[names, indices, N] = findUniqueText(allwavnames);
 			if ~isempty(names)
-				obj.Marker.wavFilesR = struct(	'uniqueNames', names, ...
-													'uniqueIndices', indices, ...
-													'Nunique', N ...
-													);
+				arrOut = struct(	'uniqueNames', names, ...
+										'uniqueIndices', indices, ...
+										'Nunique', N ...
+									);
+			else
+				arrOut = [];
 			end
-			% L channel
-			[names, indices, N] = findUniqueText(obj.Marker.WavFilenameL);
-			if ~isempty(names)
-				obj.Marker.wavFilesL = struct(	'uniqueNames', names, ...
-													'uniqueIndices', indices, ...
-													'Nunique', N ...
-													);
-			end
-			%}			
-		
+			
 		end
 		%------------------------------------------------------------------------
 		%------------------------------------------------------------------------
+		
+		
+		%------------------------------------------------------------------------
+		%------------------------------------------------------------------------
+		function arrOut = getMarkerFieldAsArray(obj, fieldname)
+		%------------------------------------------------------------------------
+		% arrOut = getMarkerFieldAsArray(obj, fieldname)
+		%------------------------------------------------------------------------
+			if ~exist('fieldname', 'var')
+				error('%s: no fieldname provided', mfilename)
+			end
+			
+			DataWaveDefaults;
+			
+			% check if fieldname is valid
+			fname = strcmp(fieldname, MARKER_TAGS);
+			
+			if isempty(fname)
+				error('%s: %s is not a valid marker tag field', mfilename, fieldname);
+			end
+			
+			% find index location of fieldname in MARKER_TAGS for dynamic indexing
+			floc = find(fname);
+			
+			% return arrOut as cell array for character fields
+			if strcmpi(MARKER_TYPES{floc}, 'char')
+				arrOut = cell(obj.Info.Nmarkers, 1);
+				for c = 1:obj.Info.Nmarkers
+					arrOut{c} = obj.Markers(c).(MARKER_TAGS{floc});
+				end
+		
+			else
+				% return as numerical array for number fields
+				arrOut = zeros(obj.Info.Nmarkers, 1);
+				for c = 1:obj.Info.Nmarkers
+					arrOut(c) = obj.Markers(c).(MARKER_TAGS{floc});
+				end
+			end
+		end	% END getMarkerFieldAsArray
+		%------------------------------------------------------------------------
+		%------------------------------------------------------------------------
+		
+
+		%% Set/Get Methods
+		%------------------------------------------------------------------------
+		%------------------------------------------------------------------------
+		function set.fname(obj, val)
+			% check if no filename or path provided
+			if isempty(val)			
+				obj.fname = '';
+				return
+			elseif isnumeric(val)
+				warning('%s: fname must be a string; file property unchanged', mfilename);
+				return
+			else
+				% assume path is included or that file is in current directory
+				[obj.fpath, obj.fname, obj.fext] = fileparts(val);
+				obj.fullfname = fullfile(obj.fpath, [obj.fname obj.fext]);
+			end
+		end
+		%------------------------------------------------------------------------
+		%------------------------------------------------------------------------
+
+		%------------------------------------------------------------------------
+		%------------------------------------------------------------------------
+		function set.fpath(obj, val)
+			% check if no filename or path provided
+			if isempty(val)			
+				obj.fpath = '';
+				return
+			elseif isnumeric(val)
+				warning('%s: fpath must be a string; path property unchanged', mfilename);
+				return
+			else
+				% user provided path string
+				obj.fpath = val;
+			end
+		end
+		%------------------------------------------------------------------------
+		%------------------------------------------------------------------------
+
+		%------------------------------------------------------------------------
+		%------------------------------------------------------------------------
+		function ret = get.fullfname(obj)
+			ret = fullfile(obj.fpath, [obj.fname obj.fext]);
+		end	%get.fullfname
+		%------------------------------------------------------------------------
+		%------------------------------------------------------------------------		
 		
 	% End of methods
 	end

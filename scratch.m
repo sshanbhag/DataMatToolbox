@@ -7,20 +7,9 @@ clear all
 % create instance
 d = DW.DWdata([pwd filesep 'BATtest.txt']);
 
-% read in raw text data.  Don't want to store this in the
-% DWdata object itself
-[~, r, errflg] = d.readRawData;
+% load Markers - this will read in raw data from BATtest.txt and parse the
+% marker information
+d.loadMarkers
 
-m = DW.Marker(r{1});
 
-d.parseMarkers(r)
 
-% d.parseMarkers(r);
-
-% % set file
-% d.file = [pwd filesep 'BATtest.txt'];
-% 
-% 
-% [~, errFlg] = d.readDataWaveTextInfo;
-% 
-% [~, errFlg] = d.parseHeader

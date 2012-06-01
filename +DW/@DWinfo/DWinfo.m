@@ -16,6 +16,7 @@
 %									determine fields, spikes, etc.
 %				data					text from data line 1
 %				ndata					# of fields in data line 1
+%		Nmarkers
 %		UnitTimestampCols		list of data columns with time stamp data
 %		MarkerTimestampCols	list of data columns with marker stime stamp data
 % 		MarkerTags				variable names in Marker data
@@ -51,7 +52,7 @@ classdef (ConstructOnLoad = true) DWinfo < handle
 	%------------------------------------------------------------------------
 
 	
-	%------------------------------------------------------------------------
+	%% ----------------------------------------------------------------------
 	%------------------------------------------------------------------------
 	% Define public properties
 	%------------------------------------------------------------------------
@@ -60,28 +61,28 @@ classdef (ConstructOnLoad = true) DWinfo < handle
 		file
 		path
 		Nlines
+		Ndatalines
 		header
 		firstline = struct('data', {}, 'ndata', []);
-		UnitTimestampCols
-		MarkerTimestampCols
+		Nmarkers
+		Ncols
 		MarkerTags
 		MarkerCols
-		Ncols
 		NMarkerCols
-		SpikeCols
-		NSpikeCols
+		MarkerTimeCols
+		NMarkerTimeCols
+		SpikeTimeCols
+		NSpikeTimeCols
 		UnitCols
 		NUnitCols
-		Ndatalines
 	end
 	
-	%------------------------------------------------------------------------
+	%% ----------------------------------------------------------------------
 	%------------------------------------------------------------------------
 	% Define methods
 	%------------------------------------------------------------------------
 	%------------------------------------------------------------------------
 	methods
-	
 		
 		%------------------------------------------------------------------------
 		%------------------------------------------------------------------------
@@ -99,21 +100,25 @@ classdef (ConstructOnLoad = true) DWinfo < handle
 			Noptarg = size(varargin, 2);
 			% determine "std" args by taking difference of total # args and Noptarg
 			Nstdarg = nargin - Noptarg;
-
+			
+			%--------------------------------------------------------------
+			%parse input and verify
+			%--------------------------------------------------------------
 			obj.file = '';
 			obj.path = '';
 			LOAD_FLAG = 0;
-
-			%parse input and verify
+			errFlag = 0;
+			
+			% check inputs
 			if nargin == 0
 				return
+				
 			else
-
-				errFlag = 0;
 				n = 1;
+				
 				% loop through Noptarg
 				while (n <= Noptarg) && ~errFlag
-
+					
 					% check for file option string
 					if strcmpi(varargin{n}, 'File')
 						% increment index
@@ -131,7 +136,7 @@ classdef (ConstructOnLoad = true) DWinfo < handle
 							obj.path = pname;
 						end
 						obj.file = [fname ext];
-						clear pname fname ext					
+						clear pname fname ext
 						n = n + 1;
 
 					% check for Load option 
@@ -143,8 +148,9 @@ classdef (ConstructOnLoad = true) DWinfo < handle
 					% unknown input
 					else
 						warning('%s: unknown option %s', mfilename, varargin{n});
+						n = n + 1;
 					end
-					n = n + 1;
+					
 				end
 
 			end
@@ -153,7 +159,8 @@ classdef (ConstructOnLoad = true) DWinfo < handle
 			% Load data
 			%--------------------------------------------------------------
 			if LOAD_FLAG
-				obj.readDataWaveTextInfo;
+				fprintf('%s: reading and parsing Header...\n', mfilename);
+				obj.readAndParseHeader;
 			end
 		end
 		%------------------------------------------------------------------------
@@ -162,6 +169,10 @@ classdef (ConstructOnLoad = true) DWinfo < handle
 		%------------------------------------------------------------------------
 		%------------------------------------------------------------------------
 		function set.file(obj, val)
+		%-----------------------------------------------------------------	
+		%	file set method
+		%-----------------------------------------------------------------
+
 			% check if no filename or path provided
 			if isempty(val)			
 				obj.file = '';
@@ -248,16 +259,65 @@ classdef (ConstructOnLoad = true) DWinfo < handle
 
 			obj.path = pname;
 		end
-		
+		%------------------------------------------------------------------------
+		%------------------------------------------------------------------------
 		
 		%------------------------------------------------------------------------
-		%------------------------------------------------------------------------		
+		%------------------------------------------------------------------------
+		function [obj, errFlg] = readAndParseHeader(obj)
+		%------------------------------------------------------------------------
+		% [obj, errFlg] = readAndParseHeader(obj)
+		%------------------------------------------------------------------------
+
+			% first check to make sure filename is set
+			errFlg = 0;
+			if isempty(obj.file)
+				warning('%s: file is undefined', mfilename);
+				errFlg = 1;
+				return
+			end
+		
+			%-----------------------------------------------------------
+			% read header if no error
+			%-----------------------------------------------------------
+			[~, errFlg] = obj.readHeader;
+			if errFlg
+				fprintf('%s: skipping parsing of header due to error %d\n', mfilename, errFlg);
+				return
+			end
+			
+			%-----------------------------------------------------------
+			% parse header if no error
+			%-----------------------------------------------------------
+			[~, errFlg] = obj.parseHeader;
+			if errFlg
+				fprintf('%s: error %d while parsing header\n', mfilename, errFlg);
+			end
+			
+			%-----------------------------------------------------------
+			% count markers if no error
+			%-----------------------------------------------------------
+			[~, nmarkers, errFlg] = obj.countMarkers;
+			if errFlg
+				fprintf('%s: error %d while counting markers\n', mfilename, errFlg);
+			else
+				fprintf('...found %d markers in file\n', nmarkers)
+			end
+			
+		end
+		%------------------------------------------------------------------------
+		%------------------------------------------------------------------------
+		
+		
 		%------------------------------------------------------------------------
 		%------------------------------------------------------------------------
 		function [obj, errFlg] = readHeader(obj)
-			errFlg = 0;
-			
+		%------------------------------------------------------------------------
+		% [obj, errFlg] = readHeader(obj)
+		%------------------------------------------------------------------------
+
 			% first check to make sure filename is set
+			errFlg = 0;
 			if isempty(obj.file)
 				warning('%s: file is undefined', mfilename);
 				errFlg = 1;
@@ -275,8 +335,13 @@ classdef (ConstructOnLoad = true) DWinfo < handle
 			% count the number of lines in the file
 			filename = fullfile(obj.path, obj.file);
 			obj.Nlines = countTextFileLines(filename);
-			fprintf('... found %d lines (including header) in file:\n %s \n', obj.Nlines, filename);
+			fprintf('... found %d lines (including header) in file:\n\t\t %s \n', ...
+								obj.Nlines, filename);
 
+			% # of data lines are total number of lines in the 
+			% file minus the # of header lines specified in DataWaveDefaults file
+			obj.Ndatalines = obj.Nlines - N_HEADER_LINES;
+			
 			% Open file for reading as text
 			fp = fopen(filename, 'rt');
 
@@ -309,16 +374,8 @@ classdef (ConstructOnLoad = true) DWinfo < handle
 			% close file
 			%-----------------------------------------------------------
 			fclose(fp);
-			
-			% parse header if no error
-			if ~errFlg
-				[~, tmp] = obj.parseHeader;
-				if tmp
-					errFlg = 3;
-				end
-			end
 
-		end
+		end  % end readHeader
 		%------------------------------------------------------------------------
 		%------------------------------------------------------------------------
 
@@ -331,9 +388,13 @@ classdef (ConstructOnLoad = true) DWinfo < handle
 		%------------------------------------------------------------------------
 		% 	Parses information from header to find:
 		%		MarkerCols			indices of marker columns
-		%		NMarkerCols			# of marker columns
-		%		SpikeCols			indices of spike timestamp columns
-		%		NSpikeCols			# of spike columns
+		%		NMarkerCols			# of marker colums
+		%		MarkerTimeCols		indices of marker timestamp columns
+		%									(should be 1 in most cases)
+		%		NMarkerTimeCols	# of marker timestamp columns
+		%		SpikeTimeCols		indices of spike timestamp columns
+		%									(should start at 34 usually)
+		%		NSpikeTimeCols		# of spike timestamp columns
 		%		UnitCols				indices to unit id columns
 		%		NUnitCols			# unit id columns (length(UnitCols))
 		%		Ndatalines			# of data lines (adjusted for # of header lines)
@@ -356,6 +417,12 @@ classdef (ConstructOnLoad = true) DWinfo < handle
 		% See: readDataWaveTextInfo, loadDWfile
 		%------------------------------------------------------------------------
 			errFlg = 0;
+			if isempty(obj.file)
+				warning('%s: file is undefined', mfilename);
+				errFlg = 1;
+				return
+			end
+			
 			%-----------------------------------------------------------
 			% load defaults
 			%-----------------------------------------------------------
@@ -364,19 +431,20 @@ classdef (ConstructOnLoad = true) DWinfo < handle
 			%--------------------------------------------------------------------
 			% find spike timestamp header tags
 			%--------------------------------------------------------------------
-			% algorithm: search text fields in header using strncmp, then locate
-			%  non-zero elements in returned vector using find
+			% algorithm: search for 'timestamp' in header using strncmp, 
+			% then locate non-zero elements in returned vector using find
 			%--------------------------------------------------------------------
 			timestamp_cols = strncmp(obj.header.fields{1}, 'timestamp', length('timestamp'));
-			obj.SpikeCols = find(timestamp_cols);
+			obj.SpikeTimeCols = find(timestamp_cols);
 			% make sure something was found
-			if isempty(obj.SpikeCols)
+			if isempty(obj.SpikeTimeCols)
 				% if empty, return error
 				errFlg = 2;
 				return
 			end
-			obj.NSpikeCols = length(obj.SpikeCols);
-
+			% store # timestamp cols
+			obj.NSpikeTimeCols = length(obj.SpikeTimeCols);
+			
 			%--------------------------------------------------------------------
 			% find unit header tags in header
 			%--------------------------------------------------------------------
@@ -396,23 +464,27 @@ classdef (ConstructOnLoad = true) DWinfo < handle
 			% There are several ways to do this.  
 			% one that makes very few assumptions is to AND together the unit and spike
 			% timestamp cols, NOT them and those should be the marker cols.
+			%			- OR	-
+			% search for 'Timestamp'
 			%--------------------------------------------------------------------
 			tmp = strncmp(obj.header.fields{1}, 'Timestamp', length('Timestamp'));
-			obj.MarkerCols = find(tmp);
+			obj.MarkerTimeCols = find(tmp);
 			% make sure something was found
-			if isempty(obj.MarkerCols)
+			if isempty(obj.MarkerTimeCols)
 				% if empty, warn user
 				warning('DWFILE:MARKER', '%s: no Marker timestamp fields found in file %s header', ...
 												mfilename, obj.filename);
-			elseif length(obj.MarkerCols) > 1
+			elseif length(obj.MarkerTimeCols) > 1
 				% if unpredicted length, warn user
 				warning('DWFILE:MARKER', '%s: %d Marker timestamp  fields found in file %s header', ...
-												mfilename, length(obj.MarkerCols), obj.filename);
+												mfilename, length(obj.MarkerTimeCols), obj.filename);
 			else
 				% 3 of columns for marker information is the value of the first
 				% spike timestamp column - 1 (all spike timestamps are written after
 				% the marker information)
-				obj.NMarkerCols = obj.SpikeCols(1) - 1;
+				obj.NMarkerCols = obj.SpikeTimeCols(1) - 1;
+				obj.MarkerCols = 1:obj.NMarkerCols;
+				obj.NMarkerTimeCols = length(obj.MarkerTimeCols);
 			end
 
 			%-----------------------------------------------------------
@@ -420,12 +492,81 @@ classdef (ConstructOnLoad = true) DWinfo < handle
 			%-----------------------------------------------------------
 			% marker tags are fields in 1st line up to NMarkerCols
 			obj.MarkerTags = obj.header.fields{1}(1:obj.NMarkerCols);
-			% # of data lines are total number of lines in the 
-			% file minus the # of header lines specified in DataWaveDefaults
-			% file
-			obj.Ndatalines = obj.Nlines - N_HEADER_LINES;
-
+			
 		end	%parseHeader
+		%------------------------------------------------------------------------
+		%------------------------------------------------------------------------
+		
+		
+		%------------------------------------------------------------------------
+		%------------------------------------------------------------------------
+		function [obj, markerCount, errFlg] = countMarkers(obj)
+		%------------------------------------------------------------------------
+		% [obj, markerCount, errFlg] = countMarkers
+		%------------------------------------------------------------------------
+		% figure out # of markers
+		%------------------------------------------------------------------------
+		% algorithm:
+		% 	read in lines of data after header, keeping running count
+		% 	when first empty marker timestamp (first element
+		% 	in cell array of read text fields) is found, break and 
+		% 	store running count as # of markers
+		%------------------------------------------------------------------------
+
+			%-----------------------------------------------------------
+			% make sure file exists
+			%-----------------------------------------------------------
+			errFlg = 0;
+			if isempty(obj.file)
+				warning('%s: file is undefined', mfilename);
+				errFlg = 1;
+				return
+			end
+			
+			%-----------------------------------------------------------
+			% load defaults
+			%-----------------------------------------------------------
+			DataWaveDefaults;
+			
+			%-----------------------------------------------------------
+			% now, count lines
+			%-----------------------------------------------------------
+			% Open file for reading as text
+			fp = fopen( fullfile(obj.path, obj.file), 'rt');
+
+			% Marker timestamp column - hardcoded here, but should figure out
+			% a way to make this programmatically determined.
+			mStartCol = 1;
+
+			% initialize marker Counter variable
+			markerCount = 0;
+
+			% skip header lines
+			for n = 1:N_HEADER_LINES
+				fgetl(fp);			
+			end
+			
+			% loop, using # of data lines as upper bound
+			for L = 1:obj.Ndatalines
+				% read line
+				tmpline = fgetl(fp);
+				% get values in line L of header (text, tab-delimited)
+				tmpvals = textscan(tmpline, '%s', 'Delimiter', '\t');
+				% check if marker information is present
+				if isempty(tmpvals{1}{mStartCol})
+					% if not, break
+					break;
+				else
+					% store marker information
+					% increment marker index
+					markerCount = markerCount + 1;
+				end
+			end
+			
+			% store marker count in Nmarkers property
+			obj.Nmarkers = markerCount;
+		
+		end % end count markers
 		%------------------------------------------------------------------------
 		%------------------------------------------------------------------------
 

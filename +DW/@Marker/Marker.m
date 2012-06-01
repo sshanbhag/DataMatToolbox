@@ -59,6 +59,7 @@
 % Revisions:
 %-----------------------------------------------------------------------------
 % TO DO:
+%
 %-----------------------------------------------------------------------------
 
 classdef (ConstructOnLoad = true) Marker < handle
@@ -106,8 +107,6 @@ classdef (ConstructOnLoad = true) Marker < handle
 		% other
 		StimulusTypeR
 		StimulusTypeL
-		wavFilesR
-		wavFilesL
 		
 	% end of properties
 	end
@@ -119,12 +118,15 @@ classdef (ConstructOnLoad = true) Marker < handle
 
 	
 	%%
+	%%
 	%------------------------------------------------------------------------
 	%------------------------------------------------------------------------
 	% Define methods
 	%------------------------------------------------------------------------
 	%------------------------------------------------------------------------
 	methods	
+		
+		%% Constructor Method
 		
 		%---------------------------------------------------------------------
 		%---------------------------------------------------------------------
@@ -153,7 +155,67 @@ classdef (ConstructOnLoad = true) Marker < handle
 		end		%Marker
 		%---------------------------------------------------------------------
 		%---------------------------------------------------------------------
+		
+		%% Overloaded Methods
 
+		%---------------------------------------------------------------------
+		%---------------------------------------------------------------------
+		function out = eq(objA, objB)
+		%---------------------------------------------------------------------
+		%---------------------------------------------------------------------
+		
+			% define fields to compare
+			numfields = {	...
+								'AttenuationR', ...
+								'BBNlowerFreqR', ...
+								'BBNupperFreqR', ...
+								'AmplitudeR', ...
+								'TimeShiftR', ...
+								'RampUpR', ...
+								'HoldTimeR', ...
+								'RampDownR', ...
+								'FixedDelayR', ...
+								'ToneFreqR', ...
+								'PhaseDegR', ...
+								'AttenuationL', ...
+								'BBNlowerFreqL', ...
+								'BBNupperFreqL', ...
+								'AmplitudeL', ...
+								'TimeShiftL', ...
+								'RampUpL', ...
+								'HoldTimeL', ...
+								'RampDownL', ...
+								'OutputTimestampL', ...
+								'OutputTimeWithDelayL', ...
+								'FixedDelayL' ...
+							};
+			charfields = {	...
+								'WavFilenameR', ...
+								'WavFilenameL', ...
+								'ToneFreqL', ...
+								'PhaseDegL' ...
+							};
+
+			numcomp = zeros(size(numfields));
+			charcomp = zeros(size(charfields));
+			
+			for n = 1:length(numfields)
+				numcomp(n) = all(objA.(numfields{n}) == objB.(numfields{n}));
+			end
+			
+			for c = 1:length(charfields)
+				charcomp(c) = strcmp( objA.(charfields{c}), objB.(charfields{c}) );
+			end
+			
+			out = all([numcomp charcomp]);
+
+		end	% END Marker/eq
+		%---------------------------------------------------------------------
+		%---------------------------------------------------------------------
+
+		
+		%% General Methods
+		
 		%---------------------------------------------------------------------
 		%---------------------------------------------------------------------
 		function initMarkerFromString(obj, varargin)
@@ -372,6 +434,7 @@ classdef (ConstructOnLoad = true) Marker < handle
 		%------------------------------------------------------------------------
 
 		
+		%% Set/Get methods
 		
 		%------------------------------------------------------------------------
 		%------------------------------------------------------------------------
@@ -387,6 +450,8 @@ classdef (ConstructOnLoad = true) Marker < handle
 		end
 		%------------------------------------------------------------------------
 		%------------------------------------------------------------------------
+		
+		
 	% End of methods
 	end
 end
