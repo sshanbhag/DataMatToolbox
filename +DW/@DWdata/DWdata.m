@@ -32,6 +32,7 @@
 %	17 May, 2012 
 %		updated documentation
 %		renamed file and class from LoadDWfileData.m to DWdata.m
+%		beginning massive Objectification...
 %-----------------------------------------------------------------------------
 % TO DO:
 %-----------------------------------------------------------------------------
@@ -52,6 +53,11 @@ classdef (ConstructOnLoad = true) DWdata < handle
 		D;				%really this should be a class too...
 		Stimulus;		%really this should be a class too...
 		Markers
+		Probes
+		Units
+		Nmarkers
+		Nprobes
+		Nunits
 	end
 	
 	%% ------------------------------------------------------------------------
@@ -216,7 +222,7 @@ classdef (ConstructOnLoad = true) DWdata < handle
 
 		%------------------------------------------------------------------------
 		%------------------------------------------------------------------------
-		function loadMarkers(obj)
+		function errFlg = loadMarkers(obj)
 		%------------------------------------------------------------------------
 		%------------------------------------------------------------------------
 
@@ -225,18 +231,56 @@ classdef (ConstructOnLoad = true) DWdata < handle
 			%-----------------------------------------------------------
 			errFlg = 0;
 			DataWaveDefaults;
-			
 			%-----------------------------------------------------------
 			% read raw data
 			%-----------------------------------------------------------
 			[~, rawdata, errFlag] = obj.readRawData;
-		
 			if errFlag
 				warning('%s: error %d', mfilename, errFlag);
 				return
 			end
-			
+			%-----------------------------------------------------------
+			% parse Markers
+			%-----------------------------------------------------------
 			obj.parseMarkersFromData(rawdata);
+			obj.Nmarkers = obj.Info.Nmarkers;
+		end	%END loadMarkers
+		%------------------------------------------------------------------------
+		%------------------------------------------------------------------------
+
+		%------------------------------------------------------------------------
+		%------------------------------------------------------------------------
+		function errFlg = loadData(obj)
+		%------------------------------------------------------------------------
+		%------------------------------------------------------------------------
+
+			%-----------------------------------------------------------
+			% Initial setup
+			%-----------------------------------------------------------
+			errFlg = 0;
+			DataWaveDefaults;
+			%-----------------------------------------------------------
+			% read raw data
+			%-----------------------------------------------------------
+			[~, rawdata, errFlg] = obj.readRawData;
+			if errFlg
+				warning('%s: error %d', mfilename, errFlag);
+				return
+			end
+			%-----------------------------------------------------------
+			% parse Markers
+			%-----------------------------------------------------------
+			obj.parseMarkersFromData(rawdata);
+			obj.Nmarkers = obj.Info.Nmarkers;
+			%-----------------------------------------------------------
+			% parse Probes
+			%-----------------------------------------------------------
+			obj.Nprobes = obj.Info.NSpikeTimeCols;
+			errFlg = obj.parseProbesFromData(rawdata)
+			%-----------------------------------------------------------
+			% parse Units
+			%-----------------------------------------------------------
+			obj.parseProbeIntoUnits;
 			
 		end	%END loadMarkers
 		%------------------------------------------------------------------------
@@ -244,7 +288,7 @@ classdef (ConstructOnLoad = true) DWdata < handle
 
 		%------------------------------------------------------------------------
 		%------------------------------------------------------------------------
-		function parseMarkersFromData(obj, rawdata)
+		function errFlg = parseMarkersFromData(obj, rawdata)
 		%------------------------------------------------------------------------
 		%------------------------------------------------------------------------
 		
@@ -253,7 +297,6 @@ classdef (ConstructOnLoad = true) DWdata < handle
 			%-----------------------------------------------------------
 			errFlg = 0;
 			DataWaveDefaults;
-			
 			%-----------------------------------------------------------
 			% check inputs
 			%-----------------------------------------------------------
@@ -262,25 +305,20 @@ classdef (ConstructOnLoad = true) DWdata < handle
 			elseif ~iscell(rawdata)
 				error('%s: improper format for rawdata; must be cell array or vector', mfilename);
 			end
-			
 			%-----------------------------------------------------------
 			% build list of Marker objects
 			%-----------------------------------------------------------
-			disp( 'Building Marker list ...')
-
+			disp( 'Building Marker list ...');
 			% get # of markers (# of rawdata values)
 			fprintf('%d markers in data\n', obj.Info.Nmarkers)
-
 			% intialize Marker
 			obj.Markers = DW.Marker;
-			
 			% loop, using # of data lines as upper bound
 			for L = 1:obj.Info.Nmarkers
 				obj.Markers(L) = DW.Marker(rawdata{L});
 				% assign marker #
 				obj.Markers(L).N = L;
 			end
-	
 		end	% END parseMarkersFromData()
 		%------------------------------------------------------------------------
 		%------------------------------------------------------------------------
@@ -288,9 +326,9 @@ classdef (ConstructOnLoad = true) DWdata < handle
 		
 		%------------------------------------------------------------------------
 		%------------------------------------------------------------------------
-		function parseProbesFromData(obj, rawdata)
+		function errFlg = parseProbesFromData(obj, rawdata)
 		%------------------------------------------------------------------------
-		% parseProbesFromData(obj, rawdata)
+		% errFlg = parseProbesFromData(obj, rawdata)
 		%------------------------------------------------------------------------
 		
 			%-----------------------------------------------------------
@@ -306,16 +344,113 @@ classdef (ConstructOnLoad = true) DWdata < handle
 				error('%s: rawdata is empty!', mfilename)
 			elseif ~iscell(rawdata)
 				error('%s: improper format for rawdata; must be cell array or vector', mfilename);
-			end			
+			end		
+		
+			%-----------------------------------------------------------
+			% Pull in Spike Channel Data
+			%-----------------------------------------------------------
+			obj.Nprobes = obj.Info.NSpikeTimeCols;
+	
+			% check # of Spike channels
+			if ~obj.Nprobes
+				% if 0, error
+				error('%s: no spike data channels detected in header', mfilename)
+			else
+				% otherwise, build Probes
+				obj.Probes = DW.Probe;
+				for n = 1:obj.Nprobes
+					obj.Probes(n) = DW.Probe;
+				end
+			end
+
+			disp('Reading and Parsing Probe Data...')
+			% loop through spike columns (i.e., tetrodes)
+			for p = 1:obj.Info.NSpikeTimeCols
+				% get current column number for spike data
+				c = obj.Info.SpikeTimeCols(p);
+				% pull out the data for this column
+				l = 0;
+				tmpline = rawdata{1};
+				loopFlag = 1;
+				while ~isempty(tmpline{c}) && (l < obj.Info.Ndatalines) && loopFlag
+					l = l+1;
+					tmpline = rawdata{l};
+					if ~isempty(tmpline{c})
+						obj.Probes(p).t(l) = str2double(tmpline{c});
+						obj.Probes(p).cluster(l) = str2double(tmpline{c+1});
+					else
+						loopFlag = 0;
+					end
+				end
+			end
+		end	% END parseProbesFromData
+		%------------------------------------------------------------------------
+		%------------------------------------------------------------------------
+
+		%---------------------------------------------------------------------
+		%---------------------------------------------------------------------
+		function parseProbeIntoUnits(obj)
+		%---------------------------------------------------------------------
+		
+			%-----------------------------------------------------------
+			% load defaults
+			%-----------------------------------------------------------
+			DataWaveDefaults;
+			errFlg = 0;
+
+			%-----------------------------------------------------------
+			% separate spike times into units
+			%-----------------------------------------------------------
+
+			% initialize total unit counter
+			NUnits = 0;
+
+			obj.Units = DW.Unit;
 			
+			% loop through probes
+			for p = 1:obj.Nprobes
+				% find unique cluster id values
+				unique_clusters = unique(obj.Probes(p).cluster);
+
+				% check if unique values were found
+				if ~isempty(unique_clusters)
+					% if so, figure out how many clusters there are
+					obj.Probes(p).Nclusters = length(unique_clusters);
+
+					% then, assign data to the Units() struct array that will hold
+					% unit and timestamp data
+
+					% initialize cluster index n
+					n = 1;
+					% loop through running count of total units, and store probe, unit number
+					% indices and timestamps for this unit
+					for u = (1 + NUnits) : (NUnits + obj.Probes(p).Nclusters)
+						obj.Units(u) = DW.Unit;
+						obj.Units(u).probe = p;
+						obj.Units(u).unit = unique_clusters(n);
+						if obj.Units(u).unit > 0
+							obj.Units(u).sorted = 1;
+						else
+							obj.Units(u).sorted = 0;
+						end
+						obj.Units(u).indices = find(obj.Probes(p).cluster == obj.Units(u).unit);
+						obj.Units(u).timestamp = obj.Probes(p).t(obj.Units(u).indices);
+						n = n + 1;
+					end
+
+					NUnits = NUnits + obj.Probes(p).Nclusters;
+				else
+					obj.Probes(p).Nclusters = 0;
+					error('%s: no units found for probe %d', mfilename, p);
+				end
+			end
 			
+			obj.Nunits = NUnits;
+
 		end
-		
-		
-		
-		%------------------------------------------------------------------------
-		%------------------------------------------------------------------------
-		
+		%---------------------------------------------------------------------
+		%---------------------------------------------------------------------
+
 		%------------------------------------------------------------------------
 		%------------------------------------------------------------------------
 		function arrOut = getUniqueWavNames(obj, channel)
@@ -370,14 +505,14 @@ classdef (ConstructOnLoad = true) DWdata < handle
 			DataWaveDefaults;
 			
 			% check if fieldname is valid
-			fname = strcmp(fieldname, MARKER_TAGS);
+			fcompare = strcmp(fieldname, MARKER_TAGS);
 			
-			if isempty(fname)
+			if isempty(fcompare)
 				error('%s: %s is not a valid marker tag field', mfilename, fieldname);
 			end
 			
 			% find index location of fieldname in MARKER_TAGS for dynamic indexing
-			floc = find(fname);
+			floc = find(fcompare);
 			
 			% return arrOut as cell array for character fields
 			if strcmpi(MARKER_TYPES{floc}, 'char')
@@ -403,7 +538,7 @@ classdef (ConstructOnLoad = true) DWdata < handle
 		%------------------------------------------------------------------------
 		function set.fname(obj, val)
 			% check if no filename or path provided
-			if isempty(val)			
+			if isempty(val)
 				obj.fname = '';
 				return
 			elseif isnumeric(val)
