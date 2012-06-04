@@ -2,6 +2,7 @@
 % DWdata.m
 %-----------------------------------------------------------------------------
 % DataMat Toolbox
+% DW Package
 % Class Definition
 %-----------------------------------------------------------------------------
 %	DWdata facilitates access to data output by loadDWfile.m
@@ -22,6 +23,7 @@
 % initial coding and design:
 %	Tony Slagle
 %	tonyslagle@gmail.com
+%
 % Continuing development: 
 %	Sharad J. Shanbhag
 %	sshanbhag@neomed.edu
@@ -45,16 +47,15 @@ classdef (ConstructOnLoad = true) DWdata < handle
 	%------------------------------------------------------------------------
 	%------------------------------------------------------------------------
 	properties (SetAccess = protected)
-		fpath;			%path to file
-		fname;			%name of file
-		fext;			%file extension
-		Info;			
-		Background;	%really this should be a class too...
-		D;				%really this should be a class too...
-		Stimulus;		%really this should be a class too...
-		Markers
-		Probes
-		Units
+		fpath			%path to file
+		fname			%name of file
+		fext				%file extension
+		Info			% DWinfo object
+		Background	%really this should be a class too...
+		Stimuli		% Stimulus object array
+		Markers		% Marker object array
+		Probes		% Probe object array
+		Units			% Unit object array
 		Nmarkers
 		Nprobes
 		Nunits
@@ -193,14 +194,11 @@ classdef (ConstructOnLoad = true) DWdata < handle
 			%-----------------------------------------------------------
 			% open file for text reading
 			fp = fopen(obj.fullfname, 'rt');
-
 			% skip past header lines
 			for n = 1:N_HEADER_LINES
 				fgetl(fp);
 			end
-
 			disp(['Reading Data from ' obj.fullfname ' ... ']);
-
 			% loop through rawdata lines, starting line after header lines
 			% (first rawdata line)
 			for line_index = 1:(obj.Info.Nlines - N_HEADER_LINES)
@@ -211,7 +209,6 @@ classdef (ConstructOnLoad = true) DWdata < handle
 				% save in rawdata cell array
 				rawdata{line_index} = tmp{1};
 			end
-
 			% close file
 			fclose(fp);
 			% no error(s) encountered
@@ -261,10 +258,12 @@ classdef (ConstructOnLoad = true) DWdata < handle
 			DataWaveDefaults;
 			%-----------------------------------------------------------
 			% read raw data
+			%	this is done within a method to avoid having to store
+			%	the raw DataWave text data in memory or in a file.
 			%-----------------------------------------------------------
 			[~, rawdata, errFlg] = obj.readRawData;
 			if errFlg
-				warning('%s: error %d', mfilename, errFlag);
+				warning('%s: error %d', mfilename, errFlg);
 				return
 			end
 			%-----------------------------------------------------------
@@ -275,7 +274,12 @@ classdef (ConstructOnLoad = true) DWdata < handle
 			%-----------------------------------------------------------
 			% parse Probes
 			%-----------------------------------------------------------
+			% determine # of probes from the Info object, NSpikeTimeCols
+			% this *should* be accurate, so long as the # of header
+			% columns labeled "timestamp" in the DataWave text output
+			% file is consistent with the # of probes.
 			obj.Nprobes = obj.Info.NSpikeTimeCols;
+			% parse the probe information from the raw text data
 			errFlg = obj.parseProbesFromData(rawdata)
 			%-----------------------------------------------------------
 			% parse Units
@@ -286,6 +290,121 @@ classdef (ConstructOnLoad = true) DWdata < handle
 		%------------------------------------------------------------------------
 		%------------------------------------------------------------------------
 
+		%------------------------------------------------------------------------
+		%------------------------------------------------------------------------
+		function errFlg = exportRawData(obj, varargin)
+		%------------------------------------------------------------------------
+		% errFlg = exportRawData(obj, varargin)
+		%------------------------------------------------------------------------
+		% exportRawData						with no arguments, will ask for a -mat
+		%											file to use for output
+		%
+		% exportRawData(<filename>)
+		%											writes DataWave Raw data to file 
+		%											specified in <filename> as a -mat file
+		%											(default)
+		%
+		% exportRawData(<filename>, <mode>)
+		%		<mode> options:
+		%			'text'			writes to <filename> as text (tab-delimited)
+		%			'csv'				writes to <filename> as text (comma-delimited)
+		%			'mat'				writes to <filename> as mat file
+		%------------------------------------------------------------------------
+			errFlg = 0;
+			
+			%-----------------------------------------------------------
+			% parse inputs
+			%-----------------------------------------------------------
+			if isempty(varargin)
+				[filen, pathn] = uiputfile(	...
+													{	'*.mat', 'MAT-file (*.mat)'; ...
+														'*.txt', 'tab-delimited text file (*.txt)'; ...
+														'*.csv', 'comma-delimited text file (*.csv)' }, ...
+														'select file for output' ...
+												);
+														
+				if isequal(filen, 0) || isequal(pathn, 0)
+					fprintf('\n\n%s: export cancelled\n\n', mfilename)
+					return
+				else
+					fullname = fullfile(pathn, filen);
+					[~, ~, fmode] = fileparts(fullname);
+				end
+				
+			else
+				% user provided at least a filename
+				fullname = varargin{1};
+				
+				% check if other args present
+				if length(varargin) > 1
+					switch upper(varargin{2})
+						case 'TEXT'
+							fmode = '.txt';
+						case 'CSV'
+							fmode = '.csv';
+						case 'MAT'
+							fmode = '.mat';
+						otherwise
+							warning('%s: unknown export mode %s', varargin{2});
+							errFlg = 1;
+							return
+					end
+				end
+			end
+
+			%-----------------------------------------------------------
+			% read raw data
+			%	this is done within a method to avoid having to store
+			%	the raw DataWave text data in memory or in a file.
+			%-----------------------------------------------------------
+			[~, rawdata, errFlg] = obj.readRawData;
+			if errFlg
+				warning('%s: error %d', mfilename, errFlag);
+				return
+			end
+			% determine size of rawdata
+			[nrows, ~] = size(rawdata);
+			ncols = length(rawdata{1});
+			
+			%-----------------------------------------------------------
+			% write raw data
+			%-----------------------------------------------------------
+			switch fmode
+				% write text file
+				case {'.txt', '.csv'}
+					% set delimiter
+					if strcmp(fmode, '.txt')
+						dlm = sprintf('\t');
+					elseif strcmp(fmode, '.csv')
+						dlm = ',';
+					end
+					% open file
+					fp = fopen(fullname, 'w');
+					% write rawdata
+					for r = 1:nrows
+						for c = 1:ncols
+							fprintf(fp, '%s%c', rawdata{r}{c}, dlm);
+						end
+						fprintf(fp, '\n');
+					end
+					% close file
+					fclose(fp);
+					
+				case '.mat'
+					% save to MAT file
+					save(fullname, 'rawdata', '-MAT');
+					
+				otherwise
+					% uh-oh
+					error('%s: unknown fmode %s', mfilename, fmode);
+			end
+		
+		end
+		%------------------------------------------------------------------------
+		%------------------------------------------------------------------------
+			
+			
+			
 		%------------------------------------------------------------------------
 		%------------------------------------------------------------------------
 		function errFlg = parseMarkersFromData(obj, rawdata)
@@ -401,10 +520,9 @@ classdef (ConstructOnLoad = true) DWdata < handle
 			%-----------------------------------------------------------
 			% separate spike times into units
 			%-----------------------------------------------------------
-
 			% initialize total unit counter
 			NUnits = 0;
-
+			% initialize Units object array
 			obj.Units = DW.Unit;
 			
 			% loop through probes
@@ -497,23 +615,26 @@ classdef (ConstructOnLoad = true) DWdata < handle
 		function arrOut = getMarkerFieldAsArray(obj, fieldname)
 		%------------------------------------------------------------------------
 		% arrOut = getMarkerFieldAsArray(obj, fieldname)
+		% DWdata class method
+		%------------------------------------------------------------------------
+		% for a given <fieldname> that is a valid marker field  
+		% (see DataWaveDefaults for values of MARKER_TAGS), returns an 
+		% [Nmarkers X 1] cell vector of values	(if field refers to a string or
+		% vector) or a [Nmarkers X 1] vector of values (numerical)
 		%------------------------------------------------------------------------
 			if ~exist('fieldname', 'var')
 				error('%s: no fieldname provided', mfilename)
 			end
-			
-			DataWaveDefaults;
-			
+			% load defaults
+			DataWaveDefaults;			
 			% check if fieldname is valid
 			fcompare = strcmp(fieldname, MARKER_TAGS);
-			
 			if isempty(fcompare)
 				error('%s: %s is not a valid marker tag field', mfilename, fieldname);
 			end
 			
 			% find index location of fieldname in MARKER_TAGS for dynamic indexing
 			floc = find(fcompare);
-			
 			% return arrOut as cell array for character fields
 			if strcmpi(MARKER_TYPES{floc}, 'char')
 				arrOut = cell(obj.Info.Nmarkers, 1);
