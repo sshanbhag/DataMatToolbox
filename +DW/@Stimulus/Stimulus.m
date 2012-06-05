@@ -21,6 +21,7 @@
 % 		Spiketimes					{# units, Nsweeps} cell array of unit spike
 % 										timestamps
 % 		Timestamp					first occurance of this Stimulus
+%		Tagstring					for debugging, will disappear eventually
 %-----------------------------------------------------------------------------
 % See also: DWdata, Marker, Probe, Unit
 %-----------------------------------------------------------------------------
@@ -55,12 +56,17 @@ classdef (ConstructOnLoad = true) Stimulus < handle
 		Nsweeps
 		Sweepstart
 		Sweepend
+		PreSweep
+		PostSweep
 		LAttenVals
 		LAttenIndices
 		RAttenVals
 		RAttenIndices
 		Spiketimes
+		
+		FirstTimestamp
  		Timestamp
+		Tagstring
 	end	% end of properties
 
 	

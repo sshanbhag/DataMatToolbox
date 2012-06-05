@@ -120,7 +120,6 @@ for n = 1:Nunique
 	mIndex = uniqueIndices{n}(1);
 	rtype = Marker(mIndex).StimulusTypeR;
 	ltype = Marker(mIndex).StimulusTypeL;
-keyboard
 	
 	% first, determine if this is a background trial (no sound played)
 	% as well as the channel for the sound stimulus (left, right, both)
@@ -149,20 +148,9 @@ keyboard
 	end
 	
 	Stimuli(n).Indices = uniqueIndices{n};
+	Stimuli(n).MarkerList = Marker(uniqueIndices{n});
 	Stimuli(n).Tagstring = uniqueText{n};
-	Stimuli(n).Nreps = length(uniqueIndices{n});
-	
-	% Now copy over the Marker tags and values
-	for f = 1:length(MARKER_TAGS)
-		if iscell(Marker.(MARKER_TAGS{f}))
-			Stimuli(n).(MARKER_TAGS{f}) = ...
-										Marker.(MARKER_TAGS{f}){uniqueIndices{n}};
-		else
-			Stimuli(n).(MARKER_TAGS{f}) = ...
-										Marker.(MARKER_TAGS{f})(uniqueIndices{n});
-		end
-	end
-	
+	Stimuli(n).Nreps = length(uniqueIndices{n});	
 end
 
 %-----------------------------------------------------------------------------
@@ -177,10 +165,11 @@ end
 % set to that sweep's start timestamp + max interval between all previous sweeps. 
 %-----------------------------------------------------------------------------
 
-% Marker.Timestamp is in string format, so convert to double
-marker_timestamp_vals = str2double(Marker.Timestamp);
+% get array of marker timestamps using DWdata's getMarkerFieldAsArray method
+marker_timestamp_vals = obj.getMarkerFieldAsArray('Timestamp');
 % find max difference between timestamps
 max_timestamp_difference = max(diff(marker_timestamp_vals));
+% check for errors (dt <= 0)
 if max_timestamp_difference <= 0
 	error('%s: strange value for max_timestamp_difference %f', ...
 						mfilename, max_timestamp_difference);
@@ -197,7 +186,7 @@ for s = 1:Nstimuli
 	% and determine end time for sweep
 	for n = 1:length(Stimuli(s).Indices)
 		start_index = Stimuli(s).Indices(n);
-		if start_index ~= Marker.Nmarkers
+		if start_index ~= obj.Nmarkers
 			% Set the Sweep end time to the Timestamp of the next marker
 			Stimuli(s).Sweepend(n) = marker_timestamp_vals(start_index + 1);
 			
