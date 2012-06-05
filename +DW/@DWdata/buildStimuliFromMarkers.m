@@ -33,40 +33,7 @@ function Stimuli = buildStimuliFromMarkers(obj, varargin)
 %										timestamps
 %
 % 		Timestamp					first occurance of this Stimulus
-% 		id
-% 		OutputFilename
-% 		AttenuationR
-% 		BBNlowerFreqR
-% 		BBNupperFreqR
-% 		AmplitudeR
-% 		TimeShiftR
-% 		RampUpR
-% 		HoldTimeR
-% 		RampDownR
-% 		OutputTimestampR
-% 		OutputTimeWithDelayR
-% 		FixedDelayR
-% 		PA5idR
-% 		WavFilenameR
-% 		ToneFreqR
-% 		PhaseDegR
-% 		AttenuationL
-% 		BBNlowerFreqL
-% 		BBNupperFreqL
-% 		AmplitudeL
-% 		TimeShiftL
-% 		RampUpL
-% 		HoldTimeL
-% 		RampDownL
-% 		OutputTimestampL
-% 		OutputTimeWithDelayL
-% 		FixedDelayL
-% 		PA5idL
-% 		WavFilenameL
-% 		ToneFreqL
-% 		PhaseDegL
 % 		Tagstring
-% 	
 %
 %------------------------------------------------------------------------
 % See also: loadDWfile, buildSpikes 
@@ -89,8 +56,8 @@ function Stimuli = buildStimuliFromMarkers(obj, varargin)
 %-----------------------------------------------------------
 DataWaveDefaults;
 
-% make local copy of Marker structure
-Marker = Data.Marker;
+% make local copy of Markers object array
+Marker = obj.Markers;
 
 %-----------------------------------------------------------------------------
 % build a global stimulus tag cell array, Tags
@@ -99,15 +66,15 @@ Marker = Data.Marker;
 % preallocate Tags cell array to hold data from all Marker stimulus "tags"
 % (a.k.a. stimulus parameters) and TagStrings{} cell vector to store
 % strings made up from each Marker's Tags (for use in searching, see below)
-Tags = cell(Marker.Nmarkers, 2*NTAGS_PER_CHANNEL);
-TagStrings = cell(Marker.Nmarkers, 1);
+Tags = cell(obj.Nmarkers, 2*NTAGS_PER_CHANNEL);
+TagStrings = cell(obj.Nmarkers, 1);
 
 % ctxt will be used to select Right and Left channels in the
 % STIMULUS_SEARCH_TAGS{} strings
 ctxt = 'RL';
 
 % loop through Markers
-for m = 1:Marker.Nmarkers
+for m = 1:obj.Nmarkers
 	% loop through number of tags
 	for t = 1:NTAGS_PER_CHANNEL
 		% loop through channels
@@ -127,6 +94,8 @@ for m = 1:Marker.Nmarkers
 		end % END OF c (channel) LOOP
 	end	% END OF t (tag) LOOP
 end	% END OF m (marker) LOOP
+
+return
 
 %-----------------------------------------------------------------------------
 % Now we have a cell array that has a mix of text and numeric fields.
