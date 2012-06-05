@@ -101,15 +101,13 @@ TagStrings = cell2str(Tags);
 % stimulus parameters.
 [uniqueText, uniqueIndices, Nunique] = findUniqueText(TagStrings);
 
-keyboard
-
 %-----------------------------------------------------------------------------
 % Determine Stimulus Type
 %-----------------------------------------------------------------------------
 % preallocate some storage structures
 BG = struct('indices', [], 'count', 0);
-Stimuli = repmat( cell2struct(STIMULUS_STRUCT_FIELDS, STIMULUS_STRUCT_FIELDS, 2), Nunique, 1);
-Nstimuli = length(Stimuli);
+Stimuli = repmat(DW.Stimulus, Nunique, 1);
+Nstimuli = Nunique;
 
 for n = 1:Nunique
 	%------------------------------------------------------------------
@@ -120,8 +118,9 @@ for n = 1:Nunique
 	%------------------------------------------------------------------
 	% get index to first instance in Marker vectors
 	mIndex = uniqueIndices{n}(1);
-	rtype = Marker.StimulusTypeR{1, 1};
-	ltype = Marker.StimulusTypeL{1, 1};
+	rtype = Marker(mIndex).StimulusTypeR;
+	ltype = Marker(mIndex).StimulusTypeL;
+keyboard
 	
 	% first, determine if this is a background trial (no sound played)
 	% as well as the channel for the sound stimulus (left, right, both)
