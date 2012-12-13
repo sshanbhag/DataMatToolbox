@@ -89,7 +89,7 @@ classdef (ConstructOnLoad = true) DWdata < handle
 		%  a dialog box to get a filename if the fileName provided does not exist.
 		%---------------------------------------------------------------------	
 
-			%parse input and verify
+			% first, parse input and verify
 			if nargin > 1
 				error('DWdata:toomanyinputs','too many inputs! Try DWdata(filename)');
 			elseif nargin == 1
@@ -100,10 +100,10 @@ classdef (ConstructOnLoad = true) DWdata < handle
 					return
 				end
 			elseif nargin == 0
-				return;
+				obj.fname = '';
 			end
 
-			%if still don't have a file name, get one
+			% if still don't have a file name, get one from the user via gui
 			if isequal(obj.fname,'')
 				[fileName, obj.fpath] = uigetfile('*.txt','Open .txt file outupt from DataWave');
 				if fileName == 0
@@ -111,27 +111,38 @@ classdef (ConstructOnLoad = true) DWdata < handle
 				end
 				[~, obj.fname, obj.fext] = fileparts(fileName);
 			end
-
+			
 			fprintf('Initializing from file %s...\n\n', obj.fullfname);
-			
+			% initialize info object
 			obj.Info = DW.DWinfo('File', obj.fullfname, 'Load');
-			
-			%{
+
 			%Try loading the file and see if crashes
 			try
-				loaded = load(obj.fullfname, 'D', 'Stimulus', 'Background');
+				loaded = load([obj.fname '.mat'], 'D', 'Stimulus', 'Background');
 				obj.D = loaded.D;
 				obj.Stimulus = loaded.Stimulus;
 				obj.Background = loaded.Background;
 			catch
-				error('%s: could not find file %s', mfilename, obj.fullfname);
+				warning('%s: could not find file %s', mfilename, [obj.fname '.mat']);
 			end
-			%}
+			
 		end		%DWdata
 		%------------------------------------------------------------------------
 		%------------------------------------------------------------------------
 
 		%% General Methods
+		
+		function display_object_info(obj, mname)
+			if any(strcmp(mname, fieldnames(obj)))
+				fprintf('\t%s:\t\t%ix%i %s\n',	...
+								mname, ...
+								size(obj.(mname), 1), ...
+								size(obj.(mname), 2), ...
+								class(obj.(mname))	);
+			else
+				fprintf('\t%s:\t\t*undefined*\n', mname);
+			end
+		end
 		
 		%------------------------------------------------------------------------
 		%------------------------------------------------------------------------
@@ -139,12 +150,13 @@ classdef (ConstructOnLoad = true) DWdata < handle
 		%------------------------------------------------------
 		% displays information about loaded data
 		%------------------------------------------------------
-			fprintf(1, '\t%s - Loaded from file:\n',class(obj));
-			fprintf(1,'\t\t%s\n\n',obj.fullfname);
+			fprintf(1, '%s\n', class(obj));
+			fprintf(1, '\tLoaded from file:\t%s\n',obj.fullfname);
 			fprintf(1,'Contains data:\n');
-			fprintf('\tStimulus:\n\t\t%ix%i %s\n',size(obj.Stimulus,1),size(obj.Stimulus,2),class(obj.Stimulus))
-			fprintf('\tBackground:\n\t\t%ix%i %s\n',size(obj.Background,1),size(obj.Background,2),class(obj.Background))
-			fprintf('\tD:\n\t\t%ix%i %s\n',size(obj.D,1),size(obj.D,2),class(obj.D))
+			display_object_info(obj, 'Info');
+			display_object_info(obj, 'Background');
+			display_object_info(obj, 'Stimuli');
+			display_object_info(obj, 'Markers');
 		end	%disp
 		%------------------------------------------------------------------------
 		%------------------------------------------------------------------------		
