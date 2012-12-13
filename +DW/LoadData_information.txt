@@ -1,0 +1,21 @@
+process for loading data:
+
+1) load constants using 
+		DataWaveDefaults
+
+2) read Raw Data
+		obj.readRawData
+	returns rawdata
+
+3) parse Markers
+	obj.parseMarkersFromData(rawdata);
+	obj.Nmarkers = obj.Info.Nmarkers;
+
+4)  parse Probes
+	obj.Nprobes = obj.Info.NSpikeTimeCols;
+	% parse the probe information from the raw text data
+	errFlg = obj.parseProbesFromData(rawdata);
+
+5) parse probes into Units
+	obj.parseProbeIntoUnits;
+		

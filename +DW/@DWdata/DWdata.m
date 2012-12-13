@@ -35,8 +35,10 @@
 %		updated documentation
 %		renamed file and class from LoadDWfileData.m to DWdata.m
 %		beginning massive Objectification...
+%	13 Dec 2012:
+%		fixing issues on initialization of object
 %-----------------------------------------------------------------------------
-% TO DO:
+% TO DO: lots....
 %-----------------------------------------------------------------------------
 
 classdef (ConstructOnLoad = true) DWdata < handle
@@ -49,7 +51,7 @@ classdef (ConstructOnLoad = true) DWdata < handle
 	properties (SetAccess = protected)
 		fpath			%path to file
 		fname			%name of file
-		fext				%file extension
+		fext			%file extension
 		Info			% DWinfo object
 		Background	%really this should be a class too...
 		Stimuli		% Stimulus object array
@@ -123,27 +125,18 @@ classdef (ConstructOnLoad = true) DWdata < handle
 				obj.Stimulus = loaded.Stimulus;
 				obj.Background = loaded.Background;
 			catch
-				warning('%s: could not find file %s', mfilename, [obj.fname '.mat']);
+				fprintf('could not find file %s', [obj.fname '.mat']);
+				fprintf('Loading data from .txt file %s', obj.fullfname);
+				obj.loadData;
 			end
 			
 		end		%DWdata
 		%------------------------------------------------------------------------
 		%------------------------------------------------------------------------
 
-		%% General Methods
+		%% General Methods	
 		
-		function display_object_info(obj, mname)
-			if any(strcmp(mname, fieldnames(obj)))
-				fprintf('\t%s:\t\t%ix%i %s\n',	...
-								mname, ...
-								size(obj.(mname), 1), ...
-								size(obj.(mname), 2), ...
-								class(obj.(mname))	);
-			else
-				fprintf('\t%s:\t\t*undefined*\n', mname);
-			end
-		end
-		
+		%{
 		%------------------------------------------------------------------------
 		%------------------------------------------------------------------------
 		function disp(obj)
@@ -159,7 +152,24 @@ classdef (ConstructOnLoad = true) DWdata < handle
 			display_object_info(obj, 'Markers');
 		end	%disp
 		%------------------------------------------------------------------------
-		%------------------------------------------------------------------------		
+		%------------------------------------------------------------------------
+		
+		%------------------------------------------------------------------------
+		%------------------------------------------------------------------------
+		function display_object_info(obj, mname)
+			if any(strcmp(mname, fieldnames(obj)))
+				fprintf('\t%s:\t\t%ix%i %s\n',	...
+								mname, ...
+								size(obj.(mname), 1), ...
+								size(obj.(mname), 2), ...
+								class(obj.(mname))	);
+			else
+				fprintf('\t%s:\t\t*undefined*\n', mname);
+			end
+		end
+		%------------------------------------------------------------------------
+		%------------------------------------------------------------------------
+		%}
 		
 		%------------------------------------------------------------------------
 		%------------------------------------------------------------------------
@@ -253,6 +263,10 @@ classdef (ConstructOnLoad = true) DWdata < handle
 			%-----------------------------------------------------------
 			obj.parseMarkersFromData(rawdata);
 			obj.Nmarkers = obj.Info.Nmarkers;
+			%-----------------------------------------------------------
+			% clean up
+			%-----------------------------------------------------------
+			clear rawdata
 		end	%END loadMarkers
 		%------------------------------------------------------------------------
 		%------------------------------------------------------------------------
@@ -261,6 +275,8 @@ classdef (ConstructOnLoad = true) DWdata < handle
 		%------------------------------------------------------------------------
 		function errFlg = loadData(obj)
 		%------------------------------------------------------------------------
+		% Loads data from file specified in obj.fname.  Initializes
+		% Markers, Probes
 		%------------------------------------------------------------------------
 
 			%-----------------------------------------------------------
@@ -292,131 +308,23 @@ classdef (ConstructOnLoad = true) DWdata < handle
 			% file is consistent with the # of probes.
 			obj.Nprobes = obj.Info.NSpikeTimeCols;
 			% parse the probe information from the raw text data
-			errFlg = obj.parseProbesFromData(rawdata)
+			errFlg = obj.parseProbesFromData(rawdata);
+			if errFlg
+				fprintf('loadData: error in DW.parseProbesFromData');
+			end
 			%-----------------------------------------------------------
 			% parse Units
 			%-----------------------------------------------------------
 			obj.parseProbeIntoUnits;
-			
-		end	%END loadMarkers
-		%------------------------------------------------------------------------
-		%------------------------------------------------------------------------
+			%-----------------------------------------------------------
+			% clean up
+			%-----------------------------------------------------------
+			clear rawdata
 
+		end	%END loadData
 		%------------------------------------------------------------------------
 		%------------------------------------------------------------------------
-		function errFlg = exportRawData(obj, varargin)
-		%------------------------------------------------------------------------
-		% errFlg = exportRawData(obj, varargin)
-		%------------------------------------------------------------------------
-		% exportRawData						with no arguments, will ask for a -mat
-		%											file to use for output
-		%
-		% exportRawData(<filename>)
-		%											writes DataWave Raw data to file 
-		%											specified in <filename> as a -mat file
-		%											(default)
-		%
-		% exportRawData(<filename>, <mode>)
-		%		<mode> options:
-		%			'text'			writes to <filename> as text (tab-delimited)
-		%			'csv'				writes to <filename> as text (comma-delimited)
-		%			'mat'				writes to <filename> as mat file
-		%------------------------------------------------------------------------
-			errFlg = 0;
-			
-			%-----------------------------------------------------------
-			% parse inputs
-			%-----------------------------------------------------------
-			if isempty(varargin)
-				[filen, pathn] = uiputfile(	...
-													{	'*.mat', 'MAT-file (*.mat)'; ...
-														'*.txt', 'tab-delimited text file (*.txt)'; ...
-														'*.csv', 'comma-delimited text file (*.csv)' }, ...
-														'select file for output' ...
-												);
-														
-				if isequal(filen, 0) || isequal(pathn, 0)
-					fprintf('\n\n%s: export cancelled\n\n', mfilename)
-					return
-				else
-					fullname = fullfile(pathn, filen);
-					[~, ~, fmode] = fileparts(fullname);
-				end
-				
-			else
-				% user provided at least a filename
-				fullname = varargin{1};
-				
-				% check if other args present
-				if length(varargin) > 1
-					switch upper(varargin{2})
-						case 'TEXT'
-							fmode = '.txt';
-						case 'CSV'
-							fmode = '.csv';
-						case 'MAT'
-							fmode = '.mat';
-						otherwise
-							warning('%s: unknown export mode %s', varargin{2});
-							errFlg = 1;
-							return
-					end
-				end
-			end
-
-			%-----------------------------------------------------------
-			% read raw data
-			%	this is done within a method to avoid having to store
-			%	the raw DataWave text data in memory or in a file.
-			%-----------------------------------------------------------
-			[~, rawdata, errFlg] = obj.readRawData;
-			if errFlg
-				warning('%s: error %d', mfilename, errFlag);
-				return
-			end
-			% determine size of rawdata
-			[nrows, ~] = size(rawdata);
-			ncols = length(rawdata{1});
-			
-			%-----------------------------------------------------------
-			% write raw data
-			%-----------------------------------------------------------
-			switch fmode
-				% write text file
-				case {'.txt', '.csv'}
-					% set delimiter
-					if strcmp(fmode, '.txt')
-						dlm = sprintf('\t');
-					elseif strcmp(fmode, '.csv')
-						dlm = ',';
-					end
-					% open file
-					fp = fopen(fullname, 'w');
-					% write rawdata
-					for r = 1:nrows
-						for c = 1:ncols
-							fprintf(fp, '%s%c', rawdata{r}{c}, dlm);
-						end
-						fprintf(fp, '\n');
-					end
-					% close file
-					fclose(fp);
-					
-				case '.mat'
-					% save to MAT file
-					save(fullname, 'rawdata', '-MAT');
-					
-				otherwise
-					% uh-oh
-					error('%s: unknown fmode %s', mfilename, fmode);
-			end
 		
-		end
-		%------------------------------------------------------------------------
-		%------------------------------------------------------------------------
-			
-			
-			
 		%------------------------------------------------------------------------
 		%------------------------------------------------------------------------
 		function errFlg = parseMarkersFromData(obj, rawdata)
@@ -581,6 +489,124 @@ classdef (ConstructOnLoad = true) DWdata < handle
 		%---------------------------------------------------------------------
 		%---------------------------------------------------------------------
 
+
+		%------------------------------------------------------------------------
+		%------------------------------------------------------------------------
+		function errFlg = exportRawData(obj, varargin)
+		%------------------------------------------------------------------------
+		% errFlg = exportRawData(obj, varargin)
+		%------------------------------------------------------------------------
+		% exportRawData						with no arguments, will ask for a -mat
+		%											file to use for output
+		%
+		% exportRawData(<filename>)
+		%											writes DataWave Raw data to file 
+		%											specified in <filename> as a -mat file
+		%											(default)
+		%
+		% exportRawData(<filename>, <mode>)
+		%		<mode> options:
+		%			'text'			writes to <filename> as text (tab-delimited)
+		%			'csv'				writes to <filename> as text (comma-delimited)
+		%			'mat'				writes to <filename> as mat file
+		%------------------------------------------------------------------------
+			errFlg = 0;
+			
+			%-----------------------------------------------------------
+			% parse inputs
+			%-----------------------------------------------------------
+			if isempty(varargin)
+				[filen, pathn] = uiputfile(	...
+													{	'*.mat', 'MAT-file (*.mat)'; ...
+														'*.txt', 'tab-delimited text file (*.txt)'; ...
+														'*.csv', 'comma-delimited text file (*.csv)' }, ...
+														'select file for output' ...
+												);
+														
+				if isequal(filen, 0) || isequal(pathn, 0)
+					fprintf('\n\n%s: export cancelled\n\n', mfilename)
+					return
+				else
+					fullname = fullfile(pathn, filen);
+					[~, ~, fmode] = fileparts(fullname);
+				end
+				
+			else
+				% user provided at least a filename
+				fullname = varargin{1};
+				
+				% check if other args present
+				if length(varargin) > 1
+					switch upper(varargin{2})
+						case 'TEXT'
+							fmode = '.txt';
+						case 'CSV'
+							fmode = '.csv';
+						case 'MAT'
+							fmode = '.mat';
+						otherwise
+							warning('%s: unknown export mode %s', varargin{2});
+							errFlg = 1;
+							return
+					end
+				end
+			end
+
+			%-----------------------------------------------------------
+			% read raw data
+			%	this is done within a method to avoid having to store
+			%	the raw DataWave text data in memory or in a file.
+			%-----------------------------------------------------------
+			[~, rawdata, errFlg] = obj.readRawData;
+			if errFlg
+				warning('%s: error %d', mfilename, errFlag);
+				return
+			end
+			% determine size of rawdata
+			[nrows, ~] = size(rawdata);
+			ncols = length(rawdata{1});
+			
+			%-----------------------------------------------------------
+			% write raw data
+			%-----------------------------------------------------------
+			switch fmode
+				% write text file
+				case {'.txt', '.csv'}
+					% set delimiter
+					if strcmp(fmode, '.txt')
+						dlm = sprintf('\t');
+					elseif strcmp(fmode, '.csv')
+						dlm = ',';
+					end
+					% open file
+					fp = fopen(fullname, 'w');
+					% write rawdata
+					for r = 1:nrows
+						for c = 1:ncols
+							fprintf(fp, '%s%c', rawdata{r}{c}, dlm);
+						end
+						fprintf(fp, '\n');
+					end
+					% close file
+					fclose(fp);
+					
+				case '.mat'
+					% save to MAT file
+					save(fullname, 'rawdata', '-MAT');
+					
+				otherwise
+					% uh-oh
+					error('%s: unknown fmode %s', mfilename, fmode);
+			end
+			%-----------------------------------------------------------
+			% clean up
+			%-----------------------------------------------------------
+			clear rawdata
+		
+		end
+		%------------------------------------------------------------------------
+		%------------------------------------------------------------------------	
+		
 		%------------------------------------------------------------------------
 		%------------------------------------------------------------------------
 		function arrOut = getUniqueWavNames(obj, channel)
