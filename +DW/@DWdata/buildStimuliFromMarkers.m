@@ -47,15 +47,16 @@ function Stimuli = buildStimuliFromMarkers(obj, varargin)
 % 	- modified from buildStimulusStruct.m
 %
 % Revisions:
+%	17 Dec 2012 (SJS): adapting to DW package format
 %------------------------------------------------------------------------
 % TO DO:
 %------------------------------------------------------------------------
 
 %-----------------------------------------------------------
-% load defaults
+% Initialize some things
 %-----------------------------------------------------------
+% load Defaults
 DataWaveDefaults;
-
 % make local copy of Markers object array
 Marker = obj.Markers;
 
@@ -286,7 +287,6 @@ end
 for s = 1:Nstimuli
 	% check the stimulus Type - it is stored as a string within a cell, so 
 	% it must be addressed using Type{} format.
-	keyboard
 	switch Stimuli(s).Type{1}
 		case 'TONE'
 			Stimuli(s).Var = assignVarTags(Stimuli(s), TONE_VAR_TAGS);
