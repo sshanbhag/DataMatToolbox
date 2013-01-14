@@ -25,6 +25,26 @@ Events = D.loadMarkers;
 %------------------------------------------------------------
 %% parse markers
 %------------------------------------------------------------
+
+% first, find the R and L marker events (R is usually Events(2), 
+% L is usually Events(3), but try not to assume)
+for v = 1:D.DDF.nEvent
+	tmp = textscan(Events(v).Info.CSVDesc, '%s', ...
+									'Delimiter', ',', ...
+									'MultipleDelimsAsOne', 1);
+	field_names = tmp{1};
+	clear tmp;
+
+	if strncmpi(Events(v).Info.CSVDesc, 'SoundType', length('SoundType'))
+		
+		
+		
+		
+	end
+	
+end
+
+
 field_names = cell(D.DDF.nEvent, 1);
 field_vals = cell(D.DDF.nEvent, 1);
 for v = 1:D.DDF.nEvent
