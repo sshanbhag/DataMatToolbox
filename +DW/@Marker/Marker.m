@@ -57,6 +57,8 @@
 % Created: 17 May, 2012 (SJS)
 %
 % Revisions:
+%	14 Jan 2013 (SJS)
+%	 -	modified to use DDF event data from NeuroShare
 %-----------------------------------------------------------------------------
 % TO DO:
 %

@@ -31,19 +31,22 @@
 % Created: January, 2012 (TS)
 %
 % Revisions:
-%	17 May, 2012 
-%		updated documentation
-%		renamed file and class from LoadDWfileData.m to DWdata.m
-%		beginning massive Objectification...
-%	13 Dec 2012:
-%		fixing issues on initialization of object
+%	17 May, 2012 (SJS): 
+%	 -	updated documentation
+%	 -	renamed file and class from LoadDWfileData.m to DWdata.m
+%	 -	beginning massive Objectification...
+%	13 Dec 2012 (SJS):
+%	 -	fixing issues on initialization of object
+%	14 Jan 2013 (SJS)
+%	 -	major overhaul to use NeuroShare Matlab API and DataWave Neuroshare
+%		interface object (@NS)
 %-----------------------------------------------------------------------------
 % TO DO: lots....
 %-----------------------------------------------------------------------------
 
 classdef (ConstructOnLoad = true) DWdata < handle
 	
-	%% ------------------------------------------------------------------------
+	%------------------------------------------------------------------------
 	%------------------------------------------------------------------------
 	% Define protected properties
 	%------------------------------------------------------------------------
@@ -52,6 +55,7 @@ classdef (ConstructOnLoad = true) DWdata < handle
 		fpath			%path to file
 		fname			%name of file
 		fext			%file extension
+		DDF			% neuroshare interface object
 		Info			% DWinfo object
 		Background	%really this should be a class too...
 		Stimuli		% Stimulus object array
@@ -63,7 +67,7 @@ classdef (ConstructOnLoad = true) DWdata < handle
 		Nunits
 	end
 	
-	%% ------------------------------------------------------------------------
+	%------------------------------------------------------------------------
 	%------------------------------------------------------------------------
 	% Define other properties
 	%------------------------------------------------------------------------
@@ -72,7 +76,7 @@ classdef (ConstructOnLoad = true) DWdata < handle
 		fullfname;  %full file name
 	end
   
-	%% ------------------------------------------------------------------------
+	%------------------------------------------------------------------------
 	%------------------------------------------------------------------------
 	% Define methods
 	%------------------------------------------------------------------------
@@ -81,7 +85,7 @@ classdef (ConstructOnLoad = true) DWdata < handle
 	
 		%------------------------------------------------------------------------
 		%------------------------------------------------------------------------
-		%% Constructor
+		% Constructor
 		%------------------------------------------------------------------------
 		% Initializes the object
 		%------------------------------------------------------------------------
@@ -95,90 +99,65 @@ classdef (ConstructOnLoad = true) DWdata < handle
 
 			% first, parse input and verify
 			if nargin > 1
-				error('DWdata:toomanyinputs','too many inputs! Try DWdata(filename)');
+				% too many inputs
+				error('DWdata: too many inputs!');
+				
 			elseif nargin == 1
+				% filename was given, make sure it exists, otherwise throw
+				% error
 				if exist(varargin{1}, 'file') == 2
 					[obj.fpath, obj.fname, obj.fext] = fileparts(varargin{1});
 				else
-					warning('DWdata:sillyfname','%s does not exist!',varargin{1});
-					return
+					error('DWdata: %s does not exist!',varargin{1});
 				end
+				
 			elseif nargin == 0
-				obj.fname = '';
-			end
-
-			% if still don't have a file name, get one from the user via gui
-			if isequal(obj.fname,'')
-				[fileName, obj.fpath] = uigetfile('*.txt','Open .txt file outupt from DataWave');
+				% no filename given, open gui panel to get file
+				[fileName, obj.fpath] = uigetfile('*.ddf', ...
+																'Open .ddf file from DataWave');
 				if fileName == 0
-					error('DWdata:nochoose','no filename chosen')
+					% if user hit cancel (filename == 0), return
+					fprintf('no filename chosen, exiting\n');
+					return
 				end
 				[~, obj.fname, obj.fext] = fileparts(fileName);
 			end
 			
-			fprintf('Initializing from file %s...\n\n', obj.fullfname);
-			% initialize info object
-			obj.Info = DW.DWinfo('File', obj.fullfname, 'Load');
-
-			%Try loading the file and see if crashes
-			try
-				loaded = load([obj.fname '.mat'], 'D', 'Stimulus', 'Background');
-				obj.D = loaded.D;
-				obj.Stimulus = loaded.Stimulus;
-				obj.Background = loaded.Background;
-			catch
-				fprintf('could not find file %s', [obj.fname '.mat']);
-				fprintf('Loading data from .txt file %s', obj.fullfname);
-				obj.loadData;
-			end
+			% store in obj.fullfname
+			obj.fullfname = fullfile(obj.fpath, [obj.fname obj.fext]);
 			
-		end		%DWdata
+			fprintf('Initializing from file %s...\n\n', obj.fullfname);
+			% initialize NS object
+			obj.initNS;
+		end	% END DWdata CONSTRUCTOR
 		%------------------------------------------------------------------------
 		%------------------------------------------------------------------------
 
-		%% General Methods	
-		
-		%{
 		%------------------------------------------------------------------------
 		%------------------------------------------------------------------------
-		function disp(obj)
-		%------------------------------------------------------
-		% displays information about loaded data
-		%------------------------------------------------------
-			fprintf(1, '%s\n', class(obj));
-			fprintf(1, '\tLoaded from file:\t%s\n',obj.fullfname);
-			fprintf(1,'Contains data:\n');
-			display_object_info(obj, 'Info');
-			display_object_info(obj, 'Background');
-			display_object_info(obj, 'Stimuli');
-			display_object_info(obj, 'Markers');
-		end	%disp
+		% Data input/reading methods
 		%------------------------------------------------------------------------
 		%------------------------------------------------------------------------
-		
+
 		%------------------------------------------------------------------------
 		%------------------------------------------------------------------------
-		function display_object_info(obj, mname)
-			if any(strcmp(mname, fieldnames(obj)))
-				fprintf('\t%s:\t\t%ix%i %s\n',	...
-								mname, ...
-								size(obj.(mname), 1), ...
-								size(obj.(mname), 2), ...
-								class(obj.(mname))	);
+		function obj = initNS(obj)
+		%------------------------------------------------------------------------
+		% initNS
+		%------------------------------------------------------------------------
+		% so long as DW.fullfname is set, initNS method will initialize the
+		% DataWave NeuroShare interface object DW.DDF
+		%------------------------------------------------------------------------
+			if ~isempty(obj.fullfname) && exist(obj.fullfname, 'file')
+				obj.DDF = DW.NS(obj.fullfname);
 			else
-				fprintf('\t%s:\t\t*undefined*\n', mname);
+				fprintf('file not found\n')
+				return
 			end
-		end
+		end	% END initNS
 		%------------------------------------------------------------------------
 		%------------------------------------------------------------------------
-		%}
 		
-		%------------------------------------------------------------------------
-		%------------------------------------------------------------------------
-		%% Data input/reading methods
-		%------------------------------------------------------------------------
-		%------------------------------------------------------------------------
-
 		%------------------------------------------------------------------------
 		%------------------------------------------------------------------------
 		function [obj, rawdata, errFlg] = readRawData(obj)
@@ -249,7 +228,7 @@ classdef (ConstructOnLoad = true) DWdata < handle
 
 		%------------------------------------------------------------------------
 		%------------------------------------------------------------------------
-		function errFlg = loadMarkers(obj)
+		function [Events, errFlg] = loadMarkers(obj)
 		%------------------------------------------------------------------------
 		%------------------------------------------------------------------------
 
@@ -257,24 +236,52 @@ classdef (ConstructOnLoad = true) DWdata < handle
 			% Initial setup
 			%-----------------------------------------------------------
 			errFlg = 0;
-			DataWaveDefaults;
+
 			%-----------------------------------------------------------
-			% read raw data
+			% read Events
 			%-----------------------------------------------------------
-			[~, rawdata, errFlag] = obj.readRawData;
-			if errFlag
-				warning('%s: error %d', mfilename, errFlag);
+			Events = obj.DDF.getEvents;
+			if isempty(Events)
+				errFlg = 1;
+				warning('%s: error loading Events', mfilename);
 				return
 			end
 			%-----------------------------------------------------------
 			% parse Markers
 			%-----------------------------------------------------------
-			obj.parseMarkersFromData(rawdata);
-			obj.Nmarkers = obj.Info.Nmarkers;
-			%-----------------------------------------------------------
-			% clean up
-			%-----------------------------------------------------------
-			clear rawdata
+			
+			
+			for v = 1:obj.DDF.nEvent
+				tmp = textscan(Events(v).Info.CSVDesc', '%s', ...
+												'Delimiter', ',', ...
+												'MultipleDelimsAsOne', 1);
+				field_names = tmp{1};
+				if Events(v).EventCount
+					field_vals = cell(Events(v).EventCount, 1);
+					for n = 1:Events(v).EventCount
+						tmp = textscan(Events(v).Info.CSVDesc', '%s', ...
+													'Delimiter', ',', ...
+													'MultipleDelimsAsOne', 1);
+						field_vals{v} = tmp{1};
+					end	% END n
+					
+					
+				end	% END if EventCount
+				
+				
+				
+				
+				
+			end	% END v DDF.nEvent index
+			
+			
+			
+			
+			
+			
+			
+			
+			
 		end	%END loadMarkers
 		%------------------------------------------------------------------------
 		%------------------------------------------------------------------------
@@ -699,8 +706,8 @@ classdef (ConstructOnLoad = true) DWdata < handle
 		%------------------------------------------------------------------------
 		%------------------------------------------------------------------------
 		
-
-		%% Set/Get Methods
+		%{
+		% Set/Get Methods
 		%------------------------------------------------------------------------
 		%------------------------------------------------------------------------
 		function set.fname(obj, val)
@@ -745,6 +752,7 @@ classdef (ConstructOnLoad = true) DWdata < handle
 		end	%get.fullfname
 		%------------------------------------------------------------------------
 		%------------------------------------------------------------------------		
+		%}
 		
 	% End of methods
 	end
