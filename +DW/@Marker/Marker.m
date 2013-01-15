@@ -5,47 +5,8 @@
 % Class Definition
 %-----------------------------------------------------------------------------
 %		marker "tags":
-% 			Timestamp					time of event, in microseconds
-% 			id								?
-% 			OutputFilename				output data file name
-% 			AttenuationR				R channel attenuation setting (dB)
-% 			BBNlowerFreqR				if noise stimulus, 
-% 			BBNupperFreqR
-% 			AmplitudeR
-% 			TimeShiftR
-% 			RampUpR
-% 			HoldTimeR
-% 			RampDownR
-% 			OutputTimestampR
-% 			OutputTimeWithDelayR
-% 			FixedDelayR
-% 			PA5idR
-% 			WavFilenameR
-% 			ToneFreqR
-% 			PhaseDegR
-% 			AttenuationL
-% 			BBNlowerFreqL
-% 			BBNupperFreqL
-% 			AmplitudeL
-% 			TimeShiftL
-% 			RampUpL
-% 			HoldTimeL
-% 			RampDownL
-% 			OutputTimestampL
-% 			OutputTimeWithDelayL
-% 			FixedDelayL
-% 			PA5idL
-% 			WavFilenameL
-% 			ToneFreqL
-% 			PhaseDegL
 %			
 %		Added values
-%			N
-% 			string						raw string from text file (¿redundant?)
-% 			StimulusTypeR
-% 			StimulusTypeL
-% 			wavFilesR
-% 			wavFilesL
 %-----------------------------------------------------------------------------
 % See also: DWdata, loadDWfile (function)
 %-----------------------------------------------------------------------------
@@ -65,18 +26,17 @@
 %-----------------------------------------------------------------------------
 
 classdef (ConstructOnLoad = true) Marker < handle
-	%%
 	%------------------------------------------------------------------------
 	%------------------------------------------------------------------------
 	% Define protected properties
 	%------------------------------------------------------------------------
 	%------------------------------------------------------------------------
 	properties (SetAccess = protected)
-		% tags
 		Timestamp
-		id
-		OutputFilename
+		% tags
+		SoundTypeR
 		AttenuationR
+		WavFilenameR
 		BBNlowerFreqR
 		BBNupperFreqR
 		AmplitudeR
@@ -88,10 +48,12 @@ classdef (ConstructOnLoad = true) Marker < handle
 		OutputTimeWithDelayR
 		FixedDelayR
 		PA5idR
-		WavFilenameR
 		ToneFreqR
 		PhaseDegR
+		OutputFileR
+		SoundTypeL
 		AttenuationL
+		WavFilenameL
 		BBNlowerFreqL
 		BBNupperFreqL
 		AmplitudeL
@@ -103,24 +65,16 @@ classdef (ConstructOnLoad = true) Marker < handle
 		OutputTimeWithDelayL
 		FixedDelayL
 		PA5idL
-		WavFilenameL
 		ToneFreqL
 		PhaseDegL
-		% other
-		StimulusTypeR
-		StimulusTypeL
-		
-	% end of properties
-	end
-
+		OutputFileL
+	end	% end of protected properties
+	% public properties
 	properties
 		N
 		string
-	end
-
+	end	% END public properties
 	
-	%%
-	%%
 	%------------------------------------------------------------------------
 	%------------------------------------------------------------------------
 	% Define methods
@@ -128,13 +82,15 @@ classdef (ConstructOnLoad = true) Marker < handle
 	%------------------------------------------------------------------------
 	methods	
 		
-		%% Constructor Method
-		
+		%---------------------------------------------------------------------
+		%---------------------------------------------------------------------
+		% Constructor Method
 		%---------------------------------------------------------------------
 		%---------------------------------------------------------------------
 		function obj = Marker(varargin)
 		%---------------------------------------------------------------------	
 		% Marker
+		%---------------------------------------------------------------------	
 		% Constructor method
 		%---------------------------------------------------------------------
 		% Marker(dwstring)	where dwstring is a row of text, in cell form, 
@@ -144,21 +100,59 @@ classdef (ConstructOnLoad = true) Marker < handle
 		%							when called with no arguments, returns empty
 		%							Marker object
 		%---------------------------------------------------------------------
-
-			%--------------------------------------------------------
-			%parse input and verify
-			%--------------------------------------------------------
-			obj.string = '';
 			
-			if nargin == 1
+			% check input args
+			nargs = length(varargin);
+			if nargs == 0
+				return
+			end
+			if nargs == 1
+				% mimick old behavior for strings
+				%parse input and verify
+				obj.string = '';
 				obj.string = varargin{1};
 				obj.initMarkerFromString;
+				return
 			end
-		end		%Marker
+			
+			% otherwise, parse inputs args
+			argc = 1;
+			while argc <= nargs
+				switch upper(varargin{argc})
+					case 'EVENT_STRING'
+						obj.setValuesFromEventList(varargin{argc+1});
+						argc = argc + 1;
+					otherwise
+						error('%s: unknown option %s', mfilename, varargin{argc})
+				end
+			end
+		end	% END Marker
 		%---------------------------------------------------------------------
 		%---------------------------------------------------------------------
 		
-		%% Overloaded Methods
+		function setValuesFromEventList(obj, Elist)
+			% load defaults
+			DataWaveDefaults;
+			% check that Elist is a cell
+			if ~iscell(Elist)
+				error('%s: list of values must be in cell format', mfilename);
+			end
+			% assign values
+			
+			% for the right channel markers, there are the same
+			% number of input fields as there are base tags
+			nM = length(MARKER_BASE);
+			
+			for n = 1:MARKER_NMARKERS
+				obj.(MARKER_TAGS{n}) = Elist{n}; %#ok<*USENS>
+			end
+		end
+		
+		%---------------------------------------------------------------------
+		%---------------------------------------------------------------------
+		% Overloaded Methods
+		%---------------------------------------------------------------------
+		%---------------------------------------------------------------------
 
 		%---------------------------------------------------------------------
 		%---------------------------------------------------------------------
@@ -166,7 +160,8 @@ classdef (ConstructOnLoad = true) Marker < handle
 		%---------------------------------------------------------------------
 		%---------------------------------------------------------------------
 		
-			% define fields to compare
+			% define fields to compare - need to split these into character
+			% and numeric types
 			numfields = {	...
 								'AttenuationR', ...
 								'BBNlowerFreqR', ...
@@ -216,7 +211,11 @@ classdef (ConstructOnLoad = true) Marker < handle
 		%---------------------------------------------------------------------
 
 		
-		%% General Methods
+		%---------------------------------------------------------------------
+		%---------------------------------------------------------------------
+		% General Methods
+		%---------------------------------------------------------------------
+		%---------------------------------------------------------------------
 		
 		%---------------------------------------------------------------------
 		%---------------------------------------------------------------------
