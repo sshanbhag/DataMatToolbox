@@ -27,6 +27,7 @@ Events = D.loadMarkers;
 %------------------------------------------------------------
 %% parse markers
 %------------------------------------------------------------
+DataWaveDefaults
 
 % create a list of Event IDS for each event entity.
 %	EventID == 0 --> non-marker entity
@@ -88,44 +89,54 @@ evR = find(EventID == R);
 fprintf('Left Markers -> Event(%d)\n', evL);
 fprintf('Right Markers -> Event(%d)\n', evR);
 
+M = repmat(DW.Marker, EventCount, 1);
+
 for n = 1:EventCount
 	% get the right and left strings (Event Data)
 	rstr = Events(evR).Data(n);
 	lstr = Events(evL).Data(n);
-	% parse into cell arrays
+	% parse into cell arrays, to preserve empty fields, do NOT
+	% treat successive delimiters/whitespace as one (in call to csvscan)
 	tmpR = csvscan(Events(evR).Data{n}, 0);
 	tmpL = csvscan(Events(evL).Data{n}, 0);
-keyboard
-	M = DW.Marker('EVENT_STRING', [tmpR{1}; tmpL{1}]);
-
-	clear tmpR tmpL
-end
-
-field_names = cell(D.DDF.nEvent, 1);
-field_vals = cell(D.DDF.nEvent, 1);
-for v = 1:D.DDF.nEvent
-	tmp = textscan(Events(v).Info.CSVDesc', '%s', ...
-									'Delimiter', ',', ...
-									'MultipleDelimsAsOne', 1);
-	field_names{v} = tmp{1};
-	field_vals{v} = cell(Events(v).EventCount, 1);	
-	if Events(v).EventCount
-		for n = 1:Events(v).EventCount
-			tmp = textscan(Events(v).Data{n}', '%s', ...
-										'Delimiter', ',', ...
-										'MultipleDelimsAsOne', 1);
-			field_vals{v}{n} = tmp{1};
-		end	% END n
-		
-
-	end	% END if EventCount
-end	% END v DDF.nEvent index
-
-for v = 1:length(field_names)
-	fprintf('event %d:\n', v)
-	disp(field_names{v})
-	if ~isempty(field_vals{v})
-		disp(field_vals{v}{1})
+	
+	% ASSUME that one of the lists will not have an outputfile field.
+	% pad with empty values 
+	if length(tmpR) ~= MARKER_NBASE
+		dlen = MARKER_NBASE - length(tmpR);
+		if dlen < 0
+			error('%d: length(tmpR) > MARKER_NBASE');
+		else
+			tmpR = [tmpR; cell(dlen, 1)]; %#ok<AGROW>
+		end
 	end
-	fprintf('\n\n');
+	if length(tmpL) ~= MARKER_NBASE
+		dlen = MARKER_NBASE - length(tmpL);
+		if dlen < 0
+			error('%d: length(tmpL) > MARKER_NBASE');
+		else
+			tmpL = [tmpL; cell(dlen, 1)]; %#ok<AGROW>
+		end
+	end
+
+	tmp = [tmpR; tmpL];
+	elist = cell(size(tmp));
+	% convert tags appropriately
+	for t = 1:MARKER_NMARKERS
+		% check for type
+		switch MARKER_TYPES{t}
+			case 'char'
+				elist{t} = tmp{t};
+			case 'float'
+				elist{t} = str2double(tmp{t});
+			case 'int'
+				elist{t} = str2double(tmp{t});
+			otherwise
+				elist{t} = tmp{t};
+		end
+	end	% END t -> MARKERS_NMARKERS
+	
+	% assign val to object
+	M(n).setValuesFromEventList(elist);
+	clear tmpR tmpL tmp elist
 end

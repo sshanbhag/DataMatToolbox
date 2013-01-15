@@ -228,7 +228,7 @@ classdef (ConstructOnLoad = true) DWdata < handle
 
 		%------------------------------------------------------------------------
 		%------------------------------------------------------------------------
-		function [Events, errFlg] = loadMarkers(obj)
+		function varargout = loadMarkers(obj)
 		%------------------------------------------------------------------------
 		%------------------------------------------------------------------------
 
@@ -236,7 +236,7 @@ classdef (ConstructOnLoad = true) DWdata < handle
 			% Initial setup
 			%-----------------------------------------------------------
 			errFlg = 0;
-
+			DataWaveDefaults
 			%-----------------------------------------------------------
 			% read Events
 			%-----------------------------------------------------------
@@ -248,40 +248,126 @@ classdef (ConstructOnLoad = true) DWdata < handle
 			end
 			%-----------------------------------------------------------
 			% parse Markers
-			%-----------------------------------------------------------
+			%-----------------------------------------------------------			
+			% create a list of Event IDS for each event entity.
+			%	EventID == 0 --> non-marker entity
+			%	EventID == 1 --> L channel markers
+			%	EventID == 2 --> R channel markers
+			EventID = zeros(obj.DDF.nEvent, 1);
 			
-			
+			% first, find the R and L marker events (R is usually Events(2), 
+			% L is usually Events(3), but try not to assume)
 			for v = 1:obj.DDF.nEvent
-				tmp = textscan(Events(v).Info.CSVDesc', '%s', ...
+				% scan the CSVDesc from the NeuroShare Events.Info to get
+				% a list (usually partial - for sound stimulus markers, the 
+				% DataWave Neuroshare (or Matlab API, unknown at moment...) leaves
+				% out some of the labels
+				tmp = textscan(Events(v).Info.CSVDesc, '%s', ...
 												'Delimiter', ',', ...
 												'MultipleDelimsAsOne', 1);
 				field_names = tmp{1};
-				if Events(v).EventCount
-					field_vals = cell(Events(v).EventCount, 1);
-					for n = 1:Events(v).EventCount
-						tmp = textscan(Events(v).Info.CSVDesc', '%s', ...
-													'Delimiter', ',', ...
-													'MultipleDelimsAsOne', 1);
-						field_vals{v} = tmp{1};
-					end	% END n
-					
-					
-				end	% END if EventCount
+				clear tmp;
+				% check if the current Event entity has 'SoundType' as part of
+				% the first element of its fields
+				if strncmpi(field_names{1}, 'SoundType', length('SoundType'))
+					% if so, assume that this is a "Marker" Entity and check for
+					% R or L to determine Right or Left sound marker
+					if strcmpi(field_names{1}(end), 'L')
+						% left marker
+						EventID(v) = L;
+					elseif strcmpi(field_names{1}(end), 'R')
+						% right marker
+						EventID(v) = R;
+					else
+						EventID(v) = 0;
+					end
+				end
+			end
+			
+			% check to ensure that both L and R Entities were found
+			if ~all( any(EventID == L) & any(EventID == R) )
+				% if not abort
+				error('%s: Markers for both (L and R) channels not found!', mfilename);
+			end
+			% check MarkerEvents
+			MarkerEvents = find(EventID);
+			nMarkerEvents = length(MarkerEvents);
+			if nMarkerEvents ~= 2
+				error('%s: nMarkerEvents is %d (must be equal to 2)',...
+								mfilename, nMarkerEvents);
+			end
+			% make sure # of events are the same
+			if ~(Events(MarkerEvents(1)).EventCount == Events(MarkerEvents(2)).EventCount)
+				error('%s: EventCount mismatch!', mfilename);
+			else
+				EventCount = Events(MarkerEvents(1)).EventCount; 
+			end
+
+			evL = find(EventID == L);
+			evR = find(EventID == R);
+			fprintf('Left Markers -> Event(%d)\n', evL);
+			fprintf('Right Markers -> Event(%d)\n', evR);
+
+			% allocate Markers object array
+			obj.Markers = repmat(DW.Marker, EventCount, 1);
+
+			for n = 1:EventCount
+				% parse into cell arrays, to preserve empty fields, do NOT
+				% treat successive delimiters/whitespace as one (in call to csvscan)
+				tmpR = csvscan(Events(evR).Data{n}, 0);
+				tmpL = csvscan(Events(evL).Data{n}, 0);
+
+				% ASSUME that one of the lists will not have an outputfile field.
+				% pad with empty values 
+				if length(tmpR) ~= MARKER_NBASE
+					dlen = MARKER_NBASE - length(tmpR);
+					if dlen < 0
+						error('%d: length(tmpR) > MARKER_NBASE');
+					else
+						tmpR = [tmpR; cell(dlen, 1)]; %#ok<AGROW>
+					end
+				end
+				if length(tmpL) ~= MARKER_NBASE
+					dlen = MARKER_NBASE - length(tmpL);
+					if dlen < 0
+						error('%d: length(tmpL) > MARKER_NBASE');
+					else
+						tmpL = [tmpL; cell(dlen, 1)]; %#ok<AGROW>
+					end
+				end
+
+				tmp = [tmpR; tmpL];
+				elist = cell(size(tmp));
+				% convert tags appropriately
+				for t = 1:MARKER_NMARKERS
+					% check for type
+					switch MARKER_TYPES{t} %#ok<USENS>
+						case 'char'
+							elist{t} = tmp{t};
+						case 'float'
+							elist{t} = str2double(tmp{t});
+						case 'int'
+							elist{t} = str2double(tmp{t});
+						otherwise
+							elist{t} = tmp{t};
+					end
+				end	% END t -> MARKERS_NMARKERS
+
+				% assign val to object
+				obj.Markers(n).setValuesFromEventList(elist);
+			end
+
+			clear tmpR tmpL tmp elist
+			% assign outputs
+			if nargout > 0
+				if nargout <= 1
+					varargout{1} = errFlg;
+				end
+				if nargout > 1
+					varargout{2} = Events;
+				end
+			end
 				
-				
-				
-				
-				
-			end	% END v DDF.nEvent index
-			
-			
-			
-			
-			
-			
-			
-			
-			
 		end	%END loadMarkers
 		%------------------------------------------------------------------------
 		%------------------------------------------------------------------------
@@ -643,7 +729,7 @@ classdef (ConstructOnLoad = true) DWdata < handle
 					fieldname = 'WavFilenameR';
 				end
 			else
-				fieldname = ['WavFilename' upper(channel)]
+				fieldname = ['WavFilename' upper(channel)];
 			end
 			
 			allwavnames = obj.getMarkerFieldAsArray(fieldname);
@@ -681,7 +767,7 @@ classdef (ConstructOnLoad = true) DWdata < handle
 			% load defaults
 			DataWaveDefaults;			
 			% check if fieldname is valid
-			fcompare = strcmp(fieldname, MARKER_TAGS);
+			fcompare = strcmp(fieldname, MARKER_TAGS); %#ok<USENS>
 			if isempty(fcompare)
 				error('%s: %s is not a valid marker tag field', mfilename, fieldname);
 			end
@@ -689,7 +775,7 @@ classdef (ConstructOnLoad = true) DWdata < handle
 			% find index location of fieldname in MARKER_TAGS for dynamic indexing
 			floc = find(fcompare);
 			% return arrOut as cell array for character fields
-			if strcmpi(MARKER_TYPES{floc}, 'char')
+			if strcmpi(MARKER_TYPES{floc}, 'char') %#ok<USENS>
 				arrOut = cell(obj.Info.Nmarkers, 1);
 				for c = 1:obj.Info.Nmarkers
 					arrOut{c} = obj.Markers(c).(MARKER_TAGS{floc});

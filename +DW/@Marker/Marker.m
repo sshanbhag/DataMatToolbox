@@ -121,7 +121,7 @@ classdef (ConstructOnLoad = true) Marker < handle
 				switch upper(varargin{argc})
 					case 'EVENT_STRING'
 						obj.setValuesFromEventList(varargin{argc+1});
-						argc = argc + 1;
+						argc = argc + 2;
 					otherwise
 						error('%s: unknown option %s', mfilename, varargin{argc})
 				end
@@ -130,23 +130,31 @@ classdef (ConstructOnLoad = true) Marker < handle
 		%---------------------------------------------------------------------
 		%---------------------------------------------------------------------
 		
+		%---------------------------------------------------------------------
+		%---------------------------------------------------------------------
 		function setValuesFromEventList(obj, Elist)
-			% load defaults
-			DataWaveDefaults;
+		%---------------------------------------------------------------------
+		% Marker.setValuesFromEventList(Elist)
+		%---------------------------------------------------------------------
+		% it is assumed that Elist is a cell array of values (pre-converted
+		% from strings) for the Marker parameters (listed in MARKER_TAGS)
+		%---------------------------------------------------------------------
+			DataWaveDefaults;		% load defaults
 			% check that Elist is a cell
 			if ~iscell(Elist)
 				error('%s: list of values must be in cell format', mfilename);
 			end
-			% assign values
-			
-			% for the right channel markers, there are the same
-			% number of input fields as there are base tags
-			nM = length(MARKER_BASE);
-			
+			if length(Elist) ~= MARKER_NMARKERS
+				error('%s: mismatch in # of fields in Elist', mfilename);
+			end
+			% assign values, using list of MARKER_TAGS to index into
+			% the Marker parameters
 			for n = 1:MARKER_NMARKERS
 				obj.(MARKER_TAGS{n}) = Elist{n}; %#ok<*USENS>
 			end
 		end
+		%---------------------------------------------------------------------
+		%---------------------------------------------------------------------
 		
 		%---------------------------------------------------------------------
 		%---------------------------------------------------------------------
