@@ -57,7 +57,8 @@ classdef (ConstructOnLoad = true) DWdata < handle
 		fext			%file extension
 		DDF			% neuroshare interface object
 		Info			% DWinfo object
-		Background	%really this should be a class too...
+		Markers		% Marker object array
+		Background	% really this should be a class too...
 		Stimuli		% Stimulus object array
 		Probes		% Probe object array
 		Units			% Unit object array
@@ -73,7 +74,6 @@ classdef (ConstructOnLoad = true) DWdata < handle
 	%------------------------------------------------------------------------
 	properties
 		fullfname;  %full file name
-		Markers		% Marker object array
 	end
   
 	%------------------------------------------------------------------------
@@ -82,7 +82,6 @@ classdef (ConstructOnLoad = true) DWdata < handle
 	%------------------------------------------------------------------------
 	%------------------------------------------------------------------------
 	methods
-	
 		%------------------------------------------------------------------------
 		%------------------------------------------------------------------------
 		% Constructor
@@ -157,7 +156,189 @@ classdef (ConstructOnLoad = true) DWdata < handle
 		end	% END initNS
 		%------------------------------------------------------------------------
 		%------------------------------------------------------------------------
+
 		
+		
+		%------------------------------------------------------------------------
+		%------------------------------------------------------------------------
+		function varargout = loadMarkers(obj)
+		%------------------------------------------------------------------------
+		% [Events, errFlg] = DWdata.loadMarkers
+		%------------------------------------------------------------------------
+
+			%-----------------------------------------------------------
+			% Initial setup
+			%-----------------------------------------------------------
+			DataWaveDefaults	% load defaults
+			errFlg = 0;
+
+			% read Events using NeuroShare
+			Events = obj.DDF.getEvents;
+			if isempty(Events)
+				errFlg = 1;
+				warning('%s: error loading Events', mfilename);
+				return
+			end
+
+			%-----------------------------------------------------------
+			% parse Markers
+			%-----------------------------------------------------------			
+			% create a list of Event IDS for each event entity.
+			%	EventID == 0 --> non-marker entity
+			%	EventID == 1 --> L channel markers
+			%	EventID == 2 --> R channel markers
+			EventID = zeros(obj.DDF.nEvent, 1);
+
+			% first, find the R and L marker events (R is usually Events(2), 
+			% L is usually Events(3), but try not to assume)
+			for v = 1:obj.DDF.nEvent
+				% scan the CSVDesc from the NeuroShare Events.Info to get
+				% a list (usually partial - for sound stimulus markers, the 
+				% DataWave Neuroshare (or Matlab API, unknown at moment...) leaves
+				% out some of the labels
+				tmp = textscan(Events(v).Info.CSVDesc, '%s', ...
+												'Delimiter', ',', ...
+												'MultipleDelimsAsOne', 1);
+				field_names = tmp{1};
+				clear tmp;
+				% check if the current Event entity has 'SoundType' as part of
+				% the first element of its fields
+				if strncmpi(field_names{1}, 'SoundType', length('SoundType'))
+					% if so, assume that this is a "Marker" Entity and check for
+					% R or L to determine Right or Left sound marker
+					if strcmpi(field_names{1}(end), 'L')
+						% left marker
+						EventID(v) = L;
+					elseif strcmpi(field_names{1}(end), 'R')
+						% right marker
+						EventID(v) = R;
+					else
+						EventID(v) = 0;
+					end
+				end
+			end
+
+			% check to ensure that both L and R Entities were found
+			if ~all( any(EventID == L) & any(EventID == R) )
+				% if not abort
+				error('%s: Markers for both (L and R) channels not found!', mfilename);
+			end
+			% check MarkerEvents
+			MarkerEvents = find(EventID);
+			nMarkerEvents = length(MarkerEvents);
+			if nMarkerEvents ~= 2
+				error('%s: nMarkerEvents is %d (must be equal to 2)',...
+								mfilename, nMarkerEvents);
+			end
+			% make sure # of events are the same
+			if ~(Events(MarkerEvents(1)).EventCount == Events(MarkerEvents(2)).EventCount)
+				error('%s: EventCount mismatch!', mfilename);
+			else
+				EventCount = Events(MarkerEvents(1)).EventCount; 
+			end
+
+			evL = find(EventID == L);
+			evR = find(EventID == R);
+			fprintf('Left Markers -> Event(%d)\n', evL);
+			fprintf('Right Markers -> Event(%d)\n', evR);
+
+			% allocate Markers object array
+			% Matlab thinks obj.Markers is a double, and will throw an
+			% an error.  so, we trick Matlab in order to do so:  first, need to
+			% initialize Markers as a single marker, then allocate 
+			% full array.  otherwise, Matlab things
+			obj.Markers = DW.Marker;
+			obj.Markers(EventCount, 1) = DW.Marker;
+
+			% loop through the events
+			for n = 1:EventCount
+				% parse into cell arrays, to preserve empty fields, do NOT
+				% treat successive delimiters/whitespace as one (in call to csvscan)
+				tmpR = csvscan(Events(evR).Data{n}, 0);
+				tmpL = csvscan(Events(evL).Data{n}, 0);
+
+				% ASSUME that one of the lists will not have an outputfile field.
+				% pad with empty values 
+				if length(tmpR) ~= MARKER_NBASE
+					dlen = MARKER_NBASE - length(tmpR);
+					if dlen < 0
+						error('%d: length(tmpR) > MARKER_NBASE');
+					else
+						tmpadd = cell(dlen, 1);
+						for t = 1:dlen
+							tmpadd{t} = '';
+						end
+						tmpR = [tmpR; tmpadd]; %#ok<AGROW>
+						clear tmpadd
+					end
+				end
+				if length(tmpL) ~= MARKER_NBASE
+					dlen = MARKER_NBASE - length(tmpL);
+					if dlen < 0
+						error('%d: length(tmpL) > MARKER_NBASE');
+					else
+						tmpadd = cell(dlen, 1);
+						for t = 1:dlen
+							tmpadd{t} = '';
+						end
+						tmpL = [tmpL; tmpadd]; %#ok<AGROW>
+						clear tmpadd
+					end
+				end
+				% create a single cell array of strings
+				tmp = [tmpR; tmpL];
+				% convert tags appropriately, first allocating a list for values
+				elist = cell(size(tmp));		
+				for t = 1:MARKER_NMARKERS
+					% check for type
+					switch MARKER_TYPES{t} %#ok<USENS>
+						case 'char'
+							elist{t} = tmp{t};
+						case 'float'
+							elist{t} = str2double(tmp{t});
+						case 'int'
+							elist{t} = str2double(tmp{t});
+						otherwise
+							elist{t} = tmp{t};
+					end
+				end	% END t -> MARKERS_NMARKERS
+
+				% assign values to marker object
+				obj.Markers(n).setValuesFromEventList(elist);
+				% set timestamp
+				ts = [Events(evR).TimeStamp(n) Events(evL).TimeStamp(n)];
+				if all(ts > 0)
+					% check if they are equal
+					if ts(1) == ts(2)
+						% if so, use the right one
+						obj.Markers(n).Timestamp = ts(1);
+					else
+						% otherwise, store the first one (in time)
+						obj.Markers(n).Timestamp = min(ts);
+					end
+				else
+					% store timestamp that is > 0
+					obj.Markers(n).Timestamp = ts(ts>0);
+				end
+				clear ts elist
+			end
+			clear tmpR tmpL tmp elist
+			%-------------------------------
+			% assign outputs
+			%-------------------------------
+			if nargout > 0
+				if nargout <= 1
+					varargout{1} = errFlg;
+				end
+				if nargout > 1
+					varargout{2} = Events;
+				end
+			end
+
+		end	%END loadMarkers
+		%------------------------------------------------------------------------
+		%------------------------------------------------------------------------
+
 		%------------------------------------------------------------------------
 		%------------------------------------------------------------------------
 		function [obj, rawdata, errFlg] = readRawData(obj)
@@ -223,166 +404,6 @@ classdef (ConstructOnLoad = true) DWdata < handle
 			% no error(s) encountered
 			errFlg = 0;
 		end
-		%------------------------------------------------------------------------
-		%------------------------------------------------------------------------
-
-		%------------------------------------------------------------------------
-		%------------------------------------------------------------------------
-		function varargout = loadMarkers(obj)
-		%------------------------------------------------------------------------
-		%------------------------------------------------------------------------
-
-			%-----------------------------------------------------------
-			% Initial setup
-			%-----------------------------------------------------------
-			errFlg = 0;
-			DataWaveDefaults
-			%-----------------------------------------------------------
-			% read Events
-			%-----------------------------------------------------------
-			Events = obj.DDF.getEvents;
-			if isempty(Events)
-				errFlg = 1;
-				warning('%s: error loading Events', mfilename);
-				return
-			end
-			%-----------------------------------------------------------
-			% parse Markers
-			%-----------------------------------------------------------			
-			% create a list of Event IDS for each event entity.
-			%	EventID == 0 --> non-marker entity
-			%	EventID == 1 --> L channel markers
-			%	EventID == 2 --> R channel markers
-			EventID = zeros(obj.DDF.nEvent, 1);
-			
-			% first, find the R and L marker events (R is usually Events(2), 
-			% L is usually Events(3), but try not to assume)
-			for v = 1:obj.DDF.nEvent
-				% scan the CSVDesc from the NeuroShare Events.Info to get
-				% a list (usually partial - for sound stimulus markers, the 
-				% DataWave Neuroshare (or Matlab API, unknown at moment...) leaves
-				% out some of the labels
-				tmp = textscan(Events(v).Info.CSVDesc, '%s', ...
-												'Delimiter', ',', ...
-												'MultipleDelimsAsOne', 1);
-				field_names = tmp{1};
-				clear tmp;
-				% check if the current Event entity has 'SoundType' as part of
-				% the first element of its fields
-				if strncmpi(field_names{1}, 'SoundType', length('SoundType'))
-					% if so, assume that this is a "Marker" Entity and check for
-					% R or L to determine Right or Left sound marker
-					if strcmpi(field_names{1}(end), 'L')
-						% left marker
-						EventID(v) = L;
-					elseif strcmpi(field_names{1}(end), 'R')
-						% right marker
-						EventID(v) = R;
-					else
-						EventID(v) = 0;
-					end
-				end
-			end
-			
-			% check to ensure that both L and R Entities were found
-			if ~all( any(EventID == L) & any(EventID == R) )
-				% if not abort
-				error('%s: Markers for both (L and R) channels not found!', mfilename);
-			end
-			% check MarkerEvents
-			MarkerEvents = find(EventID);
-			nMarkerEvents = length(MarkerEvents);
-			if nMarkerEvents ~= 2
-				error('%s: nMarkerEvents is %d (must be equal to 2)',...
-								mfilename, nMarkerEvents);
-			end
-			% make sure # of events are the same
-			if ~(Events(MarkerEvents(1)).EventCount == Events(MarkerEvents(2)).EventCount)
-				error('%s: EventCount mismatch!', mfilename);
-			else
-				EventCount = Events(MarkerEvents(1)).EventCount; 
-			end
-
-			evL = find(EventID == L);
-			evR = find(EventID == R);
-			fprintf('Left Markers -> Event(%d)\n', evL);
-			fprintf('Right Markers -> Event(%d)\n', evR);
-
-			% allocate Markers object array
-			obj.Markers = repmat(DW.Marker, EventCount, 1);
-
-			for n = 1:EventCount
-				% parse into cell arrays, to preserve empty fields, do NOT
-				% treat successive delimiters/whitespace as one (in call to csvscan)
-				tmpR = csvscan(Events(evR).Data{n}, 0);
-				tmpL = csvscan(Events(evL).Data{n}, 0);
-
-				% ASSUME that one of the lists will not have an outputfile field.
-				% pad with empty values 
-				if length(tmpR) ~= MARKER_NBASE
-					dlen = MARKER_NBASE - length(tmpR);
-					if dlen < 0
-						error('%d: length(tmpR) > MARKER_NBASE');
-					else
-						tmpadd = cell(dlen, 1);
-						for t = 1:dlen
-							tmpadd{t} = '';
-						end
-						tmpR = [tmpR; tmpadd]; %#ok<AGROW>
-						clear tmpadd
-					end
-				end
-				if length(tmpL) ~= MARKER_NBASE
-					dlen = MARKER_NBASE - length(tmpL);
-					if dlen < 0
-						error('%d: length(tmpL) > MARKER_NBASE');
-					else
-						tmpadd = cell(dlen, 1);
-						for t = 1:dlen
-							tmpadd{t} = '';
-						end
-						tmpL = [tmpL; tmpadd]; %#ok<AGROW>
-						clear tmpadd
-					end
-				end
-
-				tmp = [tmpR; tmpL];
-				elist = cell(size(tmp));
-				% convert tags appropriately
-				for t = 1:MARKER_NMARKERS
-					% check for type
-					switch MARKER_TYPES{t} %#ok<USENS>
-						case 'char'
-							elist{t} = tmp{t};
-						case 'float'
-							elist{t} = str2double(tmp{t});
-						case 'int'
-							elist{t} = str2double(tmp{t});
-						otherwise
-							elist{t} = tmp{t};
-					end
-				end	% END t -> MARKERS_NMARKERS
-	
-				% assign val to object
-				obj.Markers(n).setValuesFromEventList(elist);
-				clear elist
-			end
-			
-			for n = 1:EventCount
-				fprintf('%d: %d\n', n, obj.Markers(n).OutputTimestampR)
-			end
-			clear tmpR tmpL tmp elist
-			% assign outputs
-			if nargout > 0
-				if nargout <= 1
-					varargout{1} = errFlg;
-				end
-				if nargout > 1
-					varargout{2} = Events;
-				end
-			end
-				
-		end	%END loadMarkers
 		%------------------------------------------------------------------------
 		%------------------------------------------------------------------------
 
@@ -476,7 +497,6 @@ classdef (ConstructOnLoad = true) DWdata < handle
 		end	% END parseMarkersFromData()
 		%------------------------------------------------------------------------
 		%------------------------------------------------------------------------
-		
 		
 		%------------------------------------------------------------------------
 		%------------------------------------------------------------------------
