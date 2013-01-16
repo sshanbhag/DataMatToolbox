@@ -25,7 +25,8 @@
 %
 %-----------------------------------------------------------------------------
 
-classdef (ConstructOnLoad = true) Marker < handle
+% classdef (ConstructOnLoad = true) Marker < handle
+classdef (ConstructOnLoad = true) Marker 
 	%------------------------------------------------------------------------
 	%------------------------------------------------------------------------
 	% Define protected properties
@@ -33,6 +34,9 @@ classdef (ConstructOnLoad = true) Marker < handle
 	%------------------------------------------------------------------------
 	properties (SetAccess = protected)
 		Timestamp
+	end	% end of protected properties
+	% public properties
+	properties
 		% tags
 		SoundTypeR
 		AttenuationR
@@ -68,9 +72,7 @@ classdef (ConstructOnLoad = true) Marker < handle
 		ToneFreqL
 		PhaseDegL
 		OutputFileL
-	end	% end of protected properties
-	% public properties
-	properties
+		
 		N
 		string
 	end	% END public properties
@@ -167,57 +169,72 @@ classdef (ConstructOnLoad = true) Marker < handle
 		function out = eq(objA, objB)
 		%---------------------------------------------------------------------
 		%---------------------------------------------------------------------
-		
-			% define fields to compare - need to split these into character
-			% and numeric types
-			numfields = {	...
-								'AttenuationR', ...
-								'BBNlowerFreqR', ...
-								'BBNupperFreqR', ...
-								'AmplitudeR', ...
-								'TimeShiftR', ...
-								'RampUpR', ...
-								'HoldTimeR', ...
-								'RampDownR', ...
-								'FixedDelayR', ...
-								'ToneFreqR', ...
-								'PhaseDegR', ...
-								'AttenuationL', ...
-								'BBNlowerFreqL', ...
-								'BBNupperFreqL', ...
-								'AmplitudeL', ...
-								'TimeShiftL', ...
-								'RampUpL', ...
-								'HoldTimeL', ...
-								'RampDownL', ...
-								'OutputTimestampL', ...
-								'OutputTimeWithDelayL', ...
-								'FixedDelayL' ...
-							};
-			charfields = {	...
-								'WavFilenameR', ...
-								'WavFilenameL', ...
-								'ToneFreqL', ...
-								'PhaseDegL' ...
-							};
-
-			numcomp = zeros(size(numfields));
-			charcomp = zeros(size(charfields));
-			
+			DataWaveDefaults;	% load defaults
+			% find fields to compare
+			numfields = find( strcmp('int', MARKER_TYPES) | ...
+									strcmp('float', MARKER_TYPES) );
+			charfields = find( strcmp('char', MARKER_TYPES) );
+			% preallocate comparison arrays
+			numcomp = zeros(1, length(numfields));
+			charcomp = zeros(1, length(charfields));
+			% compare numeric values
 			for n = 1:length(numfields)
-				numcomp(n) = all(objA.(numfields{n}) == objB.(numfields{n}));
+				t = numfields(n);
+				numcomp(n) = all(objA.(MARKER_TAGS{t}) == objB.(MARKER_TAGS{t}));
 			end
-			
+			% compare character values
 			for c = 1:length(charfields)
-				charcomp(c) = strcmp( objA.(charfields{c}), objB.(charfields{c}) );
+				t = charfields(c);
+				charcomp(c) = strcmp( objA.(MARKER_TAGS{t}), objB.(MARKER_TAGS{t}) );
 			end
-			
+			% all check?
 			out = all([numcomp charcomp]);
-
 		end	% END Marker/eq
 		%---------------------------------------------------------------------
 		%---------------------------------------------------------------------
 
+		
+		
+		%---------------------------------------------------------------------
+		%---------------------------------------------------------------------
+		% Comparison Methods
+		%---------------------------------------------------------------------
+		%---------------------------------------------------------------------
+
+		%---------------------------------------------------------------------
+		%---------------------------------------------------------------------
+		function out = sameStimulus(obj, objA, channel)
+		%---------------------------------------------------------------------
+		%---------------------------------------------------------------------
+			DataWaveDefaults;	% load defaults
+			
+			if channel == 'L'
+				tags = MARKER_TAGS(LCOMP_INDEX);
+				types = MARKER_TYPES(LCOMP_INDEX);
+			elseif channel == 'R' 
+				tags = MARKER_TAGS(LCOMP_INDEX);
+				types = MARKER_TYPES(LCOMP_INDEX);
+			else
+				tags = MARKER_TAGS([RCOMP_INDEX LCOMP_INDEX]);
+				types = MARKER_TYPES([RCOMP_INDEX LCOMP_INDEX]);
+			end
+			numcomp = length(tags);
+			compvals = zeros(1, numcomp);		
+			% compare values
+			for n = 1:numcomp
+				if any(strcmp(types{n}, {'int', 'float'}))
+					numcomp(n) = all(obj.(tags{n}) == objA.(tags{n}));
+				else
+					numcomp(n) = all(strcmp(obj.(tags{n}), objA.(tags{n})));
+				end
+			end
+			% all check?
+			out = all(numcomp);
+		end	% END Marker/eq
+		%---------------------------------------------------------------------
+		%---------------------------------------------------------------------
+
+		
 		
 		%---------------------------------------------------------------------
 		%---------------------------------------------------------------------
@@ -267,7 +284,7 @@ classdef (ConstructOnLoad = true) Marker < handle
 				% check if current marker is a number
 				if any(strcmp(MARKER_TYPES{m}, {'int', 'float', 'double'}))
 					% if number, store value in vector 
-					obj.(MARKER_TAGS{m}) = str2num(obj.string{m});
+					obj.(MARKER_TAGS{m}) = str2num(obj.string{m}); %#ok<ST2NM>
 				elseif strcmp(MARKER_TYPES{m}, 'char')
 					% otherwise, if string, store in 1-D cell array
 					obj.(MARKER_TAGS{m}) = obj.string{m};

@@ -59,7 +59,6 @@ classdef (ConstructOnLoad = true) DWdata < handle
 		Info			% DWinfo object
 		Background	%really this should be a class too...
 		Stimuli		% Stimulus object array
-		Markers		% Marker object array
 		Probes		% Probe object array
 		Units			% Unit object array
 		Nmarkers
@@ -74,6 +73,7 @@ classdef (ConstructOnLoad = true) DWdata < handle
 	%------------------------------------------------------------------------
 	properties
 		fullfname;  %full file name
+		Markers		% Marker object array
 	end
   
 	%------------------------------------------------------------------------
@@ -324,7 +324,12 @@ classdef (ConstructOnLoad = true) DWdata < handle
 					if dlen < 0
 						error('%d: length(tmpR) > MARKER_NBASE');
 					else
-						tmpR = [tmpR; cell(dlen, 1)]; %#ok<AGROW>
+						tmpadd = cell(dlen, 1);
+						for t = 1:dlen
+							tmpadd{t} = '';
+						end
+						tmpR = [tmpR; tmpadd]; %#ok<AGROW>
+						clear tmpadd
 					end
 				end
 				if length(tmpL) ~= MARKER_NBASE
@@ -332,7 +337,12 @@ classdef (ConstructOnLoad = true) DWdata < handle
 					if dlen < 0
 						error('%d: length(tmpL) > MARKER_NBASE');
 					else
-						tmpL = [tmpL; cell(dlen, 1)]; %#ok<AGROW>
+						tmpadd = cell(dlen, 1);
+						for t = 1:dlen
+							tmpadd{t} = '';
+						end
+						tmpL = [tmpL; tmpadd]; %#ok<AGROW>
+						clear tmpadd
 					end
 				end
 
@@ -352,11 +362,15 @@ classdef (ConstructOnLoad = true) DWdata < handle
 							elist{t} = tmp{t};
 					end
 				end	% END t -> MARKERS_NMARKERS
-
+	
 				% assign val to object
 				obj.Markers(n).setValuesFromEventList(elist);
+				clear elist
 			end
-
+			
+			for n = 1:EventCount
+				fprintf('%d: %d\n', n, obj.Markers(n).OutputTimestampR)
+			end
 			clear tmpR tmpL tmp elist
 			% assign outputs
 			if nargout > 0
