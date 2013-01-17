@@ -105,18 +105,18 @@ classdef (ConstructOnLoad = true) Marker < handle
 			
 			% check input args
 			nargs = length(varargin);
+			% if no args provided, simply return
 			if nargs == 0
 				return
 			end
+			% mimick old behavior for strings - parse input and verify
+			% !!! this should probably disappear (SJS 17Jan2013)
 			if nargs == 1
-				% mimick old behavior for strings
-				%parse input and verify
 				obj.string = '';
 				obj.string = varargin{1};
 				obj.initMarkerFromString;
 				return
 			end
-			
 			% otherwise, parse inputs args
 			argc = 1;
 			while argc <= nargs
@@ -140,10 +140,38 @@ classdef (ConstructOnLoad = true) Marker < handle
 
 		%---------------------------------------------------------------------
 		%---------------------------------------------------------------------
-		function out = sameStimulus(obj, objA, channel)
+		function [out, outcmp, outmat] = sameStimulus(obj, objA, channel)
 		%---------------------------------------------------------------------
 		%---------------------------------------------------------------------
 			DataWaveDefaults;	% load defaults
+			% use different indices into tags depending on channel
+			if nargin == 2
+				tags = MARKER_TAGS([RCOMP_INDEX LCOMP_INDEX]);
+			else
+				if channel == 'L'
+					tags = MARKER_TAGS(LCOMP_INDEX);
+				elseif channel == 'R' 
+					tags = MARKER_TAGS(RCOMP_INDEX);
+				else
+					tags = MARKER_TAGS([RCOMP_INDEX LCOMP_INDEX]);
+				end
+			end	
+			% get # of tags to compare, preallocate test cells
+			numcomp = length(tags);
+			objvals = cell(numcomp, 1);
+			objvalsA = objvals;
+			% get values
+			for n = 1:numcomp
+				objvals{n} = obj.(tags{n});
+				objvalsA{n} = objA.(tags{n});
+			end
+			[out, outcmp] = cellcmp(objvals, objvalsA);
+			if nargout == 3
+				outmat = [objvals objvalsA];
+			end
+			
+			% OLD ALGORITHM
+			%{ 
 			% use different indices into tags depending on channel
 			if channel == 'L'
 				tags = MARKER_TAGS(LCOMP_INDEX);
@@ -170,6 +198,7 @@ classdef (ConstructOnLoad = true) Marker < handle
 			end
 			% all check?
 			out = all(numcomp);
+			%}
 		end	% END Marker/eq
 		%---------------------------------------------------------------------
 		%---------------------------------------------------------------------
@@ -180,6 +209,36 @@ classdef (ConstructOnLoad = true) Marker < handle
 		%---------------------------------------------------------------------
 		%---------------------------------------------------------------------
 
+		%---------------------------------------------------------------------
+		%---------------------------------------------------------------------
+		function out = getStimulus(obj, channel)
+		%---------------------------------------------------------------------
+		%---------------------------------------------------------------------
+			DataWaveDefaults;	% load defaults
+			% use different indices into tags depending on channel
+			if nargin == 1
+				% get all tags if channel not provided
+				tags = MARKER_TAGS([RCOMP_INDEX LCOMP_INDEX]);
+			else
+				if channel == 'L'
+					tags = MARKER_TAGS(LCOMP_INDEX);
+				elseif channel == 'R' 
+					tags = MARKER_TAGS(LCOMP_INDEX);
+				else
+					tags = MARKER_TAGS([RCOMP_INDEX LCOMP_INDEX]);
+				end
+			end
+			% get # of tags, preallocate output array
+			nout = length(tags);
+			out = cell(nout, 1);
+			% get values
+			for n = 1:nout
+				out{n} = obj.(tags{n});
+			end
+		end	% END getStimulus
+		%---------------------------------------------------------------------
+		%---------------------------------------------------------------------
+		
 		%---------------------------------------------------------------------
 		%---------------------------------------------------------------------
 		function setValuesFromEventList(obj, Elist)

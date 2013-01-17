@@ -45,15 +45,13 @@ function [outSingle, outMatrix] = cellcmp(A, B)
 % first make sure input cells are same size
 sizeA = size(A);
 sizeB = size(B);
-
 % if not same size, throw an error
 if ~all(sizeA == sizeB)
 	error('%s: cell A and cell B must be same size', mfilename);
 end
 
-
+% initialize outMatrix
 outMatrix = zeros(sizeA);
-
 
 % now, go element by element and compare values
 
@@ -88,7 +86,7 @@ outSingle = all(all(outMatrix));
 
 
 
-function out = global_compare(a, b);
+function out = global_compare(a, b)
 	tmp = (a == b);
 	while ~all(size(tmp) == [1 1])
 		tmp = all(tmp);
