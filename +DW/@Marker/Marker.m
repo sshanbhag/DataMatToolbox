@@ -142,63 +142,42 @@ classdef (ConstructOnLoad = true) Marker < handle
 		%---------------------------------------------------------------------
 		function [out, outcmp, outmat] = sameStimulus(obj, objA, channel)
 		%---------------------------------------------------------------------
+		% [out, outcmp, outmat] = Marker.sameStimulus(objA, channel)
+		%---------------------------------------------------------------------
+		% compares the stimulus-specific parameters from Marker to those of
+		% another vector, objA.  
+		% These parameters are:
+		% 	SoundType
+		% 	Attenuation
+		% 	WavFilename
+		% 	BBNlowerFreq
+		% 	BBNupperFreq
+		% 	Amplitude
+		% 	TimeShift
+		% 	RampUp
+		% 	HoldTime
+		% 	RampDown
+		% 	FixedDelay
+		% 	ToneFreq
+		% 	PhaseDeg
+		%
+		% if channel == 'L', the values will be from the Left channel (e.g.,
+		% SoundTypeL, AttenuationL, etc.)
+		% channel == 'R' will compare Right channel values.
+		% if channel is not provided, or if it equals 'B' (both), the 
+		% R and L channel values will be compared
+		%
+		% out == 1 indicates stimuli are the same
+		% out == 0 indicates different stimuli
+		% outcmp is a list of comparisons between the values
+		% outmat is a {n, 2} list of the values that were compared
 		%---------------------------------------------------------------------
 			DataWaveDefaults;	% load defaults
-			% use different indices into tags depending on channel
-			if nargin == 2
-				tags = MARKER_TAGS([RCOMP_INDEX LCOMP_INDEX]);
-			else
-				if channel == 'L'
-					tags = MARKER_TAGS(LCOMP_INDEX);
-				elseif channel == 'R' 
-					tags = MARKER_TAGS(RCOMP_INDEX);
-				else
-					tags = MARKER_TAGS([RCOMP_INDEX LCOMP_INDEX]);
-				end
-			end	
-			% get # of tags to compare, preallocate test cells
-			numcomp = length(tags);
-			objvals = cell(numcomp, 1);
-			objvalsA = objvals;
-			% get values
-			for n = 1:numcomp
-				objvals{n} = obj.(tags{n});
-				objvalsA{n} = objA.(tags{n});
-			end
-			[out, outcmp] = cellcmp(objvals, objvalsA);
+			[out, outcmp] = cellcmp(obj.getStimulus(channel), ...
+											objA.getStimulus(channel));
 			if nargout == 3
-				outmat = [objvals objvalsA];
+				outmat = [obj.getStimulus(channel) objA.getStimulus(channel)];
 			end
-			
-			% OLD ALGORITHM
-			%{ 
-			% use different indices into tags depending on channel
-			if channel == 'L'
-				tags = MARKER_TAGS(LCOMP_INDEX);
-				types = MARKER_TYPES(LCOMP_INDEX);
-			elseif channel == 'R' 
-				tags = MARKER_TAGS(LCOMP_INDEX);
-				types = MARKER_TYPES(LCOMP_INDEX);
-			else
-				tags = MARKER_TAGS([RCOMP_INDEX LCOMP_INDEX]);
-				types = MARKER_TYPES([RCOMP_INDEX LCOMP_INDEX]);
-			end
-			% get # of tags to compare, preallocate comparison array
-			numcomp = length(tags);
-			compvals = zeros(1, numcomp);		
-			% compare values
-			for n = 1:numcomp
-				% check numbers
-				if any(strcmp(types{n}, {'int', 'float'}))
-					numcomp(n) = all(obj.(tags{n}) == objA.(tags{n}));
-				else
-					% check strings/characters
-					numcomp(n) = all(strcmp(obj.(tags{n}), objA.(tags{n})));
-				end
-			end
-			% all check?
-			out = all(numcomp);
-			%}
 		end	% END Marker/eq
 		%---------------------------------------------------------------------
 		%---------------------------------------------------------------------
@@ -213,6 +192,28 @@ classdef (ConstructOnLoad = true) Marker < handle
 		%---------------------------------------------------------------------
 		function out = getStimulus(obj, channel)
 		%---------------------------------------------------------------------
+		% gets the stimulus-specific parameters from Marker, returns
+		% a cell vector with list of values:
+		% 	SoundType
+		% 	Attenuation
+		% 	WavFilename
+		% 	BBNlowerFreq
+		% 	BBNupperFreq
+		% 	Amplitude
+		% 	TimeShift
+		% 	RampUp
+		% 	HoldTime
+		% 	RampDown
+		% 	FixedDelay
+		% 	ToneFreq
+		% 	PhaseDeg
+		%
+		% if channel == 'L', the values will be from the Left channel (e.g.,
+		% SoundTypeL, AttenuationL, etc.)
+		% channel == 'R' will return Right channel values.
+		% if channel is not provided, or if it equals 'B' (both), the 
+		% output vector will have the R channel values followed by the L 
+		% channel values
 		%---------------------------------------------------------------------
 			DataWaveDefaults;	% load defaults
 			% use different indices into tags depending on channel
@@ -223,7 +224,7 @@ classdef (ConstructOnLoad = true) Marker < handle
 				if channel == 'L'
 					tags = MARKER_TAGS(LCOMP_INDEX);
 				elseif channel == 'R' 
-					tags = MARKER_TAGS(LCOMP_INDEX);
+					tags = MARKER_TAGS(RCOMP_INDEX);
 				else
 					tags = MARKER_TAGS([RCOMP_INDEX LCOMP_INDEX]);
 				end

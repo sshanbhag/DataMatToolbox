@@ -339,6 +339,29 @@ classdef (ConstructOnLoad = true) DWdata < handle
 		%------------------------------------------------------------------------
 		%------------------------------------------------------------------------
 
+		
+		%------------------------------------------------------------------------
+		%------------------------------------------------------------------------
+		function varargout = loadStimuli(obj)
+
+			% load markers if they haven't been loaded yet
+			if isempty(obj.Markers)
+				obj.loadMarkers
+			end
+			
+			if nargout == 0
+				return
+			else
+				varargout{1} = 1;
+			end
+			
+		end	% END loadStimuli
+		
+		
+		
+		
+		
+		
 		%------------------------------------------------------------------------
 		%------------------------------------------------------------------------
 		function [obj, rawdata, errFlg] = readRawData(obj)
