@@ -1,107 +1,73 @@
 %-----------------------------------------------------------------------------
-% Stimulus.m
+% Noise Class
 %-----------------------------------------------------------------------------
 % DataMat Toolbox
 % DW package
 % Class Definition
 %-----------------------------------------------------------------------------
 %	Properties:
-% 		Type							'TONE', 'NOISE', 'WAVFILE'
-% 		Channel						'R', 'L', 'B'
-% 		Indices						array of indices into Marker arrays (above)
-% 		Nreps							# of times this stimulus was presented 
-% 		Var							varying variables for this stimulus
-% 		Nsweeps						# of times this stimulus was presented
-% 		Sweepstart					list of start times for this stimulus
-% 		Sweepend						list of end times for this stimulus
-% 		LAttenVals					Left channel attenuation values
-% 		LAttenIndices				Indices for respective attenuation sweeps
-% 		RAttenVals					Right channel attenuation values
-% 		RAttenIndices				indices for R attenuaton sweeps
-% 		Spiketimes					{# units, Nsweeps} cell array of unit spike
-% 										timestamps
-% 		Timestamp					first occurance of this Stimulus
-%		Tagstring					for debugging, will disappear eventually
 %-----------------------------------------------------------------------------
-% See also: DWdata, Marker, Probe, Unit
+% See also: Stimulus, Tone, Wav, DWdata, Marker, Probe, Unit
 %-----------------------------------------------------------------------------
 
 %-----------------------------------------------------------------------------
 %	Sharad J. Shanbhag
 %	sshanbhag@neomed.edu
 %-----------------------------------------------------------------------------
-% Created: 4 June, 2012 (SJS)
+% Created: 18 January, 2012 (SJS)
 %
 % Revisions:
 %-----------------------------------------------------------------------------
 % TO DO:
-%
 %-----------------------------------------------------------------------------
 
+%*****************************************************************************
+%*****************************************************************************
+%*****************************************************************************
 % class definition
-classdef (ConstructOnLoad = true) Stimulus < handle
-	%% Properties
+%*****************************************************************************
+%*****************************************************************************
+%*****************************************************************************
+classdef (ConstructOnLoad = true) Noise < Stimulus
 	%------------------------------------------------------------------------
 	%------------------------------------------------------------------------
-	% Define protected properties
 	%------------------------------------------------------------------------
+	% Properties
 	%------------------------------------------------------------------------
 	properties
-		MarkerList
-		Type
-		Channel
-		Indices
-		Nreps
-		Var
-		Nsweeps
-		Sweepstart
-		Sweepend
-		PreSweep
-		PostSweep
-		LAttenVals
-		LAttenIndices
-		RAttenVals
-		RAttenIndices
-		Spiketimes
-		FirstTimestamp
- 		Timestamp
-		Tagstring
-		
-		% general properties
-		Amplitude
-		TimeShift
-		RampUp
-		RampDown
-		
-		
-		
+		LowerFreq
+		UpperFreq
 	end	% end of properties
+	%------------------------------------------------------------------------
+	%------------------------------------------------------------------------
+	%------------------------------------------------------------------------
 	
+	%------------------------------------------------------------------------
 	%------------------------------------------------------------------------
 	%------------------------------------------------------------------------
 	% Define methods
 	%------------------------------------------------------------------------
-	%------------------------------------------------------------------------
 	methods	
-		
 		%---------------------------------------------------------------------
 		%---------------------------------------------------------------------
 		% Constructor Method
 		%---------------------------------------------------------------------
-		function obj = Stimulus(varargin)
+		function obj = Noise(varargin)
 		%---------------------------------------------------------------------	
-		% Stimulus
+		% Noise < Stimulus
 		% Constructor method
 		%---------------------------------------------------------------------
-		% Stimulus()	when called with no arguments, returns empty
-		%					Stimulus object
+		% Noise()	when called with no arguments, returns empty
+		%				Noise object
 		%---------------------------------------------------------------------
 
 			%--------------------------------------------------------
 			%parse input and verify
 			%--------------------------------------------------------
-			
-		end		% END Stimulus constructor
+			obj.Type = 'NOISE';
+			obj.LowerFreq = [];
+			obj.UpperFreq = [];
+		end	% END Noise constructor
 		%---------------------------------------------------------------------
 		%---------------------------------------------------------------------
 		
@@ -135,10 +101,11 @@ classdef (ConstructOnLoad = true) Stimulus < handle
 		
 	
 	end	% End of methods
+	%------------------------------------------------------------------------
+	%------------------------------------------------------------------------
+	%------------------------------------------------------------------------
 end	% End of classdef
-
-
-
-
-
+%*****************************************************************************
+%*****************************************************************************
+%*****************************************************************************
 

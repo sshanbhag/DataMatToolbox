@@ -110,7 +110,6 @@ TagStrings = cell(Marker.Nmarkers, 1);
 % ctxt will be used to select Right and Left channels in the
 % STIMULUS_SEARCH_TAGS{} strings
 ctxt = 'RL';
-
 % loop through Markers
 for m = 1:Marker.Nmarkers
 	% loop through number of tags
@@ -123,7 +122,7 @@ for m = 1:Marker.Nmarkers
 			% need to check if each specific tag is in a cell or vector in order
 			% to address the tag appropriately (using {} for cell, () for
 			% vector)
-			if iscell(Marker.([STIMULUS_SEARCH_TAGS{t} ctxt(c)]))
+			if iscell(Marker.([STIMULUS_SEARCH_TAGS{t} ctxt(c)])) %#ok<USENS>
 				Tags{m, t + offset} = Marker.([STIMULUS_SEARCH_TAGS{t} ctxt(c)]){m};
 			else
 				Tags{m, t + offset} = Marker.([STIMULUS_SEARCH_TAGS{t} ctxt(c)])(m);
@@ -140,7 +139,6 @@ end	% END OF m (marker) LOOP
 %			stored in TagStrings{}
 %	(2)	use findUniqueText function to locate unique stimuli
 %-----------------------------------------------------------------------------
-
 % perform conversion to strings.
 TagStrings = cell2str(Tags);
 
@@ -148,7 +146,6 @@ TagStrings = cell2str(Tags);
 % uniqueIndices holds the indices (of Markers) for each group of common 
 % stimulus parameters.
 [uniqueText, uniqueIndices, Nunique] = findUniqueText(TagStrings);
-
 
 %-----------------------------------------------------------------------------
 % Determine Stimulus Type
@@ -159,7 +156,6 @@ Stimulus = repmat( cell2struct(STIMULUS_STRUCT_FIELDS, STIMULUS_STRUCT_FIELDS, 2
 Nstimuli = length(Stimulus);
 
 for n = 1:Nunique
-	
 	% extract type of stimulus from Marker Data
 	% we'll use the first instance of the stimulus, knowing that
 	% if the sorting method to determine unique stimuli from above
@@ -177,7 +173,7 @@ for n = 1:Nunique
 		% this is a background trial
 		% save Marker indices in the BG (Background) struct and increment counter
 		BG.count = BG.count + 1;
-		BG.indices{BG.count} = unique_indices{n};
+		BG.indices{BG.count} = unique_indices{n}; %#ok<USENS>
 		Stimulus(n).Type = {'BACKGROUND'};		
 		Stimulus(n).Channel = 'B';
 		
@@ -201,7 +197,7 @@ for n = 1:Nunique
 	Stimulus(n).Nreps = length(uniqueIndices{n});
 	
 	% Now copy over the Marker tags and values
-	for f = 1:length(MARKER_TAGS)
+	for f = 1:length(MARKER_TAGS) %#ok<USENS>
 		if iscell(Marker.(MARKER_TAGS{f}))
 			Stimulus(n).(MARKER_TAGS{f}) = ...
 										Marker.(MARKER_TAGS{f}){uniqueIndices{n}};

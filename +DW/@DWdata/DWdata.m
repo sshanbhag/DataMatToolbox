@@ -157,8 +157,6 @@ classdef (ConstructOnLoad = true) DWdata < handle
 		%------------------------------------------------------------------------
 		%------------------------------------------------------------------------
 
-		
-		
 		%------------------------------------------------------------------------
 		%------------------------------------------------------------------------
 		function varargout = loadMarkers(obj)
@@ -172,7 +170,9 @@ classdef (ConstructOnLoad = true) DWdata < handle
 			DataWaveDefaults	% load defaults
 			errFlg = 0;
 
+			%-----------------------------------------------------------
 			% read Events using NeuroShare
+			%-----------------------------------------------------------
 			Events = obj.DDF.getEvents;
 			if isempty(Events)
 				errFlg = 1;
@@ -234,7 +234,8 @@ classdef (ConstructOnLoad = true) DWdata < handle
 			if ~(Events(MarkerEvents(1)).EventCount == Events(MarkerEvents(2)).EventCount)
 				error('%s: EventCount mismatch!', mfilename);
 			else
-				EventCount = Events(MarkerEvents(1)).EventCount; 
+				EventCount = Events(MarkerEvents(1)).EventCount;
+				obj.Nmarkers = EventCount;
 			end
 
 			evL = find(EventID == L);
@@ -343,12 +344,25 @@ classdef (ConstructOnLoad = true) DWdata < handle
 		%------------------------------------------------------------------------
 		%------------------------------------------------------------------------
 		function varargout = loadStimuli(obj)
-
+			DataWaveDefaults	% load defaults
+			
+			%-----------------------------------------------------------
 			% load markers if they haven't been loaded yet
+			%-----------------------------------------------------------
 			if isempty(obj.Markers)
 				obj.loadMarkers
 			end
+			if ~obj.Nmarkers
+				error('%s: no markers in DWdata!')
+			end
+			%-----------------------------------------------------------
+			% build stimulus list
+			%-----------------------------------------------------------
+			obj.Stimuli = DW.StimulusList(obj.Markers);
 			
+			%-----------------------------------------------------------
+			% assign outputs
+			%-----------------------------------------------------------
 			if nargout == 0
 				return
 			else
@@ -358,15 +372,11 @@ classdef (ConstructOnLoad = true) DWdata < handle
 		end	% END loadStimuli
 		
 		
-		
-		
-		
-		
 		%------------------------------------------------------------------------
 		%------------------------------------------------------------------------
 		function [obj, rawdata, errFlg] = readRawData(obj)
 		%------------------------------------------------------------------------
-		% [rawdata, rawdata, errFlg] = readRawData
+		% [rawdata, errFlg] = readRawData
 		%------------------------------------------------------------------------
 		% formerly readDataWaveTextFile
 		% Reads raw text information from Datawave Text file
@@ -384,13 +394,11 @@ classdef (ConstructOnLoad = true) DWdata < handle
 		%------------------------------------------------------------------------
 		% See: readDataWaveHeader, parseDataWaveTextHeader
 		%------------------------------------------------------------------------
-
+			DataWaveDefaults;	% load defaults
 			%-----------------------------------------------------------
 			% initial things
 			%-----------------------------------------------------------
 			errFlg = 0;
-			% load defaults
-			DataWaveDefaults;
 
 			% check input arguments, act depending on inputs
 			if nargin == 0
