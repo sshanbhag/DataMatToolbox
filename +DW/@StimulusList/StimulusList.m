@@ -51,11 +51,12 @@ classdef (ConstructOnLoad = true) StimulusList < handle
 	% Properties
 	%------------------------------------------------------------------------
 	properties
-		Nstimuli;
-		MarkerList
-		Type
+		N						%	# of stimuli
+		MarkerList			%	{N X 1} list of marker indices
+		Tagstring			%	{N X 1} list of unique marker strings
+		Stimulus = {};		%	{N X 1} list of Stimulus objects (by type)
+		Type					%	{N X 1} list of Stimulus types
 		Channel
-		Indices
 		Nreps
 		Var
 		Nsweeps
@@ -70,11 +71,6 @@ classdef (ConstructOnLoad = true) StimulusList < handle
 		Spiketimes
 		FirstTimestamp
  		Timestamp
-		Tagstring
-		Stimuli
-		
-		% general properties		
-		
 	end	% end of properties
 	%------------------------------------------------------------------------
 	%------------------------------------------------------------------------
@@ -93,37 +89,25 @@ classdef (ConstructOnLoad = true) StimulusList < handle
 		function obj = StimulusList(varargin)
 		%---------------------------------------------------------------------	
 		% StimulusList
-		% Constructor method
+		% Object Constructor method
 		%---------------------------------------------------------------------
 		% StimulusList()	when called with no arguments, returns empty
-		%						StimulusList object
+		%						StimulusList object.  
+		% SimulusList(Markers)	When given a list of marker objects, the 
+		%								markers will be analyzed for specific
+		%								stimulus types and then sorted.
 		%---------------------------------------------------------------------
-
-			%--------------------------------------------------------
-			%parse input and verify
-			%--------------------------------------------------------
-			if nargin == 1
-				Markers = varargin{1};
-				%-----------------------------------------------------------
-				% find unique markers
-				%-----------------------------------------------------------
-				Nmarkers = length(Markers);
-				% need to get list of all stimuli
-				% stim tag list
-				stimtext = cell(Nmarkers, 1);
-				% loop through markers
-				for n = 1:Nmarkers
-					% convert marker tag values to string
-					tmp = cell2str(Markers(n).getStimulus');
-					% and store in stimtext
-					stimtext{n} = tmp{1};
-				end	% END n
-				% then find unique values of strings
-				[obj.Tagstring, obj.Indices, obj.Nstimuli] = findUniqueText(stimtext);
-				clear stimtext;
-			end
 			
-		end		% END Stimulus constructor
+			% check if no arguments were provided
+			if nargin == 0
+				% if so, return empty StimulusList
+				fprintf('%s: building empty StimulusList\n', mfilename);
+				return
+			end
+			fprintf('%s: building StimulusList\n', mfilename);
+			% if Marker objects provided, parse them to get stimulus info
+			obj.parseMarkersIntoStimuli(varargin{1});
+		end		% END StimulusList CONSTRUCTOR
 		%---------------------------------------------------------------------
 		%---------------------------------------------------------------------
 		
@@ -135,7 +119,92 @@ classdef (ConstructOnLoad = true) StimulusList < handle
 		
 		%---------------------------------------------------------------------
 		%---------------------------------------------------------------------
+		function parseMarkersIntoStimuli(obj, Markers)
+			DataWaveDefaults;	% load defaults
+			
+			%-----------------------------------------------------------
+			% find unique markers (stimuli)
+			%-----------------------------------------------------------
+			fprintf('%s: finding unique markers...\n', mfilename);
+			% # of markers
+			Nmarkers = length(Markers);
+			% need to get list of all stimuli in text form
+			% preallocate stim tag list
+			stimtext = cell(Nmarkers, 1);
+			% loop through markers
+			for n = 1:Nmarkers
+				% convert each marker's tag values to a string...
+				tmp = cell2str(Markers(n).getStimulus');
+				% ...and store in stimtext 
+				stimtext{n} = tmp{1};
+			end	% END n
+			% then find unique values of strings, store 
+			% Tagstring, Indices, Nstimuli
+			[obj.Tagstring, obj.MarkerList, obj.N] = findUniqueText(stimtext);
+			obj.Tagstring = obj.Tagstring';
+			clear stimtext;
+			fprintf('\t found %d unique markers\n', obj.N);
 
+			%-----------------------------------------------------------
+			% sort into Stimuli
+			%-----------------------------------------------------------
+			% create, and assign type
+			obj.Type = cell(obj.N, 1);
+			obj.Channel = cell(obj.N, 1);
+			for n = 1:obj.N
+				% check stimuli by examining the first element in each
+				% marker/stimulus subtype (this is assuming that the sorting of
+				% the markers went as planned!!!)
+				rstim = Markers(obj.MarkerList{n}(1)).SoundTypeR;
+				lstim = Markers(obj.MarkerList{n}(1)).SoundTypeL;
+				% check if either or both of rstim == 0
+				if strcmpi(rstim, '0') && strcmpi(lstim, '0')
+					% if both == 0, set Channel to '0' (none)
+					obj.Channel{n} = '0';
+				elseif strcmpi(rstim, '0')
+					% if rstim == 0, then Channel must be 'L'
+					obj.Channel{n} = 'L';
+				elseif strcmpi(lstim, '0')
+					% if lstim == 0, then Channel must be 'R'
+					obj.Channel{n} = 'R';
+				else
+					% otherwise, both channels active, Channel set to 'B'
+					obj.Channel{n} = 'B';
+				end
+				fprintf('stim %d: channel = %s', n, obj.Channel{n});				
+				fprintf('\t\t(%s\t%s)\n', lstim, rstim);
+				% set Type
+				obj.Type{n} = {lstim rstim};
+			end	% END n
+			
+			% create Stimulus cell array to hold object list
+			obj.Stimulus = cell(obj.N, 2);
+			% determine stimulus type and then initialize/assign object
+			for n = 1:obj.N
+				for c = L:R
+					% assign channel object
+					switch obj.Type{n}{c}
+						case '0'
+							obj.Stimulus{n, c} = [];
+						case 'BBN'
+							obj.Stimulus{n, c} = ...
+												DW.Noise(Markers(obj.MarkerList{n}(1)));
+						case 'WAV'
+							obj.Stimulus{n, c} = ...
+												DW.Wav(Markers(obj.MarkerList{n}(1)));
+						case 'TONE'
+							obj.Stimulus{n, c} = ...
+												DW.Tone(Markers(obj.MarkerList{n}(1)));
+						otherwise
+							warning('parseMarkersIntoStimuli: unknown stim type %s', ...
+												mfilename, obj.Type{n}{c});
+					end	% END switch
+				end	% END c
+			end	% END n
+			
+			fprintf('\n\n');
+
+		end		% END parseMarkersIntoStimuli 
 		%---------------------------------------------------------------------
 		%---------------------------------------------------------------------
 

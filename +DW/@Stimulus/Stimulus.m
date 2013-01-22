@@ -72,9 +72,6 @@ classdef (ConstructOnLoad = true) Stimulus < handle
 		TimeShift
 		RampUp
 		RampDown
-		
-		
-		
 	end	% end of properties
 	
 	%------------------------------------------------------------------------
@@ -100,6 +97,9 @@ classdef (ConstructOnLoad = true) Stimulus < handle
 			%--------------------------------------------------------
 			%parse input and verify
 			%--------------------------------------------------------
+			if isempty(varargin)
+				return
+			end
 			
 		end		% END Stimulus constructor
 		%---------------------------------------------------------------------
