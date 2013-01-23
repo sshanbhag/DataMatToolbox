@@ -54,7 +54,7 @@ classdef (ConstructOnLoad = true) StimulusList < handle
 		N						%	# of stimuli
 		MarkerList			%	{N X 1} list of marker indices
 		Tagstring			%	{N X 1} list of unique marker strings
-		Stimulus = {};		%	{N X 1} list of Stimulus objects (by type)
+		S = {};				%	{N X 1} list of Stimulus objects (by type)
 		Type					%	{N X 1} list of Stimulus types
 		Channel
 		Nreps
@@ -177,23 +177,23 @@ classdef (ConstructOnLoad = true) StimulusList < handle
 				obj.Type{n} = {lstim rstim};
 			end	% END n
 			
-			% create Stimulus cell array to hold object list
-			obj.Stimulus = cell(obj.N, 2);
+			% create S(timulus) cell array to hold object list
+			obj.S = cell(obj.N, 2);
 			% determine stimulus type and then initialize/assign object
 			for n = 1:obj.N
 				for c = L:R
 					% assign channel object
-					switch obj.Type{n}{c}
+					switch upper(obj.Type{n}{c})
 						case '0'
-							obj.Stimulus{n, c} = [];
+							obj.S{n, c} = [];
 						case 'BBN'
-							obj.Stimulus{n, c} = ...
+							obj.S{n, c} = ...
 												DW.Noise(Markers(obj.MarkerList{n}(1)));
 						case 'WAV'
-							obj.Stimulus{n, c} = ...
+							obj.S{n, c} = ...
 												DW.Wav(Markers(obj.MarkerList{n}(1)));
 						case 'TONE'
-							obj.Stimulus{n, c} = ...
+							obj.S{n, c} = ...
 												DW.Tone(Markers(obj.MarkerList{n}(1)));
 						otherwise
 							warning('parseMarkersIntoStimuli: unknown stim type %s', ...

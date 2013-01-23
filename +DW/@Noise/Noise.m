@@ -33,9 +33,9 @@ classdef (ConstructOnLoad = true) Noise < DW.Stimulus
 	%------------------------------------------------------------------------
 	%------------------------------------------------------------------------
 	%------------------------------------------------------------------------
-	% Properties
+	% Protected Properties
 	%------------------------------------------------------------------------
-	properties
+	properties (SetAccess = protected)
 		LowerFreq
 		UpperFreq
 	end	% end of properties
@@ -62,15 +62,15 @@ classdef (ConstructOnLoad = true) Noise < DW.Stimulus
 		%				Noise object
 		%---------------------------------------------------------------------
 			DataWaveDefaults;
-			
 			%--------------------------------------------------------
 			% call superclass constructor
 			%--------------------------------------------------------
 			obj = obj@DW.Stimulus(varargin);
-
 			%--------------------------------------------------------
 			% Noise-specific init
 			%--------------------------------------------------------
+			% set Type (def. in Stimulus) to NOISE
+			obj.Type = 'NOISE';
 			if isempty(varargin)
 				return
 			elseif length(varargin) == 1
@@ -79,9 +79,7 @@ classdef (ConstructOnLoad = true) Noise < DW.Stimulus
 			else
 				C = varargin{2};
 			end
-			
 			obj.setValsFromMarker(varargin{1}, C);
-			
 		end	% END Noise constructor
 		%---------------------------------------------------------------------
 		%---------------------------------------------------------------------
@@ -97,8 +95,6 @@ classdef (ConstructOnLoad = true) Noise < DW.Stimulus
 		function obj = setValsFromMarker(obj, Marker, Channel)
 		%---------------------------------------------------------------------
 			DataWaveDefaults;
-			% set Type (def. in Stimulus) to NOISE
-			obj.Type = 'NOISE';
 			% set frequency
 			if Channel == R
 				obj.LowerFreq = Marker.BBNlowerFreqR;
@@ -107,7 +103,7 @@ classdef (ConstructOnLoad = true) Noise < DW.Stimulus
 				obj.LowerFreq = Marker.BBNlowerFreqL;
 				obj.UpperFreq = Marker.BBNupperFreqL;
 			end
-		end	% END buildStimulusFromMarkers
+		end	% END setValsFromMarker
 		%---------------------------------------------------------------------
 		%---------------------------------------------------------------------
 

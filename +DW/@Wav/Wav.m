@@ -33,9 +33,9 @@ classdef (ConstructOnLoad = true) Wav < DW.Stimulus
 	%------------------------------------------------------------------------
 	%------------------------------------------------------------------------
 	%------------------------------------------------------------------------
-	% Define properties
+	% Protected Properties
 	%------------------------------------------------------------------------
-	properties
+	properties (SetAccess = protected)
 		Filename
 		Filepath
 	end	% end of properties
@@ -61,14 +61,26 @@ classdef (ConstructOnLoad = true) Wav < DW.Stimulus
 		% Wav()	when called with no arguments, returns empty
 		%				Wav object
 		%---------------------------------------------------------------------
-
+			DataWaveDefaults;
 			%--------------------------------------------------------
-			%parse input and verify
+			% call superclass constructor
 			%--------------------------------------------------------
+			obj = obj@DW.Stimulus(varargin);
+			%--------------------------------------------------------
+			% Noise-specific init
+			%--------------------------------------------------------
+			% set Type (def. in Stimulus) to NOISE
 			obj.Type = 'WAV';
-			obj.Filename = [];
-			obj.Filepath = [];
-		end	% END Noise constructor
+			if isempty(varargin)
+				return
+			elseif length(varargin) == 1
+				% if no c
+				C = R;
+			else
+				C = varargin{2};
+			end
+			obj.setValsFromMarker(varargin{1}, C);
+		end	% END Wav constructor
 		%---------------------------------------------------------------------
 		%---------------------------------------------------------------------
 		
@@ -80,11 +92,18 @@ classdef (ConstructOnLoad = true) Wav < DW.Stimulus
 		
 		%---------------------------------------------------------------------
 		%---------------------------------------------------------------------
-		function obj = buildStimulusFromMarkers(obj)
-		%---------------------------------------------------------------------	
-
-
-		end	% END buildStimulusFromMarkers
+		function obj = setValsFromMarker(obj, Marker, Channel)
+		%---------------------------------------------------------------------
+			DataWaveDefaults;
+			% set frequency
+			if Channel == R
+				[obj.Filepath, tmpn, tmpx] = Marker.WavFilenameR;
+			else
+				[obj.Filepath, tmpn, tmpx] = Marker.WavFilenameL;
+			end
+			obj.Filename = [tmpn tmpx];
+			clear tmpn tmpx
+		end	% END setValsFromMarker
 		%---------------------------------------------------------------------
 		%---------------------------------------------------------------------
 

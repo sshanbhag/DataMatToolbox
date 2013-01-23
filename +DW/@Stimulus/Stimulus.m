@@ -38,49 +38,40 @@
 %
 %-----------------------------------------------------------------------------
 
+%*****************************************************************************
+%*****************************************************************************
+%*****************************************************************************
 % class definition
+%*****************************************************************************
+%*****************************************************************************
+%*****************************************************************************
 classdef (ConstructOnLoad = true) Stimulus < handle
-	%% Properties
 	%------------------------------------------------------------------------
 	%------------------------------------------------------------------------
-	% Define protected properties
 	%------------------------------------------------------------------------
+	% Protected Properties
 	%------------------------------------------------------------------------
-	properties
-		MarkerList
+	properties (SetAccess = protected)
 		Type
 		Channel
-		Indices
-		Nreps
-		Var
-		Nsweeps
-		Sweepstart
-		Sweepend
-		PreSweep
-		PostSweep
-		LAttenVals
-		LAttenIndices
-		RAttenVals
-		RAttenIndices
-		Spiketimes
-		FirstTimestamp
- 		Timestamp
-		Tagstring
-		
-		% general properties
 		Amplitude
+		Attenuation
 		TimeShift
 		RampUp
+		HoldTime
 		RampDown
+		FixedDelay
 	end	% end of properties
+	%------------------------------------------------------------------------
+	%------------------------------------------------------------------------
+	%------------------------------------------------------------------------
 	
+	%------------------------------------------------------------------------
 	%------------------------------------------------------------------------
 	%------------------------------------------------------------------------
 	% Define methods
 	%------------------------------------------------------------------------
-	%------------------------------------------------------------------------
 	methods	
-		
 		%---------------------------------------------------------------------
 		%---------------------------------------------------------------------
 		% Constructor Method
@@ -93,14 +84,45 @@ classdef (ConstructOnLoad = true) Stimulus < handle
 		% Stimulus()	when called with no arguments, returns empty
 		%					Stimulus object
 		%---------------------------------------------------------------------
-
+			DataWaveDefaults;
 			%--------------------------------------------------------
-			%parse input and verify
+			% Check inputs
 			%--------------------------------------------------------
+			% if no inputs, return
 			if isempty(varargin)
 				return
 			end
-			
+			% if 1 input, need to perform a few checks
+			if length(varargin) == 1
+				% check if varargin{1} was directly passed in from
+				% a subclass (using obj@DW.Stimulus(varargin) syntax)
+				if strcmpi(inputname(1), 'varargin')
+					% make local copy of varargin{1}
+					tmp = varargin{1};
+					if length(tmp) == 1
+						% tmp is marker only, assume RIGHT channel
+						obj.buildStimulusFromMarker(tmp{1}, R);
+					elseif length(tmp) == 2
+						% caller provided Marker and Channel as inputs
+						obj.buildStimulusFromMarker(tmp{1}, tmp{2});
+					else
+						fprintf('%s: strange inputs... ', mfilename);
+						fprintf('%s\t', tmp);
+						fprintf('\n');
+						error('%s: invalid inputs', mfilename);
+					end
+					clear tmp
+				else
+					% if no channel provided, assume channel it RIGHT
+					obj.buildStimulusFromMarker(varargin{1}, R);
+				end
+			elseif length(varargin) == 2
+				% caller provided Marker and Channel as inputs
+				obj.buildStimulusFromMarker(varargin{1}, varargin{2});
+			else
+				error('%s: invalid input args', mfilename);
+			end
+
 		end		% END Stimulus constructor
 		%---------------------------------------------------------------------
 		%---------------------------------------------------------------------
@@ -113,11 +135,28 @@ classdef (ConstructOnLoad = true) Stimulus < handle
 		
 		%---------------------------------------------------------------------
 		%---------------------------------------------------------------------
-		function obj = buildStimulusFromMarkers(obj)
-		%---------------------------------------------------------------------	
+		function obj = buildStimulusFromMarker(obj, M, C)
+		%---------------------------------------------------------------------
+		% Stimulus.buildStimulusFromMarker(M, C)
+		%---------------------------------------------------------------------
+			DataWaveDefaults;
+			markerbase = {	'Amplitude', 'Attenuation', 'TimeShift', ...
+							'RampUp', 'HoldTime', 'RampDown', 'FixedDelay' };
+			% set channel, and marker tag character (to postpend to
+			% markerbase)
+			if C == L
+				tagchar = 'L';
+				obj.Channel = L;
+			else
+				tagchar = 'R';
+				obj.Channel = R;
+			end
+			% assign values to tags in Stimulus object
+			for n = 1:length(markerbase)
+				obj.(markerbase{n}) = M.([markerbase{n} tagchar]);
+			end
 
-
-		end	% END buildStimulusFromMarkers
+		end	% END buildStimulusFromMarker
 		%---------------------------------------------------------------------
 		%---------------------------------------------------------------------
 
