@@ -51,26 +51,18 @@ classdef (ConstructOnLoad = true) StimulusList < handle
 	% Properties
 	%------------------------------------------------------------------------
 	properties
-		N						%	# of stimuli
+		N						%	# of Different stimuli
 		MarkerList			%	{N X 1} list of marker indices
 		Tagstring			%	{N X 1} list of unique marker strings
 		S = {};				%	{N X 1} list of Stimulus objects (by type)
 		Type					%	{N X 1} list of Stimulus types
 		Channel
-		Nreps
 		Var
-		Nsweeps
+		Nsweeps				% [N X 1] array of sweeps/stim
 		Sweepstart
 		Sweepend
 		PreSweep
 		PostSweep
-		LAttenVals
-		LAttenIndices
-		RAttenVals
-		RAttenIndices
-		Spiketimes
-		FirstTimestamp
- 		Timestamp
 	end	% end of properties
 	%------------------------------------------------------------------------
 	%------------------------------------------------------------------------
@@ -97,17 +89,15 @@ classdef (ConstructOnLoad = true) StimulusList < handle
 		%								markers will be analyzed for specific
 		%								stimulus types and then sorted.
 		%---------------------------------------------------------------------
-			
-			% check if no arguments were provided
 			if nargin == 0
-				% if so, return empty StimulusList
+				% if no arguments were provided, return empty StimulusList
 				fprintf('%s: building empty StimulusList\n', mfilename);
 				return
 			end
 			fprintf('%s: building StimulusList\n', mfilename);
 			% if Marker objects provided, parse them to get stimulus info
 			obj.parseMarkersIntoStimuli(varargin{1});
-		end		% END StimulusList CONSTRUCTOR
+		end	% END StimulusList CONSTRUCTOR
 		%---------------------------------------------------------------------
 		%---------------------------------------------------------------------
 		
@@ -120,8 +110,10 @@ classdef (ConstructOnLoad = true) StimulusList < handle
 		%---------------------------------------------------------------------
 		%---------------------------------------------------------------------
 		function parseMarkersIntoStimuli(obj, Markers)
+		%---------------------------------------------------------------------
+		% StimulusList.parseMarkersIntoStimuli(Markers)
+		%---------------------------------------------------------------------
 			DataWaveDefaults;	% load defaults
-			
 			%-----------------------------------------------------------
 			% find unique markers (stimuli)
 			%-----------------------------------------------------------
@@ -146,7 +138,7 @@ classdef (ConstructOnLoad = true) StimulusList < handle
 			fprintf('\t found %d unique markers\n', obj.N);
 
 			%-----------------------------------------------------------
-			% sort into Stimuli
+			% determine type and channel from markers
 			%-----------------------------------------------------------
 			% create, and assign type
 			obj.Type = cell(obj.N, 1);
@@ -177,22 +169,25 @@ classdef (ConstructOnLoad = true) StimulusList < handle
 				obj.Type{n} = {lstim rstim};
 			end	% END n
 			
-			% create S(timulus) cell array to hold object list
+			%-----------------------------------------------------------
+			% sort into Stimuli
+			%-----------------------------------------------------------
+			% allocate S(timulus) cell array to hold object list
 			obj.S = cell(obj.N, 2);
 			% determine stimulus type and then initialize/assign object
 			for n = 1:obj.N
 				for c = L:R
 					% assign channel object
 					switch upper(obj.Type{n}{c})
-						case '0'
+						case '0'		% no sound
 							obj.S{n, c} = [];
-						case 'BBN'
+						case 'BBN'	% noise
 							obj.S{n, c} = ...
 												DW.Noise(Markers(obj.MarkerList{n}(1)));
-						case 'WAV'
+						case 'WAV'	% wav file
 							obj.S{n, c} = ...
 												DW.Wav(Markers(obj.MarkerList{n}(1)));
-						case 'TONE'
+						case 'TONE'	% tone
 							obj.S{n, c} = ...
 												DW.Tone(Markers(obj.MarkerList{n}(1)));
 						otherwise
@@ -201,12 +196,18 @@ classdef (ConstructOnLoad = true) StimulusList < handle
 					end	% END switch
 				end	% END c
 			end	% END n
+			fprintf('\nMarker Parsing complete\n');
 			
-			fprintf('\n\n');
-
+			% count # of sweeps/stim
+			obj.Nsweeps = zeros(obj.N, 1);
+			for n = 1:obj.N
+				obj.Nsweeps(n) = length(obj.MarkerList{n});
+			end
+			
 		end		% END parseMarkersIntoStimuli 
 		%---------------------------------------------------------------------
 		%---------------------------------------------------------------------
+
 
 		%---------------------------------------------------------------------
 		%---------------------------------------------------------------------

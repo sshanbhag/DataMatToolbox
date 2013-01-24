@@ -307,21 +307,12 @@ classdef (ConstructOnLoad = true) DWdata < handle
 				% assign values to marker object
 				obj.Markers(n).setValuesFromEventList(elist);
 				% set timestamp
-				ts = [Events(evR).TimeStamp(n) Events(evL).TimeStamp(n)];
-				if all(ts > 0)
-					% check if they are equal
-					if ts(1) == ts(2)
-						% if so, use the right one
-						obj.Markers(n).Timestamp = ts(1);
-					else
-						% otherwise, store the first one (in time)
-						obj.Markers(n).Timestamp = min(ts);
-					end
-				else
-					% store timestamp that is > 0
-					obj.Markers(n).Timestamp = ts(ts>0);
-				end
-				clear ts elist
+				obj.Markers(n).setTimestamp([	Events(evL).TimeStamp(n)	...
+														Events(evR).TimeStamp(n) ]);
+				
+				% set ID
+				obj.Markers(n).setID(n);
+				clear elist
 			end
 			clear tmpR tmpL tmp elist
 			%-------------------------------
