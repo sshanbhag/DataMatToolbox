@@ -97,9 +97,9 @@ classdef (ConstructOnLoad = true) Wav < DW.Stimulus
 			DataWaveDefaults;
 			% set frequency
 			if Channel == R
-				[obj.Filepath, tmpn, tmpx] = Marker.WavFilenameR;
+				[obj.Filepath, tmpn, tmpx] = fileparts(Marker.WavFilenameR);
 			else
-				[obj.Filepath, tmpn, tmpx] = Marker.WavFilenameL;
+				[obj.Filepath, tmpn, tmpx] = fileparts(Marker.WavFilenameL);
 			end
 			obj.Filename = [tmpn tmpx];
 			clear tmpn tmpx

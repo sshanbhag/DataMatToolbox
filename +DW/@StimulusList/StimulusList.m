@@ -184,7 +184,7 @@ classdef (ConstructOnLoad = true) StimulusList < handle
 						case 'BBN'	% noise
 							obj.S{n, c} = ...
 												DW.Noise(Markers(obj.MarkerList{n}(1)));
-						case 'WAV'	% wav file
+						case {'WAVFILE', 'WAV'}	% wav file
 							obj.S{n, c} = ...
 												DW.Wav(Markers(obj.MarkerList{n}(1)));
 						case 'TONE'	% tone

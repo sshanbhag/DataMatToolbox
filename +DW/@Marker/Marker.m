@@ -4,9 +4,46 @@
 % DataMat Toolbox
 % Class Definition
 %-----------------------------------------------------------------------------
-%		marker "tags":
-%			
-%		Added values
+% 	marker "tags" from DataWave/Neuroshare events :
+% 		SoundTypeR
+% 		AttenuationR
+% 		WavFilenameR
+% 		BBNlowerFreqR
+% 		BBNupperFreqR
+% 		AmplitudeR
+% 		TimeShiftR
+% 		RampUpR
+% 		HoldTimeR
+% 		RampDownR
+% 		OutputTimestampR
+% 		OutputTimeWithDelayR
+% 		FixedDelayR
+% 		PA5idR
+% 		ToneFreqR
+% 		PhaseDegR
+% 		OutputFileR
+% 		SoundTypeL
+% 		AttenuationL
+% 		WavFilenameL
+% 		BBNlowerFreqL
+% 		BBNupperFreqL
+% 		AmplitudeL
+% 		TimeShiftL
+% 		RampUpL
+% 		HoldTimeL
+% 		RampDownL
+% 		OutputTimestampL
+% 		OutputTimeWithDelayL
+% 		FixedDelayL
+% 		PA5idL
+% 		ToneFreqL
+% 		PhaseDegL
+% 		OutputFileL
+% 
+%	Additional Parameters:
+% 		Timestamp
+% 		ID
+% 		string
 %-----------------------------------------------------------------------------
 % See also: DWdata, loadDWfile (function)
 %-----------------------------------------------------------------------------
@@ -491,13 +528,19 @@ classdef (ConstructOnLoad = true) Marker < handle
 				end
 			end			
 		end
-		%------------------------------------------------------------------------		
+		%------------------------------------------------------------------------
+		%------------------------------------------------------------------------
 		
+		%------------------------------------------------------------------------
+		%------------------------------------------------------------------------
 		function setID(obj, val)
 			if ~isempty(val)
 				obj.ID = val;
 			end
 		end
+		%------------------------------------------------------------------------
+		%------------------------------------------------------------------------
+
 %{
 		%------------------------------------------------------------------------
 		% set N (number?)
