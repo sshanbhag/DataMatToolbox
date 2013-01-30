@@ -1,6 +1,8 @@
 function [d, s] = readSegment(Hfile, Data, varargin)
 %------------------------------------------------------------------------
-%[d, s] = readSegment(Hfile, Data <<, SegmentEntityList>>)
+%[d, s] = readSegment(Hfile, Data)
+%[d, s] = readSegment(Hfile, Data, 'Segments', SegmentList)
+%[d, s] = readSegment(Hfile, Data, 'LoadWaves', <<1== yes, 2 == no>>)
 %------------------------------------------------------------------------
 % 	Segment Entities (3)
 % 		Short, time-stamped segments of digitized analog
@@ -44,12 +46,26 @@ if Data.nSegment == 0
 	return
 end
 
-if nargin == 3
-	SegmentList = varargin{1};
-else
-	SegmentList = Data.SegmentList;
+% defaults
+SegmentList = Data.SegmentList;
+LoadWaves = 1;
+
+% set from options
+argn = 1;
+while argn <= length(varargin)
+	switch upper(varargin{argn})
+		case 'SEGMENTS'
+			SegmentList = varargin{argn+1};
+			argn = argn + 2;
+		case 'LOADWAVES'
+			LoadWaves = varargin{argn+1};
+			argn = argn + 2;
+		otherwise
+			error('%s: unknown option %s', mfilename, varargin{argn});
+	end		
 end
 
+% check # of segments to load
 nSegments = length(SegmentList);
 if ~nSegments
 	fprintf('ERROR(%s): no segments in SegmentList\n\n', mfilename);
@@ -57,9 +73,10 @@ if ~nSegments
 	return
 end
 
+% loop through segments
 s = zeros(nSegments, 1);
 for n = 1:nSegments
-	% These three functions are for demonstration purposes
+	% get info
 	[s(n), tmp.Info] = ns_GetSegmentInfo(Hfile, SegmentList(n));
 	[s(n), tmp.SourceInfo] = ns_GetSegmentSourceInfo(Hfile, SegmentList(n), 1);
 	% get # of items (waveforms) for this segment
@@ -72,13 +89,28 @@ for n = 1:nSegments
 	else
 		% pre-allocate storage
 		tmp.TimeStamp = zeros(tmp.ItemCount, 1);
-		tmp.WaveForm = cell(tmp.ItemCount, 1);
-		tmp.Nsamples = zeros(tmp.ItemCount, 1);
+		if LoadWaves
+			tmp.WaveForm = cell(tmp.ItemCount, 1);
+			tmp.Nsamples = zeros(tmp.ItemCount, 1);
+		else
+			tmp.WaveForm = {};
+			tmp.Nsamples = {};
+		end
 		tmp.UnitID = zeros(tmp.ItemCount, 1);
-		for m = 1:tmp.ItemCount
-			% Load the first 100 waveforms on each selected channel
-			[s(n), tmp.TimeStamp(m), tmp.WaveForm{m}, tmp.Nsamples(m), tmp.UnitID(m)] = ...
-					ns_GetSegmentData(Hfile, SegmentList(n), m);
+
+		% two different options depending on LoadWaves value
+		if LoadWaves
+			for m = 1:tmp.ItemCount
+				% Load all data (including waveforms) for selected channel
+				[s(n), tmp.TimeStamp(m), tmp.WaveForm{m}, tmp.Nsamples(m), tmp.UnitID(m)] = ...
+						ns_GetSegmentData(Hfile, SegmentList(n), m);
+			end
+		else
+			for m = 1:tmp.ItemCount
+				% Load only timestamps and unit ID for selected channel
+				[s(n), tmp.TimeStamp(m), ~, ~, tmp.UnitID(m)] = ...
+						ns_GetSegmentData(Hfile, SegmentList(n), m);
+			end			
 		end
 	end		
 	d(n) = tmp; %#ok<AGROW>
