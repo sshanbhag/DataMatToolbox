@@ -17,7 +17,7 @@ filename = '01-03-2013--2961_syllable_block_new_sorted.ddf';
 %------------------------------------------------------------
 %% init DW struct
 %------------------------------------------------------------
-D = DW.DWdata(fullfile(datapath,filename));
+D = DW.Data(fullfile(datapath,filename));
 
 %------------------------------------------------------------
 %% load probes (spikes)
@@ -25,13 +25,11 @@ D = DW.DWdata(fullfile(datapath,filename));
 % D.loadProbes;
 D.initProbesFromSegments;
 
-return
-
 %------------------------------------------------------------
 %% load markers
 %------------------------------------------------------------
-D.loadMarkers;
-
+D.parseMarkersFromEvents;
+return
 %------------------------------------------------------------
 %% load stimuli
 %------------------------------------------------------------

@@ -43,7 +43,8 @@
 % TO DO:
 %-----------------------------------------------------------------------------
 
-classdef (ConstructOnLoad = true) DWinfo < handle
+% classdef (ConstructOnLoad = true) DWinfo < handle
+classdef (ConstructOnLoad = true) DWinfo
 	
 	%------------------------------------------------------------------------
 	%------------------------------------------------------------------------
@@ -161,49 +162,6 @@ classdef (ConstructOnLoad = true) DWinfo < handle
 			if LOAD_FLAG
 				fprintf('%s: reading and parsing Header...\n', mfilename);
 				obj.readAndParseHeader;
-			end
-		end
-		%------------------------------------------------------------------------
-		%------------------------------------------------------------------------
-
-		%------------------------------------------------------------------------
-		%------------------------------------------------------------------------
-		function set.file(obj, val)
-		%-----------------------------------------------------------------	
-		%	file set method
-		%-----------------------------------------------------------------
-
-			% check if no filename or path provided
-			if isempty(val)			
-				obj.file = '';
-				return
-			elseif isnumeric(val)
-				warning('%s: file must be a string; file property unchanged', mfilename);
-				return
-			else
-				% assume path is included or that file is in current directory
-				[pname, fname, ext] = fileparts(val);
-				% set values for path and file
-				obj.path = pname;
-				obj.file = [fname ext];
-			end
-		end
-		%------------------------------------------------------------------------
-		%------------------------------------------------------------------------
-
-		%------------------------------------------------------------------------
-		%------------------------------------------------------------------------
-		function set.path(obj, val)
-			% check if no filename or path provided
-			if isempty(val)			
-				obj.path = '';
-				return
-			elseif isnumeric(val)
-				warning('%s: path must be a string; path property unchanged', mfilename);
-				return
-			else
-				% user provided path string
-				obj.path = val;
 			end
 		end
 		%------------------------------------------------------------------------

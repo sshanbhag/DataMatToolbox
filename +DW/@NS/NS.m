@@ -32,7 +32,8 @@
 %-----------------------------------------------------------------------------
 
 %------------------------------------------------------------------------
-classdef (ConstructOnLoad = true) NS < handle
+% classdef (ConstructOnLoad = true) NS < handle
+classdef (ConstructOnLoad = true) NS 
 %------------------------------------------------------------------------
 	%------------------------------------------------------------------------
 	%------------------------------------------------------------------------
@@ -711,46 +712,66 @@ classdef (ConstructOnLoad = true) NS < handle
 		%------------------------------------------------------------------------
 		%------------------------------------------------------------------------
 
+		
+		%------------------------------------------------------------------------
+		%------------------------------------------------------------------------
+		function S = getSegmentStruct(obj, varargin)
+		%------------------------------------------------------------------------
+		% Segment = NS.getSegmentStruct(segList, wavList)
+		%------------------------------------------------------------------------
+
+			% checks
+			S = [];
+			if obj.checkReadStatus == 0
+				return
+			end
+			if (obj.nSegment == 0)
+				disp('No segment entities available!');
+				return
+			end
+			
+			% check if user asked for a specific list of analog entities
+			% note that even if length(varargin) is 0, nargin will be 1
+			if nargin == 1
+				segList = [];
+				wavList = {};
+			elseif nargin == 2
+				segList = varargin{1};
+			elseif nargin == 3
+				segList = varargin{1};
+				wavList = varargin{2};
+			else
+				fprintf('NS.getSegment error: incorrect input args\n');
+				S = [];
+				return
+			end
+			% if segList is empty, use the full SegmentList
+			if isempty(segList)
+				segList = obj.SegmentList;
+			end
+			Nseg = length(segList);
+			% if wavList is empty, use all waveforms for SegmentList
+			% indicate this by creating cell vector of empty arrays
+			if isempty(wavList)
+				wavList = cell(Nseg, 1);
+				for n = 1:Nseg
+					wavList{n} = [];
+				end
+			end
+
+		
+			S = DW.readSegment(obj.Hfile, obj, 'LoadWaves', 0);
+						
+		end
+		
+		
+		
+		
 		%------------------------------------------------------------------------
 		%------------------------------------------------------------------------
 		function S = getSegmentTimeStampsOnly(obj, varargin)
 		%------------------------------------------------------------------------
 		% Segment = NS.getSegmentTimeStampsOnly(segList, wavList)
-		%------------------------------------------------------------------------
-		% read segment entities
-		%------------------------------------------------------------------------
-		% Segment Entities (3)
-		% 	Short, time-stamped segments of digitized analog
-		% 	signals in which the segments are separated by variable amounts of time.
-		% 	Segment Entities can contain data from more than one source. They are
-		% 	intended to represent discontinuous analog signals such as extracellular
-		% 	spike waveforms from electrodes or groups of electrodes.
-		% 	Each index of a segment entity refers to a short, time-stamped
-		% 	segment of analog data from one or more sources.  The number of
-		% 	indexes is equal to the number of entries for that segment entity in
-		% 	the file.
-		%------------------------------------------------------------------------
-		%	segList: a list of segments to get (from NS.SegmentList)
-		%				if not provided, all segments will be retrieved
-		%					
-		%	wavList:	a cell vector listing the waveforms to retrieve
-		%				if not provided all waveforms will be retrieved and 
-		%				you will be sad.
-		%
-		%				cell must be same length as segList (or NS.SegmentList)
-		%				and will have format like:
-		%				{ [indices of waves for SegmentList(1)], 
-		%				  [indices of waves for SegmentList(2)], 
-		%					  .
-		%				     .
-		%					[indices of waves for SegmentList(n)] }
-		%
-		%				To indicate that waveforms for a particular 
-		%				segment will not be read, enter empty matrix, []
-		% 
-		% 	A zero unit ID is unclassified, then follow unit 1, 2, 3, etc. Unit
-		% 	255 is noise.
-		% 
 		%------------------------------------------------------------------------
 
 			% checks
@@ -851,122 +872,6 @@ classdef (ConstructOnLoad = true) NS < handle
 		%------------------------------------------------------------------------
 		%------------------------------------------------------------------------
 		
-		%{
-		%------------------------------------------------------------------------
-		%------------------------------------------------------------------------
-		function [TimeStamps, UnitID, SegInfo, SrcInfo] = getSegmentTimeStamps(obj, varargin)
-		%------------------------------------------------------------------------
-		% [TimeStamps, UnitID, SegInfo, SrcInfo] = NS.getSegmentTimeStamps(segList, wavList)
-		%------------------------------------------------------------------------
-		% read segment Time stamps
-		%------------------------------------------------------------------------
-		%	segList: a list of segments to get (from NS.SegmentList)
-		%				if not provided, all segments will be retrieved
-		%					
-		%	wavList:	a cell vector listing the waveforms to retrieve
-		%				if not provided all waveforms will be retrieved and 
-		%				you will be sad.
-		%
-		%				cell must be same length as segList (or NS.SegmentList)
-		%				and will have format like:
-		%				{ [indices of waves for SegmentList(1)], 
-		%				  [indices of waves for SegmentList(2)], 
-		%					  .
-		%				     .
-		%					[indices of waves for SegmentList(n)] }
-		%
-		%				To indicate that waveforms for a particular 
-		%				segment will not be read, enter empty matrix, []
-		% 
-		% 	A zero unit ID is unclassified, then follow unit 1, 2, 3, etc. Unit
-		% 	255 is noise.
-		%------------------------------------------------------------------------
-
-			% checks
-			TimeStamps = {};
-			UnitID = {};
-			if obj.checkReadStatus == 0
-				return
-			end
-			if (obj.nSegment == 0)
-				disp('No segment entities available!');
-				return
-			end
-			
-			% check if user asked for a specific list of analog entities
-			% note that even if length(varargin) is 0, nargin will be 1
-			if nargin == 1
-				segList = [];
-				wavList = {};
-			elseif nargin == 2
-				segList = varargin{1};
-			elseif nargin == 3
-				segList = varargin{1};
-				wavList = varargin{2};
-			else
-				fprintf('NS.getSegment error: incorrect input args\n');
-				segList = [];
-				wavList = {};
-				return
-			end
-			% if segList is empty, use the full SegmentList
-			if isempty(segList)
-				segList = obj.SegmentList;
-			end
-			Nseg = length(segList);
-			% if wavList is empty, use all waveforms for SegmentList
-			% indicate this by creating cell vector of empty arrays
-			if isempty(wavList)
-				wavList = cell(Nseg, 1);
-				for n = 1:Nseg
-					wavList{n} = [];
-				end
-			end
-
-			% pre-allocate things
-
-			% loop through segments
-			for n = 1:Nseg
-				% get info and source info
-				[~, SegInfo] = ...
-										ns_GetSegmentInfo(obj.Hfile, segList(n));
-				[~, SrcInfo] = ...
-							ns_GetSegmentSourceInfo(obj.Hfile, segList(n), 1);
-				% get # of items (waveforms) available for this segment
-				MaxCount = obj.EntityInfo(segList(n)).ItemCount;
-				% only load segments if MaxCount > 0
-				if isempty(MaxCount) || (MaxCount == 0)
-					fprintf('%s warning: no segment items available for %d\n', ...
-														mfilename, segList(n))
-				else
-					if isempty(wavList{n})
-						fprintf('%s: reading all %d waveforms for Segment %d\n', ...
-										mfilename, MaxCount, n);
-						wavList{n} = 1:MaxCount; %#ok<AGROW>
-					end
-					% get # of waves to read in.
-					Nwav = length(wavList{n});
-					% store number of wavs to be read in
-					ItemCount = Nwav;
-					% if # waves ~= 0, read them in
-					if Nwav > 0
-						% pre-allocate storage
-						TimeStamp(n).time = zeros(Nwav, 1);
-						TimeStamp(n).unit = zeros(Nwav, 1);
-						for m = 1:Nwav
-							[~, TimeStamp(n).time(m), ~, ~, TimeStamp(n).unit(m) ] = ...
-												ns_GetSegmentData(obj.Hfile, ...
-																		segList(n), ...
-																		wavList{n}(m) );
-	
-						end	% END m
-					end	% END if Nwav
-				end	% END if
-			end	% END n
-		end	% END getSegmentTimeStamps
-		%------------------------------------------------------------------------
-		%------------------------------------------------------------------------
-		%}
 
 		%------------------------------------------------------------------------
 		%------------------------------------------------------------------------

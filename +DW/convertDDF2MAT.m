@@ -1,6 +1,6 @@
-function [D, varargout] = loadDDF(filename, varargin)
+function D = convertDDF2MAT(filename, varargin)
 %------------------------------------------------------------------------
-% [D, H] = loadDDF(varargin)
+% [D, H] = convertDDF2MAT(varargin)
 %------------------------------------------------------------------------
 % loads DDF file info using Neuroshare
 %
@@ -78,20 +78,16 @@ function [D, varargout] = loadDDF(filename, varargin)
 % Sharad J. Shanbhag
 % sshanbhag@neomed.edu
 %------------------------------------------------------------------------
-% Created: 19 December, 2011 (SJS)
+% Created: 30 January, 2013 (SJS)
 %
 % Revisions:
-%	3 Jan 2013 (SJS):
-% 	 -	updated docs
-% 	 -	added input options for loading data
-% 	 - reworked outputs
 %------------------------------------------------------------------------
 % TO DO:
 %------------------------------------------------------------------------
 
 %------------------------------------------------------------------------
 %------------------------------------------------------------------------
-%% some definitions
+% some definitions
 %------------------------------------------------------------------------
 %------------------------------------------------------------------------
 H = 0;
@@ -105,7 +101,7 @@ NEURAL = 0;
 
 %------------------------------------------------------------------------
 %------------------------------------------------------------------------
-%% check output arguments
+% check output arguments
 %------------------------------------------------------------------------
 %------------------------------------------------------------------------
 if nargout > 1
@@ -115,7 +111,7 @@ D = [];
 
 %------------------------------------------------------------------------
 %------------------------------------------------------------------------
-%% check input arguments
+% check input arguments
 %------------------------------------------------------------------------
 %------------------------------------------------------------------------
 if nargin == 0
@@ -164,7 +160,7 @@ end		% END IF nvararg
 
 %------------------------------------------------------------------------
 %------------------------------------------------------------------------
-%% Load the appropriate DLL
+% Load the appropriate DLL
 %------------------------------------------------------------------------
 %------------------------------------------------------------------------
 [nsresult] = ns_SetLibrary(DLLName);
@@ -182,7 +178,7 @@ end
 
 %------------------------------------------------------------------------
 %------------------------------------------------------------------------
-%% Load data file and display some info about the file
+% Load data file and display some info about the file
 %------------------------------------------------------------------------
 %------------------------------------------------------------------------
 [nsresult, H] = ns_OpenFile(filename);
@@ -206,7 +202,7 @@ end
 
 %------------------------------------------------------------------------
 %------------------------------------------------------------------------
-%% Build catalogue of entities
+% Build catalogue of entities
 %------------------------------------------------------------------------
 %------------------------------------------------------------------------
 if FileInfo.EntityCount
@@ -253,7 +249,7 @@ clear FileInfo EntityInfo EventList AnalogList SegmentList NeuralList
 clear nNeural nSegment nAnalog nEvent
 
 %------------------------------------------------------------
-%% About Entities
+% About Entities
 %------------------------------------------------------------
 % Each entity contains one or more indexed data entries that are ordered by
 % increasing time.  The API provides functions for querying the
@@ -267,7 +263,7 @@ clear nNeural nSegment nAnalog nEvent
 %------------------------------------------------------------
 
 %------------------------------------------------------------
-%% Read Event Entities
+% Read Event Entities
 %------------------------------------------------------------
 % Each index of an event entity refers to a timestamp and data combination.
 % The number of indexes is equal to the number of event entries for that
@@ -277,7 +273,7 @@ if EVENT
 	D.Event = DW.readEvent(H, D);
 end
 %------------------------------------------------------------
-%% read analog entities
+% read analog entities
 %------------------------------------------------------------
 % Each index of an analog entity refers to a specific digitized sample.
 % Each analog entity contains samples from a single channel and the number
@@ -287,7 +283,7 @@ if ANALOG
 	D.Analog = DW.readAnalog(H, D);
 end
 %------------------------------------------------------------
-%% read segment entities
+% read segment entities
 %------------------------------------------------------------
 % Each index of a segment entity refers to a short, time-stamped segment of
 % analog data from one or more sources.  The number of indexes is equal to
@@ -297,7 +293,7 @@ if SEGMENT
 	D.Segment = DW.readSegment(H, D);
 end
 %------------------------------------------------------------
-%% read neural entitites (if they exist)
+% read neural entitites (if they exist)
 %------------------------------------------------------------
 % Each index of a neural event entity refers to a timestamp for each neural
 % event.  Each neural event entity contains event times for a single neural
@@ -310,13 +306,19 @@ end
 
 %------------------------------------------------------------------------
 %------------------------------------------------------------------------
-%% build output args
+%	save to MAT file
 %------------------------------------------------------------------------
 %------------------------------------------------------------------------
-% if output for file handle object was requested, assign it here, 
-if nargout > 1
-	varargout{1} = H;
-% otherwise, close the file
-else
-	ns_CloseFile(H);
-end
+[opath, ofile] = fileparts(filename);
+ofile = [ofile '.mat'];
+% save(fullfile(opath, ofile), 'D', '-MAT');
+save(ofile, 'D', '-MAT');
+
+
+%------------------------------------------------------------------------
+%------------------------------------------------------------------------
+% clean up
+%------------------------------------------------------------------------
+%------------------------------------------------------------------------
+% close NS interface/file
+ns_CloseFile(H);
