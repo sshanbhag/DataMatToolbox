@@ -1,11 +1,12 @@
 function D = convertDDF2MAT(filename, varargin)
 %------------------------------------------------------------------------
-% [D, H] = convertDDF2MAT(varargin)
+% D = convertDDF2MAT(varargin)
 %------------------------------------------------------------------------
-% loads DDF file info using Neuroshare
+% loads DDF file info (and, optionally, data) using Neuroshare
+% stores data in struct and saves to a .mat file
 %
-% Note that SciWorks must be installed on the machine on which this
-% function is run.  The SciWorks USB key is NOT needed.
+% *Note that SciWorks must be installed on the machine on which this
+% function is run.  The SciWorks USB key is NOT needed.*
 %
 % Each entity contains one or more indexed data entries that are ordered by
 % increasing time.
@@ -61,6 +62,10 @@ function D = convertDDF2MAT(filename, varargin)
 % Options (provided as '<option_name>', '<option_value>' pair):
 %	'DLL',	'<dll_name>'	.dll file to use for Neuroshare interface
 %									default value is 'C:\DataWave\DWShared\nsDWFile.dll'
+%
+%	'MATFILE', '<.output filename>'
+%
+% Options to load entity data (no option values needed):
 % 	'EVENT'						loads event data
 % 	'ANALOG'						loads analog data
 % 	'SEGMENT'					loads segment data
@@ -69,9 +74,8 @@ function D = convertDDF2MAT(filename, varargin)
 %
 % Output Arguments:
 %	D			Data Structure
-%	H			handle to Neuroshare interface
 %------------------------------------------------------------------------
-% See also: Neuroshare MATLAB API
+% See also: Neuroshare MATLAB API, DataWave Documentation
 %------------------------------------------------------------------------
 
 %------------------------------------------------------------------------
@@ -98,6 +102,7 @@ EVENT = 0;
 ANALOG = 0;
 SEGMENT = 0;
 NEURAL = 0;
+ofile = [];
 
 %------------------------------------------------------------------------
 %------------------------------------------------------------------------
@@ -122,9 +127,12 @@ if nvararg
 	aindex = 1;
 	while aindex <= nvararg
 		switch(upper(varargin{aindex}))
-			% select DLL file
+			% select DLL file - read in option
 			case 'DLL'
 				DLLName = varargin{aindex + 1};
+				aindex = aindex + 2;
+			case 'MATFILE'
+				ofile = varargin{aindex + 1};
 				aindex = aindex + 2;
 			% Load all data
 			case 'ALL'
@@ -163,7 +171,9 @@ end		% END IF nvararg
 % Load the appropriate DLL
 %------------------------------------------------------------------------
 %------------------------------------------------------------------------
+% use neuroshare function to set DLL
 [nsresult] = ns_SetLibrary(DLLName);
+% make sure it loaded successfully
 if (nsresult ~= 0)
 	fprintf('%s: DLL %s was not found or load error!\n\n', mfilename, DLLName);
 	return
@@ -173,6 +183,7 @@ else
 	[ns_result, nsLibraryInfo] = ns_GetLibraryInfo();
 	disp(nsLibraryInfo)
 end
+clear nsresult;
 %------------------------------------------------------------------------
 %------------------------------------------------------------------------
 
@@ -197,6 +208,7 @@ else
 		disp(FileInfo);
 	end
 end
+clear nsresult
 %------------------------------------------------------------------------
 %------------------------------------------------------------------------
 
@@ -210,7 +222,7 @@ if FileInfo.EntityCount
 else
 	% Close data file. Should be done by the library but just in case. 
 	ns_CloseFile(H);
-	error('%s: no Entities found in file %s', mfilename, filename);
+	warning('%s: no Entities found in file %s', mfilename, filename);
 end
 EventList = find([EntityInfo.EntityType] == 1);
 AnalogList = find([EntityInfo.EntityType] == 2);
@@ -309,11 +321,13 @@ end
 %	save to MAT file
 %------------------------------------------------------------------------
 %------------------------------------------------------------------------
-[opath, ofile] = fileparts(filename);
-ofile = [ofile '.mat'];
-% save(fullfile(opath, ofile), 'D', '-MAT');
+if isempty(ofile)
+	% build .mat file from .ddf file name
+	[opath, ofile] = fileparts(filename);
+	ofile = fullfile(opath, [ofile '.mat']);
+end
+fprintf('Writing output to file %s \n', ofile);
 save(ofile, 'D', '-MAT');
-
 
 %------------------------------------------------------------------------
 %------------------------------------------------------------------------

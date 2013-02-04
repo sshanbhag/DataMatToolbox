@@ -31,15 +31,18 @@
 % TO DO: lots....
 %-----------------------------------------------------------------------------
 
-%------------------------------------------------------------------------
+%*****************************************************************************
+%*****************************************************************************
+%*****************************************************************************
+% class definition
+%*****************************************************************************
+%*****************************************************************************
+%*****************************************************************************
 classdef (ConstructOnLoad = true) NS < handle
-%------------------------------------------------------------------------
 	%------------------------------------------------------------------------
 	%------------------------------------------------------------------------
 	%------------------------------------------------------------------------
 	% Define protected properties
-	%------------------------------------------------------------------------
-	%------------------------------------------------------------------------
 	%------------------------------------------------------------------------
 	properties (SetAccess = protected)
 		% Library
@@ -101,7 +104,7 @@ classdef (ConstructOnLoad = true) NS < handle
 	%------------------------------------------------------------------------
 	%------------------------------------------------------------------------
 	%------------------------------------------------------------------------
-	% Define methods
+	% Define PUBLIC methods
 	%------------------------------------------------------------------------
 	%------------------------------------------------------------------------
 	%------------------------------------------------------------------------
@@ -208,9 +211,9 @@ classdef (ConstructOnLoad = true) NS < handle
 			%-----------------------------
 			obj.setLibrary;
 			%-----------------------------
-			% open file
+			% get file information
 			%-----------------------------
-			obj.openFile;
+			obj.getFileInfo;
 		end	% end NS (constructor)
 		%------------------------------------------------------------------------
 		%------------------------------------------------------------------------
@@ -221,11 +224,11 @@ classdef (ConstructOnLoad = true) NS < handle
 		%------------------------------------------------------------------------
 		% NS.setLibrary
 		%------------------------------------------------------------------------
-		% set and load library information
+		% sets NeuroShare DLL and loads library information
 		%------------------------------------------------------------------------
 			nsresult = ns_SetLibrary(obj.DLLfullname);
 			if (nsresult ~= 0)
-				fprintf('%s: DLL %s load error!\n\n', mfilename, obj.DLLfullame);
+				fprintf('%s: DLL %s load error!\n\n', mfilename, obj.DLLfullname);
 				return
 			else
 				fprintf('%s:\tDLL %s loaded\n', mfilename, obj.DLLfullname);
@@ -241,81 +244,37 @@ classdef (ConstructOnLoad = true) NS < handle
 
 		%------------------------------------------------------------------------
 		%------------------------------------------------------------------------
-		function obj = closeFile(obj)
-		%------------------------------------------------------------------------
-		% NS.closeFile
-		%------------------------------------------------------------------------
-		% Close data file
-		%------------------------------------------------------------------------
-			if isempty(obj.Hfile)
-				return
-			else
-				ns_CloseFile(obj.Hfile);
-				obj.Hfile = [];
-			end
-		end	% END closeFile
-		%------------------------------------------------------------------------
-		%------------------------------------------------------------------------
-		
-		%------------------------------------------------------------------------
-		%------------------------------------------------------------------------
-		function obj = openFile(obj)
-		%------------------------------------------------------------------------
-		% NS.openFile(obj)
-		%------------------------------------------------------------------------
-		% Open data file and get some info about the file
-		%------------------------------------------------------------------------
-			if isempty(obj.datafullname)
-				fprintf('NS error: data file name not set!\n')
-				return
-			elseif ~obj.libraryLoaded
-				fprintf('NS error: library not loaded!\n')
-				return				
-			end
-			% open file using NeuroShare function
-			[nsresult, obj.Hfile] = ns_OpenFile(obj.datafullname);
-			% check 
-			if (nsresult ~= 0)
-				fprintf('%s: Data file %s did not open!\n', ...
-							mfilename, obj.datafullname);
-				obj.Hfile = 0;
-				return
-			end
-			% get file info
-			obj.getFileInfo;
-			if (nsresult ~= 0)
-				fprintf('%s: file info error!\n', mfilename);
-				return
-			end
-		end	% END openFile
-		%------------------------------------------------------------------------
-		%------------------------------------------------------------------------
-		
-		%------------------------------------------------------------------------
-		%------------------------------------------------------------------------
 		function obj = getFileInfo(obj)
 		%------------------------------------------------------------------------
 		% NS.getFileInfo(obj)
 		%------------------------------------------------------------------------
 		% get some info about the file
 		%------------------------------------------------------------------------
-			if obj.checkReadStatus == 0
-				return
-			end
-			
+		
+			%----------------------------------------------------
+			% open file using NeuroShare interface
+			%----------------------------------------------------
+			obj.openFile;
+			%----------------------------------------------------
 			% Get file information: EntityCount, TimeStampResolution and TimeSpan
+			%----------------------------------------------------
 			[nsresult, FileInfo] = ns_GetFileInfo(obj.Hfile);
 			if (nsresult ~= 0)
 				fprintf('%s: file information did not load!\n', mfilename);
+				obj.closeFile;
 				return
 			end
 			disp(FileInfo);
+			%----------------------------------------------------
 			% assign field data from FileInfo to corresponding object params
+			%----------------------------------------------------
 			fnames = fieldnames(FileInfo);
 			for n = 1:length(fnames)
 				obj.(fnames{n}) = FileInfo.(fnames{n});
 			end
+			%----------------------------------------------------
 			% Build catalogue of entities if any exist
+			%----------------------------------------------------
 			if FileInfo.EntityCount
 				[nsresult, obj.EntityInfo] = ...
 								ns_GetEntityInfo(obj.Hfile, (1:FileInfo.EntityCount));
@@ -342,46 +301,33 @@ classdef (ConstructOnLoad = true) NS < handle
 			obj.AnalogList = find([obj.EntityInfo.EntityType] == 2);
 			obj.SegmentList = find([obj.EntityInfo.EntityType] == 3);
 			obj.NeuralList = find([obj.EntityInfo.EntityType] == 4);
+			%----------------------------------------------------
 			% How many of a particular entity do we have
+			%----------------------------------------------------
 			obj.nNeural = length(obj.NeuralList);       
 			obj.nSegment = length(obj.SegmentList);
 			obj.nAnalog = length(obj.AnalogList);
 			obj.nEvent = length(obj.EventList);
+			%----------------------------------------------------
 			% give info to user
+			%----------------------------------------------------
 			fprintf('%d Entities found\n', FileInfo.EntityCount);
 			fprintf('\t%d\tentity events available\n', obj.nEvent);
 			fprintf('\t%d\tanalog events available\n', obj.nAnalog);
 			fprintf('\t%d\tsegment events available\n', obj.nSegment);
 			fprintf('\t%d\tneural events available\n', obj.nNeural);
+			%----------------------------------------------------
 			% clear unused data
-			clear FileInfo		
+			%----------------------------------------------------
+			clear FileInfo
+			%----------------------------------------------------			
+			% close file
+			%----------------------------------------------------
+			obj.closeFile;
 		end	% END getFileInfo
 		%------------------------------------------------------------------------
 		%------------------------------------------------------------------------
 
-		%------------------------------------------------------------------------
-		%------------------------------------------------------------------------
-		function status = checkReadStatus(obj)
-		%------------------------------------------------------------------------
-		% status = NS.checkReadStatus
-		%------------------------------------------------------------------------
-		% use to check IO status
-		%------------------------------------------------------------------------
-			if ~obj.libraryLoaded
-				fprintf('NS error: library not loaded!\n');
-				status = 0;
-				return
-			elseif isempty(obj.Hfile)
-				fprintf('NS error: file not open\n');
-				status = 0;
-				return
-			else
-				status = 1;
-			end
-		end
-		%------------------------------------------------------------------------
-		%------------------------------------------------------------------------
-		
 		%------------------------------------------------------------------------
 		%------------------------------------------------------------------------
 		% About Entities
@@ -414,15 +360,20 @@ classdef (ConstructOnLoad = true) NS < handle
 		% 	combination. The number of indexes is equal to the number of event
 		% 	entries for that event entity in the data file.
 		%------------------------------------------------------------------------
+
+			%----------------------------------------------------
+			% setup
+			%----------------------------------------------------
 			Events = [];
-			if obj.checkReadStatus == 0
-				return
-			end
 			if (obj.nEvent == 0)
 				disp('No event entities available!');
 				return
 			end
+			obj.openFile;
+			
+			%----------------------------------------------------
 			% preallocate events
+			%----------------------------------------------------
 			Events = repmat( struct(	'Info', [], ...
 												'EventCount', [], ...
 												'TimeStamp', [], ...
@@ -430,7 +381,9 @@ classdef (ConstructOnLoad = true) NS < handle
 												'DataSize', []	), ...
 									obj.nEvent, 1	);
 			s = zeros(obj.nEvent, 1);
+			%----------------------------------------------------
 			% Read Events in the eventlist
+			%----------------------------------------------------
 			for n = 1:obj.nEvent
 				% get event information
 				[s(n, 1), Events(n).Info] = ...
@@ -462,7 +415,11 @@ classdef (ConstructOnLoad = true) NS < handle
 					Events(n).Data = {};
 					Events(n).DataSize = [];
 				end
-			end
+			end	% END nEvent loop
+			%----------------------------------------------------
+			% close file
+			%----------------------------------------------------
+			obj.closeFile;
 		end	% END getEvents
 		%------------------------------------------------------------------------
 		%------------------------------------------------------------------------
@@ -495,18 +452,20 @@ classdef (ConstructOnLoad = true) NS < handle
 		% Analog = obj.getAnalog(<entity list>, <start point>, < points to read>)
 		%------------------------------------------------------------------------
 		
-			% checks
-			Analog = [];
-			if obj.checkReadStatus == 0
-				return
-			end
+			%----------------------------------------------------
+			% checks & setup
+			%----------------------------------------------------
 			if (obj.nAnalog == 0)
 				disp('No analog entities available!');
 				return
 			end
+			Analog = [];
+			obj.openFile;
+			%----------------------------------------------------
 			% check if user asked for a specific list of analog entities
 			% and/or a specific chunk of the waveform
 			% note that even if length(varargin) is 0, nargin will be 1
+			%----------------------------------------------------
 			if nargin == 1
 				anaList = [];
 				anaPoints = {};
@@ -524,7 +483,9 @@ classdef (ConstructOnLoad = true) NS < handle
 			if isempty(anaList)
 				anaList = obj.AnalogList;
 			end
+			%----------------------------------------------------
 			% pre-allocate Analog and s arrays
+			%----------------------------------------------------
 			Nlist = length(anaList);
 			Analog = repmat(	struct(	'Info',		[], ...
 												'startPoint',	[], ...
@@ -541,7 +502,9 @@ classdef (ConstructOnLoad = true) NS < handle
 					anaPoints{2}(n) = obj.EntityInfo(anaList(n)).ItemCount;
 				end
 			end
+			%----------------------------------------------------
 			% read analog entity 
+			%----------------------------------------------------
 			for n = 1:Nlist
 				% get the information about the current analog entity
 				[s(n), Analog(n).Info] = ns_GetAnalogInfo(obj.Hfile, anaList(n));
@@ -558,6 +521,10 @@ classdef (ConstructOnLoad = true) NS < handle
 				end
 				Analog(n).startPoint = anaPoints{1}(n);	
 			end
+			%----------------------------------------------------
+			% close file
+			%----------------------------------------------------
+			obj.closeFile
 		end	% END getAnalog
 		%------------------------------------------------------------------------
 		%------------------------------------------------------------------------
@@ -604,18 +571,19 @@ classdef (ConstructOnLoad = true) NS < handle
 		% 
 		%------------------------------------------------------------------------
 
-			% checks
-			S = [];
-			if obj.checkReadStatus == 0
-				return
-			end
+			%----------------------------------------------------
+			% checks & setup
+			%----------------------------------------------------
 			if (obj.nSegment == 0)
 				disp('No segment entities available!');
 				return
 			end
+			S = [];
 			
+			%----------------------------------------------------
 			% check if user asked for a specific list of analog entities
 			% note that even if length(varargin) is 0, nargin will be 1
+			%----------------------------------------------------
 			if nargin == 1
 				segList = [];
 				wavList = {};
@@ -629,13 +597,22 @@ classdef (ConstructOnLoad = true) NS < handle
 				S = [];
 				return
 			end
+			%----------------------------------------------------
+			% open file
+			%----------------------------------------------------
+			obj.openFile;
+			
+			%----------------------------------------------------
 			% if segList is empty, use the full SegmentList
+			%----------------------------------------------------
 			if isempty(segList)
 				segList = obj.SegmentList;
 			end
 			Nseg = length(segList);
+			%----------------------------------------------------
 			% if wavList is empty, use all waveforms for SegmentList
 			% indicate this by creating cell vector of empty arrays
+			%----------------------------------------------------
 			if isempty(wavList)
 				wavList = cell(Nseg, 1);
 				for n = 1:Nseg
@@ -643,7 +620,9 @@ classdef (ConstructOnLoad = true) NS < handle
 				end
 			end
 
+			%----------------------------------------------------
 			% pre-allocate things
+			%----------------------------------------------------
 			t = zeros(Nseg, 1);
 			S = repmat(	struct(	'Info',			[], ...
 										'SourceInfo',	[], ...
@@ -655,7 +634,9 @@ classdef (ConstructOnLoad = true) NS < handle
 										'UnitID',		[]), ...
 							Nseg, 1);
 
+			%----------------------------------------------------
 			% loop through segments
+			%----------------------------------------------------
 			for n = 1:Nseg
 				% get info and source info
 				[t(n), S(n).Info] = ...
@@ -687,26 +668,21 @@ classdef (ConstructOnLoad = true) NS < handle
 						S(n).UnitID = zeros(Nwav, 1);
 						for m = 1:Nwav
 							% Load the waveforms on each selected channel
-% 							[t(n), S(n).TimeStamp(m), ...
-% 									 S(n).WaveForm{m}, ...
-% 									 S(n).Nsamples(m), ...
-% 									 S(n).UnitID(m) ] = ...
-% 														ns_GetSegmentData(obj.Hfile, ...
-% 																				segList(n), ...
-% 																				wavList{n}(m) );
-							% Load the waveforms on each selected channel
-							[~, S(n).TimeStamp(m), ...
-									 ~, ...
-									 ~, ...
+							[t(n), S(n).TimeStamp(m), ...
+									 S(n).WaveForm{m}, ...
+									 S(n).Nsamples(m), ...
 									 S(n).UnitID(m) ] = ...
 														ns_GetSegmentData(obj.Hfile, ...
 																				segList(n), ...
 																				wavList{n}(m) );
-	
-						end	% END m
+						end	% END m Nwav
 					end	% END if Nwav
 				end	% END if
 			end	% END n
+			%----------------------------------------------------
+			% close file
+			%----------------------------------------------------
+			obj.closeFile;
 		end	% END getSegment
 		%------------------------------------------------------------------------
 		%------------------------------------------------------------------------
@@ -753,18 +729,19 @@ classdef (ConstructOnLoad = true) NS < handle
 		% 
 		%------------------------------------------------------------------------
 
-			% checks
-			S = [];
-			if obj.checkReadStatus == 0
-				return
-			end
+			%----------------------------------------------------
+			% checks & setup
+			%----------------------------------------------------
 			if (obj.nSegment == 0)
 				disp('No segment entities available!');
 				return
 			end
+			S = [];
 			
+			%----------------------------------------------------
 			% check if user asked for a specific list of analog entities
 			% note that even if length(varargin) is 0, nargin will be 1
+			%----------------------------------------------------
 			if nargin == 1
 				segList = [];
 				wavList = {};
@@ -778,13 +755,22 @@ classdef (ConstructOnLoad = true) NS < handle
 				S = [];
 				return
 			end
+			%----------------------------------------------------
+			% open file
+			%----------------------------------------------------
+			obj.openFile;
+			
+			%----------------------------------------------------
 			% if segList is empty, use the full SegmentList
+			%----------------------------------------------------
 			if isempty(segList)
 				segList = obj.SegmentList;
 			end
 			Nseg = length(segList);
+			%----------------------------------------------------
 			% if wavList is empty, use all waveforms for SegmentList
 			% indicate this by creating cell vector of empty arrays
+			%----------------------------------------------------
 			if isempty(wavList)
 				wavList = cell(Nseg, 1);
 				for n = 1:Nseg
@@ -846,128 +832,15 @@ classdef (ConstructOnLoad = true) NS < handle
 					end	% END if Nwav
 				end	% END if
 			end	% END n
+			%----------------------------------------------------
+			% close file
+			%----------------------------------------------------
+			obj.closeFile;
 			clear t;
 		end	% END getSegment
 		%------------------------------------------------------------------------
 		%------------------------------------------------------------------------
 		
-		%{
-		%------------------------------------------------------------------------
-		%------------------------------------------------------------------------
-		function [TimeStamps, UnitID, SegInfo, SrcInfo] = getSegmentTimeStamps(obj, varargin)
-		%------------------------------------------------------------------------
-		% [TimeStamps, UnitID, SegInfo, SrcInfo] = NS.getSegmentTimeStamps(segList, wavList)
-		%------------------------------------------------------------------------
-		% read segment Time stamps
-		%------------------------------------------------------------------------
-		%	segList: a list of segments to get (from NS.SegmentList)
-		%				if not provided, all segments will be retrieved
-		%					
-		%	wavList:	a cell vector listing the waveforms to retrieve
-		%				if not provided all waveforms will be retrieved and 
-		%				you will be sad.
-		%
-		%				cell must be same length as segList (or NS.SegmentList)
-		%				and will have format like:
-		%				{ [indices of waves for SegmentList(1)], 
-		%				  [indices of waves for SegmentList(2)], 
-		%					  .
-		%				     .
-		%					[indices of waves for SegmentList(n)] }
-		%
-		%				To indicate that waveforms for a particular 
-		%				segment will not be read, enter empty matrix, []
-		% 
-		% 	A zero unit ID is unclassified, then follow unit 1, 2, 3, etc. Unit
-		% 	255 is noise.
-		%------------------------------------------------------------------------
-
-			% checks
-			TimeStamps = {};
-			UnitID = {};
-			if obj.checkReadStatus == 0
-				return
-			end
-			if (obj.nSegment == 0)
-				disp('No segment entities available!');
-				return
-			end
-			
-			% check if user asked for a specific list of analog entities
-			% note that even if length(varargin) is 0, nargin will be 1
-			if nargin == 1
-				segList = [];
-				wavList = {};
-			elseif nargin == 2
-				segList = varargin{1};
-			elseif nargin == 3
-				segList = varargin{1};
-				wavList = varargin{2};
-			else
-				fprintf('NS.getSegment error: incorrect input args\n');
-				segList = [];
-				wavList = {};
-				return
-			end
-			% if segList is empty, use the full SegmentList
-			if isempty(segList)
-				segList = obj.SegmentList;
-			end
-			Nseg = length(segList);
-			% if wavList is empty, use all waveforms for SegmentList
-			% indicate this by creating cell vector of empty arrays
-			if isempty(wavList)
-				wavList = cell(Nseg, 1);
-				for n = 1:Nseg
-					wavList{n} = [];
-				end
-			end
-
-			% pre-allocate things
-
-			% loop through segments
-			for n = 1:Nseg
-				% get info and source info
-				[~, SegInfo] = ...
-										ns_GetSegmentInfo(obj.Hfile, segList(n));
-				[~, SrcInfo] = ...
-							ns_GetSegmentSourceInfo(obj.Hfile, segList(n), 1);
-				% get # of items (waveforms) available for this segment
-				MaxCount = obj.EntityInfo(segList(n)).ItemCount;
-				% only load segments if MaxCount > 0
-				if isempty(MaxCount) || (MaxCount == 0)
-					fprintf('%s warning: no segment items available for %d\n', ...
-														mfilename, segList(n))
-				else
-					if isempty(wavList{n})
-						fprintf('%s: reading all %d waveforms for Segment %d\n', ...
-										mfilename, MaxCount, n);
-						wavList{n} = 1:MaxCount; %#ok<AGROW>
-					end
-					% get # of waves to read in.
-					Nwav = length(wavList{n});
-					% store number of wavs to be read in
-					ItemCount = Nwav;
-					% if # waves ~= 0, read them in
-					if Nwav > 0
-						% pre-allocate storage
-						TimeStamp(n).time = zeros(Nwav, 1);
-						TimeStamp(n).unit = zeros(Nwav, 1);
-						for m = 1:Nwav
-							[~, TimeStamp(n).time(m), ~, ~, TimeStamp(n).unit(m) ] = ...
-												ns_GetSegmentData(obj.Hfile, ...
-																		segList(n), ...
-																		wavList{n}(m) );
-	
-						end	% END m
-					end	% END if Nwav
-				end	% END if
-			end	% END n
-		end	% END getSegmentTimeStamps
-		%------------------------------------------------------------------------
-		%------------------------------------------------------------------------
-		%}
-
 		%------------------------------------------------------------------------
 		%------------------------------------------------------------------------
 		function [SegmentInfo, SourceInfo] = getSegmentInfo(obj, varargin)
@@ -980,21 +853,20 @@ classdef (ConstructOnLoad = true) NS < handle
 		%				if not provided, all segments will be retrieved
 		%					
 		%------------------------------------------------------------------------
+
+			%----------------------------------------------------
 			% checks
-			if obj.checkReadStatus == 0
-				SegmentInfo = [];
-				SourceInfo = [];
-				return
-			end
+			%----------------------------------------------------
 			if (obj.nSegment == 0)
 				SegmentInfo = [];
 				SourceInfo = [];
 				disp('No segment entities available!');
 				return
 			end
-			
-			% check if user asked for a specific list of analog entities
+			%----------------------------------------------------
+			% check if user asked for a specific list of segment entities
 			% note that even if length(varargin) is 0, nargin will be 1
+			%----------------------------------------------------
 			if nargin == 1
 				segList = [];
 			elseif nargin == 2
@@ -1010,11 +882,17 @@ classdef (ConstructOnLoad = true) NS < handle
 				segList = obj.SegmentList;
 			end
 			Nseg = length(segList);
-
+			%----------------------------------------------------
+			% open file
+			%----------------------------------------------------
+			obj.openFile;
+			%----------------------------------------------------
 			% pre-allocate things
+			%----------------------------------------------------
 			t = zeros(Nseg, 1);
-
+			%----------------------------------------------------
 			% loop through segments
+			%----------------------------------------------------
 			for n = 1:Nseg
 				% get info and source info
 				[t(n), SegmentInfo(n)] = ...
@@ -1022,6 +900,10 @@ classdef (ConstructOnLoad = true) NS < handle
 				[t(n), SourceInfo(n)] = ...
 						ns_GetSegmentSourceInfo(obj.Hfile, segList(n), 1); %#ok<AGROW>
 			end
+			%----------------------------------------------------
+			% close file
+			%----------------------------------------------------
+			obj.closeFile;
 		end
 		%------------------------------------------------------------------------
 		%------------------------------------------------------------------------
@@ -1095,8 +977,118 @@ classdef (ConstructOnLoad = true) NS < handle
 		%------------------------------------------------------------------------
 		%------------------------------------------------------------------------
 		
-	end	% END of METHODS
+	end	% END of PUBLIC METHODS
 	%------------------------------------------------------------------------
 	%------------------------------------------------------------------------
-end	% END of NS
+	%------------------------------------------------------------------------
+	
+	
+	%------------------------------------------------------------------------
+	%------------------------------------------------------------------------
+	%------------------------------------------------------------------------
+	% PROTECTED methods
+	%------------------------------------------------------------------------
+	methods (Access = protected)
+	
+		%------------------------------------------------------------------------
+		%------------------------------------------------------------------------
+		function obj = openFile(obj)
+		%------------------------------------------------------------------------
+		% NS.openFile(obj)
+		%------------------------------------------------------------------------
+		% Open data file and get some info about the file
+		%------------------------------------------------------------------------
 
+			%--------------------------------
+			% perform some checks
+			%--------------------------------
+			if ~isempty(obj.Hfile)
+				% file is already open!
+				return
+			end
+			if isempty(obj.datafullname)
+				% no data file set
+				fprintf('NS error: data file name not set!\n')
+				return
+			end
+			if ~obj.libraryLoaded
+				% Library not loaded - load it now
+				fprintf('NS warning: library not loaded!\n')
+				fprintf('\t loading default library %s\n', obj.DLLfullname);
+				obj.setLibrary;
+			end			
+			%---------------------------------------
+			% open file using NeuroShare function
+			%---------------------------------------
+			[nsresult, obj.Hfile] = ns_OpenFile(obj.datafullname);
+			% check 
+			if (nsresult ~= 0)
+				fprintf('%s: Data file %s did not open!\n', ...
+							mfilename, obj.datafullname);
+				obj.Hfile = 0;
+				return
+			end
+		end	% END openFile
+		%------------------------------------------------------------------------
+		%------------------------------------------------------------------------
+		
+		%------------------------------------------------------------------------
+		%------------------------------------------------------------------------
+		function obj = closeFile(obj)
+		%------------------------------------------------------------------------
+		% NS.closeFile
+		%------------------------------------------------------------------------
+		% Close data file
+		%------------------------------------------------------------------------
+			if isempty(obj.Hfile)
+				fprintf('File interface already closed!\n')
+				return
+			else
+				ns_CloseFile(obj.Hfile);
+				obj.Hfile = [];
+			end
+		end	% END closeFile
+		%------------------------------------------------------------------------
+		%------------------------------------------------------------------------
+		
+		%------------------------------------------------------------------------
+		%------------------------------------------------------------------------
+		function status = checkReadStatus(obj)
+		%------------------------------------------------------------------------
+		% status = NS.checkReadStatus
+		%------------------------------------------------------------------------
+		% use to check IO status
+		%------------------------------------------------------------------------
+			if ~obj.libraryLoaded
+				fprintf('NS: library not loaded!\n');
+				status = 0;
+				return
+			elseif isempty(obj.Hfile)
+				fprintf('NS: file not open\n');
+				status = 0;
+				return
+			else
+				status = 1;
+			end
+		end
+		%------------------------------------------------------------------------
+		%------------------------------------------------------------------------		
+		
+	end	% END of PROTECTED METHODS
+	%------------------------------------------------------------------------
+	%------------------------------------------------------------------------
+	%------------------------------------------------------------------------
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+end	% END of NS
+%*****************************************************************************
+%*****************************************************************************
+%*****************************************************************************

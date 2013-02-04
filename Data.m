@@ -1,13 +1,13 @@
 %-----------------------------------------------------------------------------
-% DWdata.m
+% Data.m
 %-----------------------------------------------------------------------------
 % DataMat Toolbox
 % DW Package
 % Class Definition
 %-----------------------------------------------------------------------------
-%	DWdata facilitates access to data output by loadDWfile.m
+%	Data facilitates access to data output by loadDWfile.m
 %
-%  obj = DWdata('xxx_y_zz_ttt_n.mat') loads the following:
+%  obj = Data('xxx_y_zz_ttt_n.mat') loads the following:
 %     obj.fpath;   %path to file
 %     obj.fname;   %name of file
 %     obj.fext;    %file extension
@@ -33,7 +33,7 @@
 % Revisions:
 %	17 May, 2012 (SJS): 
 %	 -	updated documentation
-%	 -	renamed file and class from LoadDWfileData.m to DWdata.m
+%	 -	renamed file and class from LoadDWfileData.m to Data.m
 %	 -	beginning massive Objectification...
 %	13 Dec 2012 (SJS):
 %	 -	fixing issues on initialization of object
@@ -52,7 +52,7 @@
 %*****************************************************************************
 %*****************************************************************************
 %*****************************************************************************
-classdef (ConstructOnLoad = true) DWdata < handle
+classdef (ConstructOnLoad = true) Data < handle
 	%------------------------------------------------------------------------
 	%------------------------------------------------------------------------
 	%------------------------------------------------------------------------
@@ -101,49 +101,25 @@ classdef (ConstructOnLoad = true) DWdata < handle
 		%------------------------------------------------------------------------
 		% Initializes the object
 		%------------------------------------------------------------------------
-		function obj = DWdata(varargin)
+		function obj = Data(varargin)
 		%---------------------------------------------------------------------	
-		%	DWdata(<fileName>) 
+		%	Data(<fileName>) 
 		%	Constructor method
 		%	opens file called fileName (char) or opens
 		%  a dialog box to get a filename if the fileName provided does not exist.
 		%---------------------------------------------------------------------	
 
-			
-			
 			% first, parse input and verify
 			if nargin > 1
 				% too many inputs
-				error('DWdata: too many inputs!');
+				error('Data: too many inputs!');
 				
 			elseif nargin == 1
-				% filename was given, make sure it exists, otherwise throw
-				% error
-				if exist(varargin{1}, 'file') == 2
-					[obj.fpath, obj.fname, obj.fext] = fileparts(varargin{1});
-				else
-					error('DWdata: %s does not exist!',varargin{1});
-				end
+				% D struct was provided
+				obj.initFromStruct(varargin{1});
 				
-			elseif nargin == 0
-				% no filename given, open gui panel to get file
-				[fileName, obj.fpath] = uigetfile('*.ddf', ...
-																'Open .ddf file from DataWave');
-				if fileName == 0
-					% if user hit cancel (filename == 0), return
-					fprintf('no filename chosen, exiting\n');
-					return
-				end
-				[~, obj.fname, obj.fext] = fileparts(fileName);
-			end
-			
-			% store in obj.fullfname
-			obj.fullfname = fullfile(obj.fpath, [obj.fname obj.fext]);
-			
-			fprintf('Initializing from file %s...\n\n', obj.fullfname);
-			% initialize NS object
-			obj.initNS;
-		end	% END DWdata CONSTRUCTOR
+			end			
+		end	% END Data CONSTRUCTOR
 		%------------------------------------------------------------------------
 		%------------------------------------------------------------------------
 
@@ -155,43 +131,52 @@ classdef (ConstructOnLoad = true) DWdata < handle
 
 		%------------------------------------------------------------------------
 		%------------------------------------------------------------------------
-		function obj = initNS(obj)
+		function initFromStruct(obj, D)
 		%------------------------------------------------------------------------
-		% initNS
+		% Data.initFromStruct
 		%------------------------------------------------------------------------
-		% so long as DW.fullfname is set, initNS method will initialize the
-		% DataWave NeuroShare interface object DW.DDF
-		%------------------------------------------------------------------------
-			if ~isempty(obj.fullfname) && exist(obj.fullfname, 'file')
-				obj.DDF = DW.NS(obj.fullfname);
-			else
-				fprintf('file not found\n')
-				return
+		
+			% store info bits in obj.Info!
+			infotags = {'FileType', 'EntityCount', 'TimeStampResolution', ...
+								'TimeSpan', 'AppName', 'Time_Year', 'Time_Month', ...
+								'Time_Day', 'Time_Hour', 'Time_Min', 'Time_Sec', ...
+								'Time_MilliSec', 'FileComment' };
+			for n = 1:length(infotags)
+				obj.Info.(infotags{n}) = D.(infotags{n});
 			end
-		end	% END initNS
-		%------------------------------------------------------------------------
-		%------------------------------------------------------------------------
+			% store other bits in obj.DDF!
+			ddftags = {'EntityInfo', 'EventList', 'AnalogList', 'SegmentList', ...
+							'NeuralList', 'nNeural', 'nSegment', 'nAnalog', 'nEvent'};
+			for n = 1:length(ddftags)
+				obj.DDF.(ddftags{n}) = D.(ddftags{n});
+			end
+			% store Markers
+			obj.loadMarkers(D.Event);
+			% convert to stimuli
+			obj.loadStimuli;
+			% convert segments to Probes
+			obj.loadProbes(D.Segment);
+			
 
+		end	% END initFromStruct
 		%------------------------------------------------------------------------
 		%------------------------------------------------------------------------
-		function varargout = loadMarkers(obj)
+		
 		%------------------------------------------------------------------------
-		% [Events, errFlg] = DWdata.loadMarkers
+		%------------------------------------------------------------------------
+		function varargout = loadMarkers(obj, Events)
+		%------------------------------------------------------------------------
+		% [Events, errFlg] = Data.loadMarkers
 		%------------------------------------------------------------------------
 
 			%-----------------------------------------------------------
-			% Initial setup
+			% Initial setup and checks
 			%-----------------------------------------------------------
 			DataWaveDefaults	% load defaults
 			errFlg = 0;
-
-			%-----------------------------------------------------------
-			% read Events using NeuroShare
-			%-----------------------------------------------------------
-			Events = obj.DDF.getEvents;
 			if isempty(Events)
 				errFlg = 1;
-				warning('%s: error loading Events', mfilename);
+				warning('%s: no Events!', mfilename);
 				return
 			end
 
@@ -348,7 +333,7 @@ classdef (ConstructOnLoad = true) DWdata < handle
 		%------------------------------------------------------------------------
 		function varargout = loadStimuli(obj)
 		%------------------------------------------------------------------------
-		% Stimuli = DWdata.loadStimuli
+		% Stimuli = Data.loadStimuli
 		%------------------------------------------------------------------------
 			DataWaveDefaults	% load defaults
 			%-----------------------------------------------------------
@@ -358,7 +343,7 @@ classdef (ConstructOnLoad = true) DWdata < handle
 				obj.loadMarkers
 			end
 			if ~obj.Nmarkers
-				error('%s: no markers in DWdata!')
+				error('%s: no markers in Data!')
 			end
 			%-----------------------------------------------------------
 			% Initialize and build the StimulusList object (obj.Stimuli)
@@ -378,9 +363,9 @@ classdef (ConstructOnLoad = true) DWdata < handle
 		%------------------------------------------------------------------------
 		
 		%------------------------------------------------------------------------
-		function loadProbes(obj)
+		function loadProbes(obj, Segment)
 		%------------------------------------------------------------------------
-		% Probes = DWdata.loadProbes
+		% Probes = Data.loadProbes
 		%------------------------------------------------------------------------
 			DataWaveDefaults	% load defaults
 			%-----------------------------------------------------------
@@ -390,7 +375,7 @@ classdef (ConstructOnLoad = true) DWdata < handle
 				obj.loadMarkers
 			end
 			if ~obj.Nmarkers
-				error('%s: no markers in DWdata!')
+				error('%s: no markers in Data!')
 			end
 			
 			%-----------------------------------------------------------
@@ -405,9 +390,6 @@ classdef (ConstructOnLoad = true) DWdata < handle
 				return
 			end
 			
-			% load segment timestamps
-			Segment = obj.DDF.getSegmentTimeStampsOnly;
-	
 			obj.Probes = DW.Probe;
 			if obj.DDF.nSegment > 1
 				obj.Probes(obj.DDF.nSegment, 1) = DW.Probe;
