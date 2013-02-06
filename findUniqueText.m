@@ -73,7 +73,24 @@ end
 %------------------------------------------------------------------------
 % find unique values
 %------------------------------------------------------------------------
-[uniqueText, firstind, locs] = unique(strings_to_search, 'stable');
+% need to account for differences in unique() function for matlab versions
+mver = version('-release');
+if strcmp(mver(1:4), '2012')
+	[uniqueText, firstind, locs] = unique(strings_to_search, 'first');
+% 	unique2012.strings = strings_to_search;
+% 	unique2012.uniqueText = uniqueText;
+% 	unique2012.firstind = firstind;
+% 	unique2012.locs = locs;
+% 	save unique2012.mat unique2012
+else
+	[uniqueText, firstind, locs] = unique(strings_to_search, 'first');
+% 	unique2010b.strings = strings_to_search;
+% 	unique2010b.uniqueText = uniqueText;
+% 	unique2010b.firstind = firstind;
+% 	unique2010b.locs = locs;
+% 	save unique2010b.mat unique2010b
+end
+
 % uniqueText is a list (cell array) of unique strings
 % firstind is a list of indices in strings_search where the unique strings
 %	are first found

@@ -68,8 +68,9 @@ function DataWaveDefaults(varargin)
 % 	 - functionalized
 %	14 Jan 2013 (SJS)
 %	 - updated for use with NeuroShare event markers
-%------------------------------------------------------------------------
-% TO DO:
+%	5 Feb 2013 (SJS)
+% 	 - added TIME_RESOLUTION
+% 	 -	added SWEEP_DURATION
 %------------------------------------------------------------------------
 
 %-----------------------------------------------------------
@@ -86,6 +87,15 @@ end
 % otherwise, go ahead and create the default vars.
 %-----------------------------------------------------------
 %-----------------------------------------------------------
+
+%-----------------------------------------------------------
+%-----------------------------------------------------------
+% default time settings
+%-----------------------------------------------------------
+% Time resolution
+TIME_RESOLUTION = 1e-6;
+% sweep time (microseconds)
+SWEEP_DURATION = 1/TIME_RESOLUTION;
 
 %-----------------------------------------------------------
 %-----------------------------------------------------------
@@ -290,6 +300,8 @@ STIMULUS_STRUCT_FIELDS = [STIMULUS_STRUCT_FIELDS MARKER_TAGS'];
 %-----------------------------------------------------------
 fprintf('Saving file DataWaveDefaults.mat...')
 save('DataWaveDefaults.mat', ...
+	'TIME_RESOLUTION', ...
+	'SWEEP_DURATION', ...
 	'N_CHANNELS', ...
 	'PRE_PLOTTIME', ...
 	'POST_PLOTTIME', ...

@@ -52,7 +52,8 @@
 %*****************************************************************************
 %*****************************************************************************
 %*****************************************************************************
-classdef (ConstructOnLoad = true) Data < handle
+% classdef (ConstructOnLoad = true) Data < handle
+classdef Data < handle
 	%------------------------------------------------------------------------
 	%------------------------------------------------------------------------
 	%------------------------------------------------------------------------
@@ -62,7 +63,7 @@ classdef (ConstructOnLoad = true) Data < handle
 		fpath			%path to file
 		fname			%name of file
 		fext			%file extension
-		DDF			% neuroshare interface object
+% 		DDF			% neuroshare interface object
 		Info			% DWinfo object
 		Markers		% Marker object array
 		Background	% really this should be a class too...
@@ -110,14 +111,15 @@ classdef (ConstructOnLoad = true) Data < handle
 		%---------------------------------------------------------------------	
 
 			% first, parse input and verify
+			if nargin == 0
+				return
+			end
+			% D struct was provided
+			obj.initFromStruct(varargin{1});
+			% check if a filename was provided
 			if nargin > 1
-				% too many inputs
-				error('Data: too many inputs!');
-				
-			elseif nargin == 1
-				% D struct was provided
-				obj.initFromStruct(varargin{1});
-				
+				obj.fullfname = varargin{2};
+				[obj.fpath, obj.fname, obj.fext] = fileparts(varargin{2});
 			end			
 		end	% END Data CONSTRUCTOR
 		%------------------------------------------------------------------------
@@ -144,12 +146,12 @@ classdef (ConstructOnLoad = true) Data < handle
 			for n = 1:length(infotags)
 				obj.Info.(infotags{n}) = D.(infotags{n});
 			end
-			% store other bits in obj.DDF!
-			ddftags = {'EntityInfo', 'EventList', 'AnalogList', 'SegmentList', ...
-							'NeuralList', 'nNeural', 'nSegment', 'nAnalog', 'nEvent'};
-			for n = 1:length(ddftags)
-				obj.DDF.(ddftags{n}) = D.(ddftags{n});
-			end
+% 			% store other bits in obj.DDF!
+% 			ddftags = {'EntityInfo', 'EventList', 'AnalogList', 'SegmentList', ...
+% 							'NeuralList', 'nNeural', 'nSegment', 'nAnalog', 'nEvent'};
+% 			for n = 1:length(ddftags)
+% 				obj.DDF.(ddftags{n}) = D.(ddftags{n});
+% 			end
 			% store Markers
 			obj.loadMarkers(D.Event);
 			% convert to stimuli
@@ -178,20 +180,29 @@ classdef (ConstructOnLoad = true) Data < handle
 				errFlg = 1;
 				warning('%s: no Events!', mfilename);
 				return
+			else
+				nEvents = length(Events);
 			end
 
 			%-----------------------------------------------------------
 			% parse Markers
 			%-----------------------------------------------------------			
+			% From Neuroshare/DataWave, each channel's stimulus Marker
+			% is stored in an individual Event entity: the left (channel
+			% 1) marker is in EventID = 1, the right (channel 2) is in 
+			% EventId 2.
+			% 
 			% create a list of Event IDS for each event entity.
+			% 
 			%	EventID == 0 --> non-marker entity
 			%	EventID == 1 --> L channel markers
 			%	EventID == 2 --> R channel markers
-			EventID = zeros(obj.DDF.nEvent, 1);
+			%-----------------------------------------------------------			
+			EventID = zeros(nEvents, 1);
 
 			% first, find the R and L marker events (R is usually Events(2), 
 			% L is usually Events(3), but try not to assume)
-			for v = 1:obj.DDF.nEvent
+			for v = 1:nEvents
 				% scan the CSVDesc from the NeuroShare Events.Info to get
 				% a list (usually partial - for sound stimulus markers, the 
 				% DataWave Neuroshare (or Matlab API, unknown at moment...) leaves
@@ -232,7 +243,7 @@ classdef (ConstructOnLoad = true) Data < handle
 			end
 			% make sure # of events are the same
 			if ~(Events(MarkerEvents(1)).EventCount == Events(MarkerEvents(2)).EventCount)
-				error('%s: EventCount mismatch!', mfilename);
+				error('%s: EventCount mismatch between L and R channels!', mfilename);
 			else
 				EventCount = Events(MarkerEvents(1)).EventCount;
 				obj.Nmarkers = EventCount;
@@ -243,17 +254,19 @@ classdef (ConstructOnLoad = true) Data < handle
 			fprintf('Left Markers -> Event(%d)\n', evL);
 			fprintf('Right Markers -> Event(%d)\n', evR);
 
+			%-----------------------------------------------------------			
 			% allocate Markers object array
+			%-----------------------------------------------------------			
 			% Matlab thinks obj.Markers is a double, and will throw an
 			% an error.  so, we trick Matlab in order to do so:  first, need to
 			% initialize Markers as a single marker, then allocate 
-			% full array.  otherwise, Matlab things
+			% full array. 
 			obj.Markers = DW.Marker;
 			obj.Markers(EventCount, 1) = DW.Marker;
 
 			% loop through the events
 			for n = 1:EventCount
-				% parse into cell arrays, to preserve empty fields, do NOT
+				% parse strings into cell arrays; to preserve empty fields, do NOT
 				% treat successive delimiters/whitespace as one (in call to csvscan)
 				tmpR = csvscan(Events(evR).Data{n}, 0);
 				tmpL = csvscan(Events(evL).Data{n}, 0);
@@ -289,7 +302,8 @@ classdef (ConstructOnLoad = true) Data < handle
 				% create a single cell array of strings
 				tmp = [tmpR; tmpL];
 				% convert tags appropriately, first allocating a list for values
-				elist = cell(size(tmp));		
+				elist = cell(size(tmp));
+				% loop through the marker tags
 				for t = 1:MARKER_NMARKERS
 					% check for type
 					switch MARKER_TYPES{t} %#ok<USENS>
@@ -377,26 +391,28 @@ classdef (ConstructOnLoad = true) Data < handle
 			if ~obj.Nmarkers
 				error('%s: no markers in Data!')
 			end
-			
+			% check if there are any segment entities in the data
+			if isempty(Segment)
+				warning('%s: there are no Segment entities in data!', mfilename);
+				return
+			else
+				nSegments = length(Segment);
+			end
+		
 			%-----------------------------------------------------------
 			% you'd assume that the neural events from 
 			% DataWave/Neuroshare are what we want for the spike data.
 			% you'd be wrong.  the segment entities have the spiketimes
 			% as well as the spike snippets (if stored).
 			%-----------------------------------------------------------
-			% check if there are any segment entities in the data
-			if ~obj.DDF.nSegment
-				warning('%s: there are no Segment entities in data!', mfilename);
-				return
-			end
-			
+			% create the Probe object
 			obj.Probes = DW.Probe;
-			if obj.DDF.nSegment > 1
-				obj.Probes(obj.DDF.nSegment, 1) = DW.Probe;
+			if nSegments > 1
+				obj.Probes(nSegments, 1) = DW.Probe;
 			end
 			
 			% unit 0 is uncatergorized, 255 is noise
-			for n = 1:obj.DDF.nSegment
+			for n = 1:nSegments
 				 obj.Probes(n).t = Segment(n).TimeStamp(Segment(n).UnitID == 0);
 				 obj.Probes(n).cluster = Segment(n).SourceInfo.ProbeInfo;
 			end

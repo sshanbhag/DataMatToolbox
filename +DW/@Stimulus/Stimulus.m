@@ -45,7 +45,8 @@
 %*****************************************************************************
 %*****************************************************************************
 %*****************************************************************************
-classdef (ConstructOnLoad = true) Stimulus < handle
+% classdef (ConstructOnLoad = true) Stimulus < handle
+classdef Stimulus < handle
 	%------------------------------------------------------------------------
 	%------------------------------------------------------------------------
 	%------------------------------------------------------------------------
@@ -60,6 +61,8 @@ classdef (ConstructOnLoad = true) Stimulus < handle
 		RampUp
 		HoldTime
 		RampDown
+		OutputTimestamp
+		OutputTimeWithDelay
 		FixedDelay
 	end	% end of properties
 	%------------------------------------------------------------------------
@@ -139,11 +142,15 @@ classdef (ConstructOnLoad = true) Stimulus < handle
 		%---------------------------------------------------------------------
 		% Stimulus.buildStimulusFromMarker(M, C)
 		%---------------------------------------------------------------------
+		% given marker object M and channel C (L == 1, R == 2), assign values
+		% from marker to appropriate values in Stimulus object
+		%---------------------------------------------------------------------
 			DataWaveDefaults;
 			markerbase = {	'Amplitude', 'Attenuation', 'TimeShift', ...
-							'RampUp', 'HoldTime', 'RampDown', 'FixedDelay' };
+							'RampUp', 'HoldTime', 'RampDown', ...
+							'FixedDelay', 'OutputTimestamp', 'OutputTimeWithDelay' };
 			% set channel, and marker tag character (to postpend to
-			% markerbase)
+			% markerbase string to properly identify Marker property name)
 			if C == L
 				tagchar = 'L';
 				obj.Channel = L;

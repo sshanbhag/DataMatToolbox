@@ -44,7 +44,8 @@
 %*****************************************************************************
 %*****************************************************************************
 %*****************************************************************************
-classdef (ConstructOnLoad = true) StimulusList < handle
+% classdef (ConstructOnLoad = true) StimulusList < handle
+classdef StimulusList < handle
 	%------------------------------------------------------------------------
 	%------------------------------------------------------------------------
 	%------------------------------------------------------------------------
@@ -93,10 +94,11 @@ classdef (ConstructOnLoad = true) StimulusList < handle
 				% if no arguments were provided, return empty StimulusList
 				fprintf('%s: building empty StimulusList\n', mfilename);
 				return
+			else
+				fprintf('%s: building StimulusList\n', mfilename);
+				% if Marker objects provided, parse them to get stimulus info
+				obj.parseMarkersIntoStimuli(varargin{1});
 			end
-			fprintf('%s: building StimulusList\n', mfilename);
-			% if Marker objects provided, parse them to get stimulus info
-			obj.parseMarkersIntoStimuli(varargin{1});
 		end	% END StimulusList CONSTRUCTOR
 		%---------------------------------------------------------------------
 		%---------------------------------------------------------------------
@@ -135,7 +137,8 @@ classdef (ConstructOnLoad = true) StimulusList < handle
 			[obj.Tagstring, obj.MarkerList, obj.N] = findUniqueText(stimtext);
 			obj.Tagstring = obj.Tagstring';
 			clear stimtext;
-			fprintf('\t found %d unique markers\n', obj.N);
+			fprintf('\t found %d unique markers from %d total markers\n', ...
+									obj.N, Nmarkers);
 
 			%-----------------------------------------------------------
 			% determine type and channel from markers
@@ -203,12 +206,125 @@ classdef (ConstructOnLoad = true) StimulusList < handle
 			for n = 1:obj.N
 				obj.Nsweeps(n) = length(obj.MarkerList{n});
 			end
-			
 		end		% END parseMarkersIntoStimuli 
 		%---------------------------------------------------------------------
 		%---------------------------------------------------------------------
 
+		%---------------------------------------------------------------------
+		%---------------------------------------------------------------------
+		function extractTimeFromMarkers(obj, Markers, varargin)
+		%---------------------------------------------------------------------
+		% StimulusList.extractTimeFromMarkers(Markers)
+		% StimulusList.extractTimeFromMarkers(Markers, 'SweepDuration', SweepDur)
+		% StimulusList.extractTimeFromMarkers(Markers, 'MaxTime', MaxTime)
+		%---------------------------------------------------------------------
+			DataWaveDefaults;	% load defaults
+			%-----------------------------------------------------------
+			%-----------------------------------------------------------
+			SweepDuration = [];
+			MaxTime = [];
+			if ~isempty(varargin)
+				vindx = 1;
+				while vindx <= length(varargin)
+					switch upper(varargin{vindx})
+						case 'SWEEPDURATION'
+							SweepDuration = varargin{vindx+1};
+							vindx = vindx + 2;
+						case 'MAXTIME'
+							MaxTime =  varargin{vindx+1};
+							vindx = vindx + 2;
+						otherwise
+							error('%s: unknown option %s', varargin{vindx});
+					end
+				end
+			end
+			if isempty(SweepDuration)
+				SweepDuration = SWEEP_DURATION;
+			end
+			
+			%-----------------------------------------------------------
+			% init
+			%-----------------------------------------------------------
+			fprintf('%s: calculating sweep times...\n', mfilename);
+			% # of markers
+			Nmarkers = length(Markers);
+			% allocate storage
+			obj.Sweepstart = cell(obj.N, 1);
+			obj.Sweepend = cell(obj.N, 1);
+			obj.PreSweep = cell(obj.N, 1);
+			obj.PostSweep = cell(obj.N, 1);
 
+			for s = 1:obj.N
+				fprintf('%d sweeps for stimulus %d\n', obj.Nsweeps(s), s);
+				obj.Sweepstart{s} = zeros(obj.Nsweeps(s), 1);
+				obj.Sweepend{s} = zeros(obj.Nsweeps(s), 1);
+				obj.PreSweep{s} = zeros(obj.Nsweeps(s), 1);
+				obj.PostSweep{s} = zeros(obj.Nsweeps(s), 1);
+
+				for w = 1:obj.Nsweeps(s)
+					m = obj.MarkerList{s}(w);
+					fprintf('\t%.0f\t\t%.0f\t%s\t%.0f\n', ...
+						Markers(m).OutputTimestampL, ...
+						Markers(m).OutputTimestampR, Markers(m).WavFilenameR, ...
+						Markers(m).AttenuationR);
+
+					if m == 1
+						preindx = 0;
+					else
+						preindx = m - 1;
+					end
+					if m == Nmarkers
+						postindx = Nmarkers;
+					else
+						postindx = m + 1;
+					end
+
+					if obj.Channel{s} == 'L'
+						obj.Sweepstart{s}(w) = Markers(m).OutputTimestampL;
+						if isempty(SweepDuration)
+							obj.Sweepend{s}(w) = ...
+															Markers(postindx).OutputTimestampL;
+						else
+							obj.Sweepend{s}(w) = obj.Sweepstart{s}(w) + SweepDuration;
+						end
+					elseif obj.Channel{s} == 'R'
+						obj.Sweepstart{s}(w) = Markers(m).OutputTimestampR;
+						if isempty(SweepDuration)
+							obj.Sweepend{s}(w) = Markers(postindx).OutputTimestampR;
+						else
+							obj.Sweepend{s}(w) = obj.Sweepstart{s}(w) + SweepDuration;
+						end
+					elseif obj.Channel{s} == 'B'
+						% use min value of l and r
+						obj.Sweepstart{s}(w) = ...
+													min([Markers(m).OutputTimestampL ...
+															Markers(m).OutputTimestampR]);
+						if isempty(SweepDuration)
+							obj.Sweepend{s}(w) = ...
+												min([Markers(postindx).OutputTimestampL ...
+														Markers(postindx).OutputTimestampR]);
+						else
+							obj.Sweepend{s}(w) = obj.Sweepstart{s}(w) + SweepDuration;
+						end
+					else
+						error('%s: bad channel value %s', mfilename, obj.Channel{s});
+					end
+					% correct final sweep time
+					if postindx == Nmarkers
+						if isempty(MaxTime)
+							obj.Sweepend{s}(w) = ...
+									obj.Sweepstart{s}(w) + SweepDuration;
+						else
+							obj.Sweepend{s}(w) = MaxTime;
+						end
+					end
+					obj.PreSweep{s}(w) = preindx;
+					obj.PostSweep{s}(w) = postindx;
+				end	% END sweep
+			end	% END stim
+			
+			
+		end
 		%---------------------------------------------------------------------
 		%---------------------------------------------------------------------
 		% Overloaded Methods
