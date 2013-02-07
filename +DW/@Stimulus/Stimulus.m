@@ -87,7 +87,7 @@ classdef Stimulus < handle
 		% Stimulus()	when called with no arguments, returns empty
 		%					Stimulus object
 		%---------------------------------------------------------------------
-			DataWaveDefaults;
+			DW.DataWaveDefaults;
 			%--------------------------------------------------------
 			% Check inputs
 			%--------------------------------------------------------
@@ -145,7 +145,7 @@ classdef Stimulus < handle
 		% given marker object M and channel C (L == 1, R == 2), assign values
 		% from marker to appropriate values in Stimulus object
 		%---------------------------------------------------------------------
-			DataWaveDefaults;
+			DW.DataWaveDefaults;
 			markerbase = {	'Amplitude', 'Attenuation', 'TimeShift', ...
 							'RampUp', 'HoldTime', 'RampDown', ...
 							'FixedDelay', 'OutputTimestamp', 'OutputTimeWithDelay' };

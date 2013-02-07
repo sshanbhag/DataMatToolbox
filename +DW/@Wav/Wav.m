@@ -62,7 +62,7 @@ classdef Wav < DW.Stimulus
 		% Wav()	when called with no arguments, returns empty
 		%				Wav object
 		%---------------------------------------------------------------------
-			DataWaveDefaults;
+			DW.DataWaveDefaults;
 			%--------------------------------------------------------
 			% call superclass constructor
 			%--------------------------------------------------------
@@ -95,7 +95,7 @@ classdef Wav < DW.Stimulus
 		%---------------------------------------------------------------------
 		function obj = setValsFromMarker(obj, Marker, Channel)
 		%---------------------------------------------------------------------
-			DataWaveDefaults;
+			DW.DataWaveDefaults;
 			% set frequency
 			if Channel == R
 				[obj.Filepath, tmpn, tmpx] = fileparts(Marker.WavFilenameR);

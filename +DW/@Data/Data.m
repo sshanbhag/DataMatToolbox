@@ -174,7 +174,7 @@ classdef Data < handle
 			%-----------------------------------------------------------
 			% Initial setup and checks
 			%-----------------------------------------------------------
-			DataWaveDefaults	% load defaults
+			DW.DataWaveDefaults	% load defaults
 			errFlg = 0;
 			if isempty(Events)
 				errFlg = 1;
@@ -349,7 +349,7 @@ classdef Data < handle
 		%------------------------------------------------------------------------
 		% Stimuli = Data.loadStimuli
 		%------------------------------------------------------------------------
-			DataWaveDefaults	% load defaults
+			DW.DataWaveDefaults	% load defaults
 			%-----------------------------------------------------------
 			% load markers if they haven't been loaded yet
 			%-----------------------------------------------------------
@@ -377,11 +377,11 @@ classdef Data < handle
 		%------------------------------------------------------------------------
 		
 		%------------------------------------------------------------------------
-		function loadProbes(obj, Segment)
+		function varargout = loadProbes(obj, Segment)
 		%------------------------------------------------------------------------
 		% Probes = Data.loadProbes
 		%------------------------------------------------------------------------
-			DataWaveDefaults	% load defaults
+			DW.DataWaveDefaults	% load defaults
 			%-----------------------------------------------------------
 			% load markers if they haven't been loaded yet
 			%-----------------------------------------------------------
@@ -409,14 +409,24 @@ classdef Data < handle
 			obj.Probes = DW.Probe;
 			if nSegments > 1
 				obj.Probes(nSegments, 1) = DW.Probe;
-			end
+			end	
 			
-			% unit 0 is uncatergorized, 255 is noise
+			% pull out timestamps based on unit ID
+			% according to Neuroshare, unit 0 is uncatergorized, 255 is noise
+			unitID = cell(nSegments, 1);
 			for n = 1:nSegments
-				 obj.Probes(n).t = Segment(n).TimeStamp(Segment(n).UnitID == 0);
-				 obj.Probes(n).cluster = Segment(n).SourceInfo.ProbeInfo;
+				% find unique unit IDs
+				unitID{n} = unique(Segment(n).UnitID);
+				% store timestamps for units with ID 0 - should
+				% probably figure out a way to store/sort all unitIDs at some
+				% point........
+				obj.Probes(n).t = Segment(n).TimeStamp(Segment(n).UnitID == 0);
+				obj.Probes(n).cluster = Segment(n).SourceInfo.ProbeInfo;
 			end
 			clear Segment
+			if nargout
+				varargout{1} = unitID;
+			end
 		end	% END loadProbes
 		%------------------------------------------------------------------------
 		%------------------------------------------------------------------------

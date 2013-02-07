@@ -6,22 +6,22 @@
 % Class Definition
 %-----------------------------------------------------------------------------
 %	Properties:
-% 		Type							'TONE', 'NOISE', 'WAVFILE'
-% 		Channel						'R', 'L', 'B'
-% 		Indices						array of indices into Marker arrays (above)
-% 		Nreps							# of times this stimulus was presented 
-% 		Var							varying variables for this stimulus
-% 		Nsweeps						# of times this stimulus was presented
-% 		Sweepstart					list of start times for this stimulus
-% 		Sweepend						list of end times for this stimulus
-% 		LAttenVals					Left channel attenuation values
-% 		LAttenIndices				Indices for respective attenuation sweeps
-% 		RAttenVals					Right channel attenuation values
-% 		RAttenIndices				indices for R attenuaton sweeps
-% 		Spiketimes					{# units, Nsweeps} cell array of unit spike
-% 										timestamps
-% 		Timestamp					first occurance of this Stimulus
-%		Tagstring					for debugging, will disappear eventually
+% 		N						# of Different stimuli
+% 		MarkerList			{N X 1} list of marker indices
+% 		Tagstring			{N X 1} list of unique marker strings
+% 		S = {};				{N X # audio chan} list of Stimulus objects (by type)
+% 		Type					{N X 2} list of Stimulus types ('WAV', 'TONE', etc)
+% 		Channel				[N X 1] character array of channel ('0' 'L' 'R' 'B')
+% 		Var
+% 		Nsweeps				[N X 1] array of sweeps/stim
+% 		Sweepstart			{N X 1} list of vectors of sweep start times in usec
+%									each vector will have a time for each type
+% 									and sweep
+% 		Sweepend				same format as Sweepstart, but contains sweep end 
+% 									times in usec
+% 		PreSweepMark		{N X 1} list of indices into Markers (see DW.Data)
+% 									for sweep before 
+% 		PostSweepMark		{N X 1} list of indices into Markers for sweep after
 %-----------------------------------------------------------------------------
 % See also: DWdata, Marker, Probe, Unit
 %-----------------------------------------------------------------------------
@@ -52,18 +52,18 @@ classdef StimulusList < handle
 	% Properties
 	%------------------------------------------------------------------------
 	properties
-		N						%	# of Different stimuli
-		MarkerList			%	{N X 1} list of marker indices
-		Tagstring			%	{N X 1} list of unique marker strings
-		S = {};				%	{N X 1} list of Stimulus objects (by type)
-		Type					%	{N X 1} list of Stimulus types
+		N
+		MarkerList
+		Tagstring
+		S = {};
+		Type
 		Channel
 		Var
-		Nsweeps				% [N X 1] array of sweeps/stim
+		Nsweeps
 		Sweepstart
 		Sweepend
-		PreSweep
-		PostSweep
+		PreSweepMark
+		PostSweepMark
 	end	% end of properties
 	%------------------------------------------------------------------------
 	%------------------------------------------------------------------------
@@ -115,7 +115,7 @@ classdef StimulusList < handle
 		%---------------------------------------------------------------------
 		% StimulusList.parseMarkersIntoStimuli(Markers)
 		%---------------------------------------------------------------------
-			DataWaveDefaults;	% load defaults
+			DW.DataWaveDefaults;	% load defaults
 			%-----------------------------------------------------------
 			% find unique markers (stimuli)
 			%-----------------------------------------------------------
@@ -143,9 +143,10 @@ classdef StimulusList < handle
 			%-----------------------------------------------------------
 			% determine type and channel from markers
 			%-----------------------------------------------------------
+			fprintf('%s: finding stimulus types and channels...\n', mfilename);
 			% create, and assign type
-			obj.Type = cell(obj.N, 1);
-			obj.Channel = cell(obj.N, 1);
+			obj.Type = cell(obj.N, 2);
+			obj.Channel = char(obj.N, 1);
 			for n = 1:obj.N
 				% check stimuli by examining the first element in each
 				% marker/stimulus subtype (this is assuming that the sorting of
@@ -155,33 +156,34 @@ classdef StimulusList < handle
 				% check if either or both of rstim == 0
 				if strcmpi(rstim, '0') && strcmpi(lstim, '0')
 					% if both == 0, set Channel to '0' (none)
-					obj.Channel{n} = '0';
+					obj.Channel(n) = '0';
 				elseif strcmpi(rstim, '0')
 					% if rstim == 0, then Channel must be 'L'
-					obj.Channel{n} = 'L';
+					obj.Channel(n) = 'L';
 				elseif strcmpi(lstim, '0')
 					% if lstim == 0, then Channel must be 'R'
-					obj.Channel{n} = 'R';
+					obj.Channel(n) = 'R';
 				else
 					% otherwise, both channels active, Channel set to 'B'
-					obj.Channel{n} = 'B';
+					obj.Channel(n) = 'B';
 				end
 				fprintf('stim %d: channel = %s', n, obj.Channel{n});				
 				fprintf('\t\t(%s\t%s)\n', lstim, rstim);
 				% set Type
-				obj.Type{n} = {lstim rstim};
+				obj.Type(n, :) = {lstim rstim};
 			end	% END n
 			
 			%-----------------------------------------------------------
 			% sort into Stimuli
 			%-----------------------------------------------------------
+			fprintf('%s: sorting into stimuli...\n', mfilename);
 			% allocate S(timulus) cell array to hold object list
 			obj.S = cell(obj.N, 2);
 			% determine stimulus type and then initialize/assign object
 			for n = 1:obj.N
 				for c = L:R
 					% assign channel object
-					switch upper(obj.Type{n}{c})
+					switch upper(obj.Type{n, c})
 						case '0'		% no sound
 							obj.S{n, c} = [];
 						case 'BBN'	% noise
@@ -218,7 +220,7 @@ classdef StimulusList < handle
 		% StimulusList.extractTimeFromMarkers(Markers, 'SweepDuration', SweepDur)
 		% StimulusList.extractTimeFromMarkers(Markers, 'MaxTime', MaxTime)
 		%---------------------------------------------------------------------
-			DataWaveDefaults;	% load defaults
+			DW.DataWaveDefaults;	% load defaults
 			%-----------------------------------------------------------
 			%-----------------------------------------------------------
 			SweepDuration = [];
@@ -251,15 +253,15 @@ classdef StimulusList < handle
 			% allocate storage
 			obj.Sweepstart = cell(obj.N, 1);
 			obj.Sweepend = cell(obj.N, 1);
-			obj.PreSweep = cell(obj.N, 1);
-			obj.PostSweep = cell(obj.N, 1);
+			obj.PreSweepMark = cell(obj.N, 1);
+			obj.PostSweepMark = cell(obj.N, 1);
 
 			for s = 1:obj.N
 				fprintf('%d sweeps for stimulus %d\n', obj.Nsweeps(s), s);
 				obj.Sweepstart{s} = zeros(obj.Nsweeps(s), 1);
 				obj.Sweepend{s} = zeros(obj.Nsweeps(s), 1);
-				obj.PreSweep{s} = zeros(obj.Nsweeps(s), 1);
-				obj.PostSweep{s} = zeros(obj.Nsweeps(s), 1);
+				obj.PreSweepMark{s} = zeros(obj.Nsweeps(s), 1);
+				obj.PostSweepMark{s} = zeros(obj.Nsweeps(s), 1);
 
 				for w = 1:obj.Nsweeps(s)
 					m = obj.MarkerList{s}(w);
@@ -318,13 +320,32 @@ classdef StimulusList < handle
 							obj.Sweepend{s}(w) = MaxTime;
 						end
 					end
-					obj.PreSweep{s}(w) = preindx;
-					obj.PostSweep{s}(w) = postindx;
+					obj.PreSweepMark{s}(w) = preindx;
+					obj.PostSweepMark{s}(w) = postindx;
 				end	% END sweep
 			end	% END stim
+
+		end	% END extractTimeFromMarkers FUNCTION
+		%---------------------------------------------------------------------
+		%---------------------------------------------------------------------
+		
+		%---------------------------------------------------------------------
+		%---------------------------------------------------------------------
+		function varargout = findMatching(obj)
+			
+			for s = 1:obj.N
+				
+				
+				
+				
+			end	% END s
 			
 			
-		end
+			
+		end	% END findMatchingStim FUNCTION
+		%---------------------------------------------------------------------
+		%---------------------------------------------------------------------
+
 		%---------------------------------------------------------------------
 		%---------------------------------------------------------------------
 		% Overloaded Methods

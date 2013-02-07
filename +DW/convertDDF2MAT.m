@@ -282,6 +282,7 @@ clear nNeural nSegment nAnalog nEvent
 % event entity in the data file.
 %------------------------------------------------------------
 if EVENT
+	fprintf('%s: reading events\n', mfilename);
 	D.Event = DW.readEvent(H, D);
 end
 %------------------------------------------------------------
@@ -292,6 +293,7 @@ end
 % of indexes is equal to the number of samples present for that channel.
 %------------------------------------------------------------
 if ANALOG
+	fprintf('%s: reading analog entities\n', mfilename);
 	D.Analog = DW.readAnalog(H, D);
 end
 %------------------------------------------------------------
@@ -302,6 +304,7 @@ end
 % the number of entries for that segment entity in the file.
 %------------------------------------------------------------
 if SEGMENT
+	fprintf('%s: reading Segment entities\n', mfilename);
 	D.Segment = DW.readSegment(H, D);
 end
 %------------------------------------------------------------
@@ -313,6 +316,7 @@ end
 % neural event entity.
 %------------------------------------------------------------
 if NEURAL
+	fprintf('%s: reading Neural entities\n', mfilename);
 	D.Neural = DW.readNeural(H, D);
 end
 

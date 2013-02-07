@@ -213,7 +213,7 @@ classdef Marker < handle
 		% outcmp is a list of comparisons between the values
 		% outmat is a {n, 2} list of the values that were compared
 		%---------------------------------------------------------------------
-			DataWaveDefaults;	% load defaults
+			DW.DataWaveDefaults;	% load defaults
 			[out, outcmp] = cellcmp(obj.getStimulus(channel), ...
 											objA.getStimulus(channel));
 			if nargout == 3
@@ -256,7 +256,7 @@ classdef Marker < handle
 		% output vector will have the R channel values followed by the L 
 		% channel values
 		%---------------------------------------------------------------------
-			DataWaveDefaults;	% load defaults
+			DW.DataWaveDefaults;	% load defaults
 			% use different indices into tags depending on channel
 			if nargin == 1
 				% get all tags if channel not provided
@@ -290,7 +290,7 @@ classdef Marker < handle
 		% it is assumed that Elist is a cell array of values (pre-converted
 		% from strings) for the Marker parameters (listed in MARKER_TAGS)
 		%---------------------------------------------------------------------
-			DataWaveDefaults;		% load defaults
+			DW.DataWaveDefaults;		% load defaults
 			% check that Elist is a cell
 			if ~iscell(Elist)
 				error('%s: list of values must be in cell format', mfilename);
@@ -336,7 +336,7 @@ classdef Marker < handle
 		%---------------------------------------------------------------------
 		% parses string into individual properties for Marker object
 		%---------------------------------------------------------------------
-			DataWaveDefaults;	% load defaults
+			DW.DataWaveDefaults;	% load defaults
 			if length(varargin) == 1
 				obj.string = varargin{1};
 			end
@@ -365,7 +365,7 @@ classdef Marker < handle
 		% identifyStimulus(obj)
 		%---------------------------------------------------------------------
 		%---------------------------------------------------------------------
-			DataWaveDefaults;	% load defaults
+			DW.DataWaveDefaults;	% load defaults
 			% Identify Stimulus types, store in obj.Marker structure
 			obj.checkStimulusType('R');
 			obj.checkStimulusType('L');
@@ -393,7 +393,7 @@ classdef Marker < handle
 		%------------------------------------------------------------------------
 		% See: readDataWaveHeader 
 		%------------------------------------------------------------------------
-			DataWaveDefaults;				% load defaults
+			DW.DataWaveDefaults;				% load defaults
 			unknownFlag = 0;
 			% build some tagnames
 			wavtag = ['WavFilename' C];
@@ -582,7 +582,7 @@ classdef Marker < handle
 		function out = eq(objA, objB)
 		%---------------------------------------------------------------------
 		%---------------------------------------------------------------------
-			DataWaveDefaults;	% load defaults
+			DW.DataWaveDefaults;	% load defaults
 			% find fields to compare
 			numfields = find( strcmp('int', MARKER_TYPES) | ...
 									strcmp('float', MARKER_TYPES) );
