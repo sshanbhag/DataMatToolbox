@@ -70,8 +70,6 @@ classdef Wav < DW.Stimulus
 			%--------------------------------------------------------
 			% Noise-specific init
 			%--------------------------------------------------------
-			% set Type (def. in Stimulus) to NOISE
-			obj.Type = 'WAV';
 			if isempty(varargin)
 				return
 			elseif length(varargin) == 1
@@ -113,7 +111,45 @@ classdef Wav < DW.Stimulus
 		% Overloaded Methods
 		%---------------------------------------------------------------------
 		%---------------------------------------------------------------------
+		%---------------------------------------------------------------------
+		%---------------------------------------------------------------------
+		function [mval, mcomp] = match(obj, B)
+			% first, check that classes are the same
+			if ~strcmpi(class(obj), class(B))
+				mval = 0;
+				mcomp = 0;
+				return
+			end
+			
+			% call superclass method
+			[mval_s, mcomp_s] = match@DW.Stimulus(obj, B);
+			if ~mval_s
+				mval = mval_s;
+				mcomp = mcomp_s;
+				return
+			end
+			
+			% compare local properties
 
+			% list the properties to match here.  
+			matchprop = {	'Filename'	};
+			np = length(matchprop);
+			% preallocate zeros vector for item comparisons
+			mcomp = zeros(np, 1);
+			% loop through properties to compare
+			for n = 1:np
+				mcomp(n) = strcmpi( obj.(matchprop{n}), B.(matchprop{n}) );
+			end
+			% if they're all 1, 
+			if all(mcomp)
+				mval = 1;
+			else
+				mval = 0;
+			end
+		end	% END match FUNCTION
+		%---------------------------------------------------------------------
+		%---------------------------------------------------------------------
+		
 		%---------------------------------------------------------------------
 		%---------------------------------------------------------------------
 		% set/get Methods

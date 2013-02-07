@@ -53,7 +53,7 @@ classdef Stimulus < handle
 	% Protected Properties
 	%------------------------------------------------------------------------
 	properties (SetAccess = protected)
-		Type
+% 		Type
 		Channel
 		Amplitude
 		Attenuation
@@ -169,6 +169,43 @@ classdef Stimulus < handle
 
 		%---------------------------------------------------------------------
 		%---------------------------------------------------------------------
+		function [mval, mcomp] = match(obj, B)
+			% first, check that classes are the same
+			if ~strcmpi(class(obj), class(B))
+				mval = 0;
+				mcomp = 0;
+			else
+				% list the properties to match here.  
+				% Amplitude is left out simply because it is often used as an
+				% adjustment during calibration.  
+				% !!! this list may need to be adjusted in the future!!!!
+				% also, since all properties are numerical, no need to 
+				% split up by type (to use strmatch or simply == for numbers)
+				% this will have to be modified if properties are added that
+				% are strings or characters. subclasses will also need to act
+				% accordingly!
+				matchprop = {	'Channel', 'TimeShift', 'RampUp', 'HoldTime', ...
+									'RampDown', 'FixedDelay'	};
+				np = length(matchprop);
+				% preallocate zeros vector for item comparisons
+				mcomp = zeros(np, 1);
+				% loop through properties to compare
+				for n = 1:np
+					mcomp(n) = ( obj.(matchprop{n}) == B.(matchprop{n}) );
+				end
+				% if they're all 1, 
+				if all(mcomp)
+					mval = 1;
+				else
+					mval = 0;
+				end
+			end
+		end	% END match FUNCTION
+		%---------------------------------------------------------------------
+		%---------------------------------------------------------------------
+		
+		%---------------------------------------------------------------------
+		%---------------------------------------------------------------------
 		% Overloaded Methods
 		%---------------------------------------------------------------------
 		%---------------------------------------------------------------------
@@ -178,7 +215,6 @@ classdef Stimulus < handle
 		% set/get Methods
 		%---------------------------------------------------------------------
 		%---------------------------------------------------------------------
-		
 	
 	end	% End of methods
 end	% End of classdef

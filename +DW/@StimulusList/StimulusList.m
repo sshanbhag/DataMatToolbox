@@ -167,7 +167,7 @@ classdef StimulusList < handle
 					% otherwise, both channels active, Channel set to 'B'
 					obj.Channel(n) = 'B';
 				end
-				fprintf('stim %d: channel = %s', n, obj.Channel{n});				
+				fprintf('stim %d: channel = %s', n, obj.Channel(n));				
 				fprintf('\t\t(%s\t%s)\n', lstim, rstim);
 				% set Type
 				obj.Type(n, :) = {lstim rstim};
@@ -281,7 +281,7 @@ classdef StimulusList < handle
 						postindx = m + 1;
 					end
 
-					if obj.Channel{s} == 'L'
+					if obj.Channel(s) == 'L'
 						obj.Sweepstart{s}(w) = Markers(m).OutputTimestampL;
 						if isempty(SweepDuration)
 							obj.Sweepend{s}(w) = ...
@@ -289,14 +289,14 @@ classdef StimulusList < handle
 						else
 							obj.Sweepend{s}(w) = obj.Sweepstart{s}(w) + SweepDuration;
 						end
-					elseif obj.Channel{s} == 'R'
+					elseif obj.Channel(s) == 'R'
 						obj.Sweepstart{s}(w) = Markers(m).OutputTimestampR;
 						if isempty(SweepDuration)
 							obj.Sweepend{s}(w) = Markers(postindx).OutputTimestampR;
 						else
 							obj.Sweepend{s}(w) = obj.Sweepstart{s}(w) + SweepDuration;
 						end
-					elseif obj.Channel{s} == 'B'
+					elseif obj.Channel(s) == 'B'
 						% use min value of l and r
 						obj.Sweepstart{s}(w) = ...
 													min([Markers(m).OutputTimestampL ...
@@ -309,7 +309,7 @@ classdef StimulusList < handle
 							obj.Sweepend{s}(w) = obj.Sweepstart{s}(w) + SweepDuration;
 						end
 					else
-						error('%s: bad channel value %s', mfilename, obj.Channel{s});
+						error('%s: bad channel value %s', mfilename, obj.Channel(s));
 					end
 					% correct final sweep time
 					if postindx == Nmarkers
@@ -340,7 +340,7 @@ classdef StimulusList < handle
 				
 			end	% END s
 			
-			
+			varargout{1} = s;
 			
 		end	% END findMatchingStim FUNCTION
 		%---------------------------------------------------------------------
