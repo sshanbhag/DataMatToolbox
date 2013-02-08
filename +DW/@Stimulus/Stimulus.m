@@ -169,37 +169,78 @@ classdef Stimulus < handle
 
 		%---------------------------------------------------------------------
 		%---------------------------------------------------------------------
-		function [mval, mcomp] = match(obj, B)
-			% first, check that classes are the same
-			if ~strcmpi(class(obj), class(B))
-				mval = 0;
-				mcomp = 0;
-			else
-				% list the properties to match here.  
-				% Amplitude is left out simply because it is often used as an
-				% adjustment during calibration.  
-				% !!! this list may need to be adjusted in the future!!!!
-				% also, since all properties are numerical, no need to 
-				% split up by type (to use strmatch or simply == for numbers)
-				% this will have to be modified if properties are added that
-				% are strings or characters. subclasses will also need to act
-				% accordingly!
-				matchprop = {	'Channel', 'TimeShift', 'RampUp', 'HoldTime', ...
-									'RampDown', 'FixedDelay'	};
-				np = length(matchprop);
-				% preallocate zeros vector for item comparisons
-				mcomp = zeros(np, 1);
-				% loop through properties to compare
-				for n = 1:np
-					mcomp(n) = ( obj.(matchprop{n}) == B.(matchprop{n}) );
-				end
-				% if they're all 1, 
-				if all(mcomp)
-					mval = 1;
-				else
-					mval = 0;
+		function varargout = getmatchproperties(obj)
+		%---------------------------------------------------------------------
+		% [names, type, values] = Stimulus.getmatchproperties
+		%---------------------------------------------------------------------
+			
+			%-----------------------------------------------
+			% list the properties to match here.  
+			% Amplitude is left out simply because it is often used as an
+			% adjustment during calibration.  
+			% !!! this list may need to be adjusted in the future!!!!
+			% property_type char vector has 'n' for numeric type, 'c' for char
+			% this will have to be modified if properties are added 
+			% subclasses will also need to act accordingly!
+			%-----------------------------------------------
+			property_name = {	'Channel', 'TimeShift', 'RampUp', 'HoldTime', ...
+								'RampDown', 'FixedDelay'	};
+			property_type = [ 'n' 'n' 'n' 'n' 'n' 'n' ];
+			nprop = length(property_name);
+			
+			% get property values
+			if any( nargout == [0 1])
+				varargout{1} = property_name;
+			end
+			% get property names for 2nd output arg
+			if nargout == 2
+				varargout{2} = property_type;
+			end
+			% get property type for 3rd output arg
+			if nargout == 3
+				varargout{3} = cell(nprop, 1);
+				for n = 1:nprop
+					varargout{1}{n} = obj.(property_name{n});
 				end
 			end
+		end
+		%---------------------------------------------------------------------
+		%---------------------------------------------------------------------
+		
+		%---------------------------------------------------------------------
+		%---------------------------------------------------------------------
+		function [mval, mcomp] = match(obj, B)
+		%---------------------------------------------------------------------
+		% [mval, mcomp] = Stimulus.match(stimobj)
+		%---------------------------------------------------------------------
+			matchprop = obj.getmatchproperties;
+			np = length(matchprop);	
+			nB = length(B);
+			mval = zeros(nB, 1);
+			mcomp = cell(nB, 1);
+			
+			for b = 1:nB;
+				%-----------------------------------------------
+				% first, check that classes are the same
+				%-----------------------------------------------
+				if ~strcmpi(class(obj), class(B(b)))
+					mval(b) = 0;
+					mcomp{b} = 0;
+				else
+					% preallocate zeros vector for item comparisons
+					mcomp{b} = zeros(np, 1);
+					% loop through properties to compare
+					for n = 1:np
+						mcomp{b}(n) = ( obj.(matchprop{n}) == B(b).(matchprop{n}) );
+					end
+					% if they're all 1, 
+					if all(mcomp{b})
+						mval(b) = 1;
+					else
+						mval(b) = 0;
+					end
+				end	% END if
+			end	% END b
 		end	% END match FUNCTION
 		%---------------------------------------------------------------------
 		%---------------------------------------------------------------------

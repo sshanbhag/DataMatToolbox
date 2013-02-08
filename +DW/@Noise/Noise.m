@@ -116,6 +116,66 @@ classdef Noise < DW.Stimulus
 
 		%---------------------------------------------------------------------
 		%---------------------------------------------------------------------
+		function [mval, mcomp] = match(obj, B)
+		%---------------------------------------------------------------------
+		% [mval, mcomp] = Noise.match(wavobj)
+		%---------------------------------------------------------------------
+
+			%-----------------------------------------------
+			% list the properties to match here.
+			%-----------------------------------------------
+			matchprop = {	'LowerFreq', 'UpperFreq'	};
+			matchtype = {	'n', 'n'	};		% c = char, n = num
+			np = length(matchprop);			
+			nB = length(B);
+			mval = zeros(nB, 1);
+			mcomp = cell(nB, 1);
+			%-----------------------------------------------
+			% loop through the B elements
+			%-----------------------------------------------
+			for b = 1:nB;
+				%-----------------------------------------------
+				% first, check that classes are the same
+				%-----------------------------------------------
+				if ~strcmpi(class(obj), class(B(b)))
+					mval(b) = 0;
+					mcomp{b} = 0;
+				else
+					%-----------------------------------------------
+					% call superclass method
+					%-----------------------------------------------
+					[mval_s, mcomp_s] = match@DW.Stimulus(obj, B);
+					if ~mval_s
+						% if the superclass says they're different, who are 
+						% we to complain?
+						mval(b) = mval_s;
+						mcomp{b} = mcomp_s;
+					else
+						% preallocate zeros vector for item comparisons
+						mcomp{b} = zeros(np, 1);
+						% loop through properties to compare
+						for n = 1:np
+							if matchtype{n} == 'c'
+								mcomp{b}(n) = strcmpi( obj.(matchprop{n}), B(b).(matchprop{n}) );
+							else
+								mcomp{b}(n) = ( obj.(matchprop{n}) == B(b).(matchprop{n}) );								
+							end
+						end
+						% if they're all 1, 
+						if all(mcomp{b})
+							mval(b) = 1;
+						else
+							mval(b) = 0;
+						end
+					end	% END if ~mval_s
+				end	% END if ~strcmpi
+			end	% END b
+		end	% END match FUNCTION	
+		%---------------------------------------------------------------------
+		%---------------------------------------------------------------------
+		
+		%---------------------------------------------------------------------
+		%---------------------------------------------------------------------
 		% set/get Methods
 		%---------------------------------------------------------------------
 		%---------------------------------------------------------------------

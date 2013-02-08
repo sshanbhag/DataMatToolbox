@@ -1,17 +1,41 @@
-load d
+function varargout = scratch(varargin)
+	nargout
+	
+	varargout{1} = 'arg1';
+
+end
 
 
 
 
-SWEEPDUR = 1 / d.Info.TimeStampResolution;
-ENDTIME = d.Info.TimeSpan;
 
-Nmarkers = length(d.Markers);
+%{ 
+load F:\Work\Data\DataWave\DDFtest\d.mat
 
-Sweepstart = cell(d.Stimuli.N, 1);
-Sweepend = cell(d.Stimuli.N, 1);
-PreSweep = cell(d.Stimuli.N, 1);
-PostSweep = cell(d.Stimuli.N, 1);
+for stim = 1:d.Stimuli.N
+	fprintf('%d\t\t%s\n', stim, d.Stimuli.S{stim, 2}.Filename)
+	
+	
+end
+return
+% check channel for this stimulus
+c = d.Stimuli.Channel(stim)
+
+switch c
+	
+	case 'L'
+		
+		
+	case 'R'
+		
+		[m, mlist] = d.Stimuli.S{stim, 2}.match(d.Stimuli.S(:, 2))
+		
+	case 'B'
+		
+end
+
+%}
+
 
 %{
 for stim = 1:d.Stimuli.N

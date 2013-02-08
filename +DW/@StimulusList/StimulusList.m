@@ -334,6 +334,9 @@ classdef StimulusList < handle
 		function varargout = findMatching(obj)
 			
 			for s = 1:obj.N
+				% need to take into account channels
+				if obj.Channel == 'B'
+				end
 				
 				
 				
