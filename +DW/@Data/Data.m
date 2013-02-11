@@ -120,7 +120,7 @@ classdef Data < handle
 			if nargin > 1
 				obj.fullfname = varargin{2};
 				[obj.fpath, obj.fname, obj.fext] = fileparts(varargin{2});
-			end			
+			end
 		end	% END Data CONSTRUCTOR
 		%------------------------------------------------------------------------
 		%------------------------------------------------------------------------
@@ -158,8 +158,10 @@ classdef Data < handle
 			obj.loadStimuli;
 			% convert segments to Probes
 			obj.loadProbes(D.Segment);
-			
-
+			% get sweep times
+			obj.Stimuli.extractTimeFromMarkers(obj.Markers);
+			% find stimulus groups (same apart from attenuation)
+			obj.Stimuli.findCommon;
 		end	% END initFromStruct
 		%------------------------------------------------------------------------
 		%------------------------------------------------------------------------
@@ -430,7 +432,6 @@ classdef Data < handle
 		end	% END loadProbes
 		%------------------------------------------------------------------------
 		%------------------------------------------------------------------------
-
 		
 	end	% End of methods
 	%------------------------------------------------------------------------

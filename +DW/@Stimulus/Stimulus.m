@@ -187,16 +187,21 @@ classdef Stimulus < handle
 								'RampDown', 'FixedDelay'	};
 			property_types = { 'num', 'num', 'num', 'num', 'num', 'num' };
 			nprop = length(property_names);
-			
+			%-----------------------------------------------
 			% get property values
+			%-----------------------------------------------
 			if any( nargout == (0:3))
 				varargout{1} = property_names;
 			end
+			%-----------------------------------------------
 			% get property names for 2nd output arg
+			%-----------------------------------------------
 			if any(nargout == (2:3))
 				varargout{2} = property_types;
 			end
+			%-----------------------------------------------
 			% get property type for 3rd output arg
+			%-----------------------------------------------
 			if nargout == 3
 				varargout{3} = cell(length(property_names), 1);
 				for n = 1:length(property_names)
@@ -213,30 +218,61 @@ classdef Stimulus < handle
 		%---------------------------------------------------------------------
 		% [mval, mcomp] = Stimulus.match(stimobj)
 		%---------------------------------------------------------------------
-			matchprop = obj.getmatchproperties;
-			np = length(matchprop);	
+		
+			%-----------------------------------------------------------
+			% get the property names and types to match 
+			%-----------------------------------------------------------
+			[mProp, mType] = obj.getmatchproperties;
+			% get lengths
+			np = length(mProp);	
 			nB = length(B);
+			% preallocate things
 			mval = zeros(nB, 1);
 			mcomp = cell(nB, 1);
-			
+
+			%-----------------------------------------------------------
+			% loop through the input B (can be a singleton or a vector!)
+			%-----------------------------------------------------------
 			for b = 1:nB;
+				% local copy of element in B (in order to allow for
+				% arrays or cells of data)
+				if iscell(B)
+					Btmp = B{b};
+				else
+					Btmp = B(b);
+				end
 				%-----------------------------------------------
 				% first, check that classes are the same
 				%-----------------------------------------------
-				if ~strcmpi(class(obj), class(B(b)))
+				if ~strcmpi(class(obj), class(Btmp))
+					% if they're not the same, assign zeros
 					mval(b) = 0;
 					mcomp{b} = 0;
 				else
+					%-----------------------------------------------
+					% since they are the same, compare values
+					%-----------------------------------------------
 					% preallocate zeros vector for item comparisons
 					mcomp{b} = zeros(np, 1);
 					% loop through properties to compare
 					for n = 1:np
-						mcomp{b}(n) = ( obj.(matchprop{n}) == B(b).(matchprop{n}) );
+						% compare using appropriate method for property type
+						if strcmpi(mType{n}, 'num')
+							% number!
+							mcomp{b}(n) = ( obj.(mProp{n}) == Btmp.(mProp{n}) );
+						elseif strcmpi(mType{n}, 'char')
+							% char (or string)!
+							mcomp{b}(n) = strcmp(obj.(mProp{n}), Btmp.(mProp{n}));
+						else
+							% WTF????
+							error('%s: unknown type %s!!!!', mfilename, mType{n});
+						end
 					end
-					% if they're all 1, 
 					if all(mcomp{b})
+						% if they're all 1, they match
 						mval(b) = 1;
 					else
+						% if not, they don't and mval(b) is 0
 						mval(b) = 0;
 					end
 				end	% END if

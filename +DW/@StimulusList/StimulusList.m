@@ -56,6 +56,7 @@ classdef StimulusList < handle
 		MarkerList
 		Tagstring
 		S = {};
+		GroupList = {};
 		Type
 		Channel
 		Var
@@ -331,20 +332,60 @@ classdef StimulusList < handle
 		
 		%---------------------------------------------------------------------
 		%---------------------------------------------------------------------
-		function varargout = findMatching(obj)
+		function varargout = findCommon(obj)
 			
-			for s = 1:obj.N
-				% need to take into account channels
-				if obj.Channel == 'B'
+			%----------------------------------
+			% initialize values
+			%----------------------------------
+			obj.GroupList = {};
+			runFlag = 1;
+			nUnique = 0;
+			% search all indices initially
+			searchIndices = 1:obj.N;
+			%----------------------------------
+			% loop
+			%----------------------------------
+			while runFlag
+				stim = searchIndices(1);
+				fprintf('%d:\t', stim);
+				% check channel for current stimulus
+				c = obj.Channel(stim);
+				% compare current stim to other stims
+				if strcmpi(c, 'L') || strcmpi(c, 'B')
+					% if channel is L or Both, compare left, store matches in lcomp
+					[lcomp, llist] = obj.S{stim, 1}.match(obj.S(searchIndices, 1));
+					fprintf('%s\t', obj.S{stim, 1}.Filename);
 				end
-				
-				
-				
-				
-			end	% END s
-			
-			varargout{1} = s;
-			
+				if strcmpi(c, 'R') || strcmpi(c, 'B')
+					% if channel is R or Both, compare right, store matches in rcomp
+					[rcomp, rlist] = obj.S{stim, 2}.match(obj.S(searchIndices, 2));
+					fprintf('%s\t', obj.S{stim, 2}.Filename);
+				end
+				fprintf('\n');
+				if strcmpi(c, 'B')
+					% if channel is Both, AND the lcomp and rcomp
+					comp = lcomp & rcomp;
+				else
+					% otherwise, use appropriate channels results
+					if strcmpi(c, 'L')
+						comp = lcomp;
+					else
+						comp = rcomp;
+					end
+				end
+				% store unique indices
+				nUnique = nUnique + 1;
+				obj.GroupList{nUnique} = find(comp);
+				% eliminate them from the list to search
+				searchIndices = searchIndices(~logical(comp));
+				% Check if we're done
+				if isempty(searchIndices)
+					runFlag = 0;
+				end
+			end
+			if nargout
+				varargout{1} = obj.GroupList;
+			end
 		end	% END findMatchingStim FUNCTION
 		%---------------------------------------------------------------------
 		%---------------------------------------------------------------------

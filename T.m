@@ -46,6 +46,7 @@ classdef T < handle
 		function [mval, mcomp] = match(obj, B)
 		%---------------------------------------------------------------------
 		%---------------------------------------------------------------------
+		
 			%-----------------------------------------------------------
 			% get the property names and types to match 
 			%-----------------------------------------------------------
@@ -84,7 +85,7 @@ classdef T < handle
 							mcomp{b}(n) = strcmp(obj.(mProp{n}), B(b).(mProp{n}));
 						else
 							% WTF????
-							error('%s: unknown type %s!!!!', mfilename, mType{b});
+							error('%s: unknown type %s!!!!', mfilename, mType{n});
 						end
 					end
 					if all(mcomp{b})

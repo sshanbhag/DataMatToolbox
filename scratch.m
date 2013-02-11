@@ -1,86 +1,52 @@
 
-
-
-
-%{ 
-load F:\Work\Data\DataWave\DDFtest\d.mat
-
-for stim = 1:d.Stimuli.N
-	fprintf('%d\t\t%s\n', stim, d.Stimuli.S{stim, 2}.Filename)
-	
-	
-end
-return
-% check channel for this stimulus
-c = d.Stimuli.Channel(stim)
-
-switch c
-	
-	case 'L'
-		
-		
-	case 'R'
-		
-		[m, mlist] = d.Stimuli.S{stim, 2}.match(d.Stimuli.S(:, 2))
-		s
-	case 'B'
-		
+for n = 1:d.Stimuli.N
+	fn{n} = d.Stimuli.S{n, 2}.Filename;
 end
 
-%}
+runFlag = 1;
+nUnique = 0;
 
+% search all indices initially
+searchIndices = 1:d.Stimuli.N;
 
-%{
-for stim = 1:d.Stimuli.N
-% for stim = 1:1
-	fprintf('%d sweeps for stimulus %d\n', d.Stimuli.Nsweeps(stim), stim);
-	Sweepstart{stim} = zeros(d.Stimuli.Nsweeps(stim), 1);
-	Sweepend{stim} = zeros(d.Stimuli.Nsweeps(stim), 1);
-	PreSweep{stim} = zeros(d.Stimuli.Nsweeps(stim), 1);
-	PostSweep{stim} = zeros(d.Stimuli.Nsweeps(stim), 1);
+while runFlag
+	stim = searchIndices(1);
+	fprintf('%d:\t%s\t%s\n', stim, d.Stimuli.S{stim, 2}.Filename, d.Stimuli.Channel(stim))
 
-	for sweep = 1:d.Stimuli.Nsweeps(stim)
-		mindx = d.Stimuli.MarkerList{stim}(sweep);
-		fprintf('\t%.0f\t\t%.0f\t%s\t%.0f\n', d.Markers(mindx).OutputTimestampL, ...
-			d.Markers(mindx).OutputTimestampR, d.Markers(mindx).WavFilenameR, ...
-			d.Markers(mindx).AttenuationR);
-		
-		if mindx == 1
-			preindx = 0;
-		else
-			preindx = mindx - 1;
-		end
-		if mindx == Nmarkers
-			postindx = Nmarkers;
-		else
-			postindx = mindx + 1;
-		end
-		
-		if d.Stimuli.Channel{stim} == 'L'
-			Sweepstart{stim}(sweep) = d.Markers(mindx).OutputTimestampL;
-			Sweepend{stim}(sweep) = d.Markers(postindx).OutputTimestampL;
-		elseif d.Stimuli.Channel{stim} == 'R'
-			Sweepstart{stim}(sweep) = d.Markers(mindx).OutputTimestampR;
-			Sweepend{stim}(sweep) = d.Markers(postindx).OutputTimestampR;			
-		elseif d.Stimuli.Channel{stim} == 'B'
-			% use min value of l and r
-			Sweepstart{stim}(sweep) = min([d.Markers(mindx).OutputTimestampL ...
-														d.Markers(mindx).OutputTimestampR]);
-			Sweepend{stim}(sweep) = min([d.Markers(postindx).OutputTimestampL ...
-														d.Markers(postindx).OutputTimestampR]);
-		else
-			error('%s: bad channel value %s', mfilename, d.Stimuli.Channel{stim});
-		end
-		% correct final sweep time
-		if postindx == Nmarkers
-			Sweepend{stim}(sweep) = Sweepstart{stim}(sweep) + SWEEPDUR; 
-		end
-		PreSweep{stim}(sweep) = preindx;
-		PostSweep{stim}(sweep) = postindx;
-
-	end	% END sweep
+	% check channel for current stimulus
+	c = d.Stimuli.Channel(stim);
 	
+	% compare current stim to other stims
+	if strcmpi(c, 'L') || strcmpi(c, 'B')
+		% if channel is L or Both, compare left, store matches in lcomp
+		[lcomp, llist] = d.Stimuli.S{stim, 1}.match(d.Stimuli.S(searchIndices, 1));
+	end
+	if strcmpi(c, 'R') || strcmpi(c, 'B')
+		% if channel is R or Both, compare right, store matches in rcomp
+		[rcomp, rlist] = d.Stimuli.S{stim, 2}.match(d.Stimuli.S(searchIndices, 2));
+	end
+	if strcmpi(c, 'B')
+		% if channel is Both, AND the lcomp and rcomp
+		comp = lcomp & rcomp;
+	else
+		% otherwise, use appropriate channels results
+		if strcmpi(c, 'L')
+			comp = lcomp;
+		else
+			comp = rcomp;
+		end
+	end
 	
+	% store unique indices
+	nUnique = nUnique + 1;
+	group{nUnique} = find(comp); %#ok<SAGROW>
+	% eliminate them from the list to search
+	searchIndices = searchIndices(~logical(comp));
+
+	if (stim == d.Stimuli.N) || isempty(searchIndices)
+		% stop
+		runFlag = 0;
+	end
 	
-end	% END stim
-%}
+end
+

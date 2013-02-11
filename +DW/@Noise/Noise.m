@@ -116,61 +116,47 @@ classdef Noise < DW.Stimulus
 
 		%---------------------------------------------------------------------
 		%---------------------------------------------------------------------
-		function [mval, mcomp] = match(obj, B)
+		function varargout = getmatchproperties(obj)
 		%---------------------------------------------------------------------
-		% [mval, mcomp] = Noise.match(wavobj)
+		% [names, types, values] = Noise.getmatchproperties
 		%---------------------------------------------------------------------
-
+		% Method to return properties used by Stimulus.match method
+		% (superclass).  
+		% 	names is N X 1 cell vector of property names
+		% 	types is N X 1 cell vector of property types
+		% 						'num' indicates numeric type
+		% 						'char' indicates character or string type
+		% 	values is N X 1 cell vector of valus of properties listed in names
+		%---------------------------------------------------------------------
+			
 			%-----------------------------------------------
-			% list the properties to match here.
+			% list the properties to match here.  
 			%-----------------------------------------------
-			matchprop = {	'LowerFreq', 'UpperFreq'	};
-			matchtype = {	'n', 'n'	};		% c = char, n = num
-			np = length(matchprop);			
-			nB = length(B);
-			mval = zeros(nB, 1);
-			mcomp = cell(nB, 1);
+			property_names = {	'LowerFreq', 'UpperFreq'	};
+			property_types = {	'num', 'num'	};		% c = char, n = num
+			nprop = length(property_names);
 			%-----------------------------------------------
-			% loop through the B elements
+			% get property values
 			%-----------------------------------------------
-			for b = 1:nB;
-				%-----------------------------------------------
-				% first, check that classes are the same
-				%-----------------------------------------------
-				if ~strcmpi(class(obj), class(B(b)))
-					mval(b) = 0;
-					mcomp{b} = 0;
-				else
-					%-----------------------------------------------
-					% call superclass method
-					%-----------------------------------------------
-					[mval_s, mcomp_s] = match@DW.Stimulus(obj, B);
-					if ~mval_s
-						% if the superclass says they're different, who are 
-						% we to complain?
-						mval(b) = mval_s;
-						mcomp{b} = mcomp_s;
-					else
-						% preallocate zeros vector for item comparisons
-						mcomp{b} = zeros(np, 1);
-						% loop through properties to compare
-						for n = 1:np
-							if matchtype{n} == 'c'
-								mcomp{b}(n) = strcmpi( obj.(matchprop{n}), B(b).(matchprop{n}) );
-							else
-								mcomp{b}(n) = ( obj.(matchprop{n}) == B(b).(matchprop{n}) );								
-							end
-						end
-						% if they're all 1, 
-						if all(mcomp{b})
-							mval(b) = 1;
-						else
-							mval(b) = 0;
-						end
-					end	% END if ~mval_s
-				end	% END if ~strcmpi
-			end	% END b
-		end	% END match FUNCTION	
+			if any( nargout == (0:3))
+				varargout{1} = property_names;
+			end
+			%-----------------------------------------------
+			% get property names for 2nd output arg
+			%-----------------------------------------------
+			if any(nargout == (2:3))
+				varargout{2} = property_types;
+			end
+			%-----------------------------------------------
+			% get property type for 3rd output arg
+			%-----------------------------------------------
+			if nargout == 3
+				varargout{3} = cell(length(property_names), 1);
+				for n = 1:length(property_names)
+					varargout{1}{n} = obj.(property_names{n});
+				end
+			end
+		end	% END getmatchproperties
 		%---------------------------------------------------------------------
 		%---------------------------------------------------------------------
 		
