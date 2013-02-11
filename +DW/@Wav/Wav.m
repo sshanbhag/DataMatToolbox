@@ -155,7 +155,7 @@ classdef Wav < DW.Stimulus
 			%-----------------------------------------------
 			% list the properties to match here.
 			%-----------------------------------------------
-			[matchprop = {	'Filename'	};
+			matchprop = {	'Filename'	};
 			matchtype = {	'c'	};		% c = char, n = num
 			np = length(matchprop);			
 			nB = length(B);

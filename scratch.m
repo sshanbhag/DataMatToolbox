@@ -1,10 +1,3 @@
-function varargout = scratch(varargin)
-	nargout
-	
-	varargout{1} = 'arg1';
-
-end
-
 
 
 
@@ -29,7 +22,7 @@ switch c
 	case 'R'
 		
 		[m, mlist] = d.Stimuli.S{stim, 2}.match(d.Stimuli.S(:, 2))
-		
+		s
 	case 'B'
 		
 end

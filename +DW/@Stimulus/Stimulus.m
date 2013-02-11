@@ -175,7 +175,7 @@ classdef Stimulus < handle
 		%---------------------------------------------------------------------
 			
 			%-----------------------------------------------
-			% list the properties to match here.  
+			% list the properties (and type) to match here.  
 			% Amplitude is left out simply because it is often used as an
 			% adjustment during calibration.  
 			% !!! this list may need to be adjusted in the future!!!!
@@ -183,27 +183,27 @@ classdef Stimulus < handle
 			% this will have to be modified if properties are added 
 			% subclasses will also need to act accordingly!
 			%-----------------------------------------------
-			property_name = {	'Channel', 'TimeShift', 'RampUp', 'HoldTime', ...
+			property_names = {	'Channel', 'TimeShift', 'RampUp', 'HoldTime', ...
 								'RampDown', 'FixedDelay'	};
-			property_type = [ 'n' 'n' 'n' 'n' 'n' 'n' ];
-			nprop = length(property_name);
+			property_types = { 'num', 'num', 'num', 'num', 'num', 'num' };
+			nprop = length(property_names);
 			
 			% get property values
-			if any( nargout == [0 1])
-				varargout{1} = property_name;
+			if any( nargout == (0:3))
+				varargout{1} = property_names;
 			end
 			% get property names for 2nd output arg
-			if nargout == 2
-				varargout{2} = property_type;
+			if any(nargout == (2:3))
+				varargout{2} = property_types;
 			end
 			% get property type for 3rd output arg
 			if nargout == 3
-				varargout{3} = cell(nprop, 1);
-				for n = 1:nprop
-					varargout{1}{n} = obj.(property_name{n});
+				varargout{3} = cell(length(property_names), 1);
+				for n = 1:length(property_names)
+					varargout{1}{n} = obj.(property_names{n});
 				end
 			end
-		end
+		end	% END getmatchproperties
 		%---------------------------------------------------------------------
 		%---------------------------------------------------------------------
 		
