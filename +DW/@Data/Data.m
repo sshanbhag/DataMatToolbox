@@ -426,12 +426,46 @@ classdef Data < handle
 				obj.Probes(n).cluster = Segment(n).SourceInfo.ProbeInfo;
 			end
 			clear Segment
+			obj.Nprobes = nSegments;
 			if nargout
 				varargout{1} = unitID;
 			end
 		end	% END loadProbes
 		%------------------------------------------------------------------------
 		%------------------------------------------------------------------------
+		
+		
+		function spikes = getSpikesForStimulusGroup(obj, groupnum, probenum)
+			% # of groups available
+			ngroups = length(obj.Stimuli.GroupList);
+			% check to make sure groupnum is within bounds
+			if ~between(groupnum, 1, ngroups)
+				error('%s: group must be in range [1:%d]', mfilename, ngroups)
+			end
+			if ~between(probenum, 1, length(obj.Probes))
+				error('%s: probe must be in range [1:%d]', mfilename, ...
+																		length(obj.Probes));
+			end
+			% get the list of stimuli for this group
+			Sindx = obj.Stimuli.GroupList{groupnum};
+			% allocate spikes vector
+			spikes = cell(length(Sindx), 1);
+			% get timestamps (in seconds!)
+			Spiketimes = obj.Probes(probenum).t;
+			% convert to microseconds
+			Spiketimes = 1e6 * Spiketimes;
+			% loop through the groups
+			for sloop = 1:length(Sindx)
+				s = Sindx(sloop);
+				% get the spikes for this stimulus
+				spikes{sloop} = find_valid_timestamps(Spiketimes, ...
+																  obj.Stimuli.Sweepstart{s}, ...
+																	obj.Stimuli.Sweepend{s});
+			end
+		end	% END getSpikes
+		
+		
+		
 		
 	end	% End of methods
 	%------------------------------------------------------------------------

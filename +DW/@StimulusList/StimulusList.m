@@ -341,6 +341,7 @@ classdef StimulusList < handle
 			runFlag = 1;
 			nUnique = 0;
 			% search all indices initially
+			masterList = 1:obj.N;
 			searchIndices = 1:obj.N;
 			%----------------------------------
 			% loop
@@ -368,16 +369,16 @@ classdef StimulusList < handle
 				else
 					% otherwise, use appropriate channels results
 					if strcmpi(c, 'L')
-						comp = lcomp;
+						comp = logical(lcomp);
 					else
-						comp = rcomp;
+						comp = logical(rcomp);
 					end
 				end
 				% store unique indices
 				nUnique = nUnique + 1;
-				obj.GroupList{nUnique} = find(comp);
+				obj.GroupList{nUnique} = searchIndices(comp);
 				% eliminate them from the list to search
-				searchIndices = searchIndices(~logical(comp));
+				searchIndices = searchIndices(~(comp));
 				% Check if we're done
 				if isempty(searchIndices)
 					runFlag = 0;
