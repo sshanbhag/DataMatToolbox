@@ -6,24 +6,18 @@
 % Class Definition
 %-----------------------------------------------------------------------------
 %	Properties:
-% 		Type							'TONE', 'NOISE', 'WAVFILE'
 % 		Channel						'R', 'L', 'B'
-% 		Indices						array of indices into Marker arrays (above)
-% 		Nreps							# of times this stimulus was presented 
-% 		Var							varying variables for this stimulus
-% 		Nsweeps						# of times this stimulus was presented
-% 		Sweepstart					list of start times for this stimulus
-% 		Sweepend						list of end times for this stimulus
-% 		LAttenVals					Left channel attenuation values
-% 		LAttenIndices				Indices for respective attenuation sweeps
-% 		RAttenVals					Right channel attenuation values
-% 		RAttenIndices				indices for R attenuaton sweeps
-% 		Spiketimes					{# units, Nsweeps} cell array of unit spike
-% 										timestamps
-% 		Timestamp					first occurance of this Stimulus
-%		Tagstring					for debugging, will disappear eventually
+%		Amplitude					output signal amplitude (mV)
+% 		Attenuation
+% 		TimeShift
+% 		RampUp
+% 		HoldTime
+% 		RampDown
+% 		OutputTimestamp
+% 		OutputTimeWithDelay
+% 		FixedDelay
 %-----------------------------------------------------------------------------
-% See also: DWdata, Marker, Probe, Unit
+% See also: Wav, Tone, Noise, StimulusList, Data, Marker, Probe, Unit
 %-----------------------------------------------------------------------------
 
 %-----------------------------------------------------------------------------
@@ -33,9 +27,7 @@
 % Created: 4 June, 2012 (SJS)
 %
 % Revisions:
-%-----------------------------------------------------------------------------
-% TO DO:
-%
+%	12 Feb 2013 (SJS): reworked, subclassed (Tone Wav Noise)
 %-----------------------------------------------------------------------------
 
 %*****************************************************************************
@@ -53,7 +45,6 @@ classdef Stimulus < handle
 	% Protected Properties
 	%------------------------------------------------------------------------
 	properties (SetAccess = protected)
-% 		Type
 		Channel
 		Amplitude
 		Attenuation

@@ -62,7 +62,7 @@ classdef Tone < DW.Stimulus
 		% Tone()	when called with no arguments, returns empty
 		%			Tone object
 		%---------------------------------------------------------------------
-			DataWaveDefaults;
+			DW.DataWaveDefaults;
 			%--------------------------------------------------------
 			% call superclass constructor
 			%--------------------------------------------------------
@@ -71,7 +71,6 @@ classdef Tone < DW.Stimulus
 			% Noise-specific init
 			%--------------------------------------------------------
 			% set Type (def. in Stimulus) to NOISE
-			obj.Type = 'TONE';
 			if isempty(varargin)
 				return
 			elseif length(varargin) == 1
@@ -95,7 +94,7 @@ classdef Tone < DW.Stimulus
 		%---------------------------------------------------------------------
 		function obj = setValsFromMarker(obj, Marker, Channel)
 		%---------------------------------------------------------------------
-			DataWaveDefaults;
+			DW.DataWaveDefaults;
 			% set frequency
 			if Channel == R
 				obj.Freq = Marker.ToneFreqR;
@@ -132,7 +131,7 @@ classdef Tone < DW.Stimulus
 			% list the properties to match here.  
 			%-----------------------------------------------
 			property_names = {	'Freq', 'Phase'	};
-			property_types = {	'n', 'n'	};		% c = char, n = num
+			property_types = {	'num', 'num'	};		% c = char, n = num
 			nprop = length(property_names);
 			%-----------------------------------------------
 			% get property values

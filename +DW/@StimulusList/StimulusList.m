@@ -331,8 +331,10 @@ classdef StimulusList < handle
 		%---------------------------------------------------------------------
 		
 		%---------------------------------------------------------------------
-		%---------------------------------------------------------------------
 		function varargout = findCommon(obj)
+		%---------------------------------------------------------------------
+		% varargout = StimulusList.findCommon
+		%---------------------------------------------------------------------
 			
 			%----------------------------------
 			% initialize values
@@ -340,29 +342,28 @@ classdef StimulusList < handle
 			obj.GroupList = {};
 			runFlag = 1;
 			nUnique = 0;
-			% search all indices initially
+			% masterList is list of indices into rows of obj.S
 			masterList = 1:obj.N;
-			searchIndices = 1:obj.N;
+			% search all indices initially - this will be shrunk as
+			% matches are found
+			searchList = 1:obj.N;
 			%----------------------------------
 			% loop
 			%----------------------------------
 			while runFlag
-				stim = searchIndices(1);
-				fprintf('%d:\t', stim);
+				% use first element in searchList as test
+				stim = searchList(1);
 				% check channel for current stimulus
 				c = obj.Channel(stim);
 				% compare current stim to other stims
 				if strcmpi(c, 'L') || strcmpi(c, 'B')
 					% if channel is L or Both, compare left, store matches in lcomp
-					[lcomp, llist] = obj.S{stim, 1}.match(obj.S(searchIndices, 1));
-					fprintf('%s\t', obj.S{stim, 1}.Filename);
+					[lcomp, llist] = obj.S{stim, 1}.match(obj.S(searchList, 1));
 				end
 				if strcmpi(c, 'R') || strcmpi(c, 'B')
 					% if channel is R or Both, compare right, store matches in rcomp
-					[rcomp, rlist] = obj.S{stim, 2}.match(obj.S(searchIndices, 2));
-					fprintf('%s\t', obj.S{stim, 2}.Filename);
+					[rcomp, rlist] = obj.S{stim, 2}.match(obj.S(searchList, 2));
 				end
-				fprintf('\n');
 				if strcmpi(c, 'B')
 					% if channel is Both, AND the lcomp and rcomp
 					comp = lcomp & rcomp;
@@ -374,13 +375,15 @@ classdef StimulusList < handle
 						comp = logical(rcomp);
 					end
 				end
-				% store unique indices
+				% store unique indices (from masterList) in GroupList
 				nUnique = nUnique + 1;
-				obj.GroupList{nUnique} = searchIndices(comp);
+				obj.GroupList{nUnique} = masterList(comp);
 				% eliminate them from the list to search
-				searchIndices = searchIndices(~(comp));
+				searchList = searchList(~(comp));
+				% and shrink the unsearched masterList as well
+				masterList = masterList(~(comp));
 				% Check if we're done
-				if isempty(searchIndices)
+				if isempty(searchList)
 					runFlag = 0;
 				end
 			end

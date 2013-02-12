@@ -4,7 +4,7 @@
 %------------------------------------------------------------
 %------------------------------------------------------------
 close all; clear all;
-FORCEFLAG = 0;
+FORCEFLAG = 1;
 
 %------------------------------------------------------------
 %------------------------------------------------------------
@@ -35,9 +35,15 @@ end
 %********* repetition rate (bat)
 % filename = '12-12-2012--2854_RepRate0.ddf';
 %********* syllables, sorted spikes (bat)
-filename = '01-03-2013--2961_syllable_block_new_sorted.ddf';
+% filename = '01-03-2013--2961_syllable_block_new_sorted.ddf';
+%********* syllables, sorted spikes, multispikes (bat)
+% filename = '01-03-2013--2961_syllable_block_new_sorted.ddf';
+%********* freq/response area, sorted spikes (bat)
+% filename = '829_01-05-2013--2729_FRA_Sorted.ddf';
+%********* repetition rate, sorted spikes (bat)
+% filename = '829_01-05-2013--2729_repRate20_Sorted.ddf';
 %********* Combination sensitivity, Multichannel recording (mouse)
-% filename = '834_012913_combosens_1_spikes_sorted_1_small.ddf';
+filename = '834_012913_combosens_1_spikes_sorted_1_small.ddf';
 
 % generate matfile name for output of converted .ddf data
 [~, matfile] = fileparts(filename);
@@ -68,5 +74,6 @@ end
 %------------------------------------------------------------
 d = DW.Data(D, fullfile(datapath, filename));
 
+save( fullfile(datapath, ['Dobj_' matfile]), 'd', 'D');
 
 

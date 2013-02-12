@@ -41,6 +41,7 @@
 %	 -	major overhaul to use NeuroShare Matlab API and DataWave Neuroshare
 %		interface object (@NS)
 %	31 Jan 2013 (SJS): reworking to avoid segmentation faults 
+%	12 Feb 2013 (SJS): added plotting routines
 %-----------------------------------------------------------------------------
 % TO DO: lots....
 %-----------------------------------------------------------------------------
@@ -415,16 +416,22 @@ classdef Data < handle
 			
 			% pull out timestamps based on unit ID
 			% according to Neuroshare, unit 0 is uncatergorized, 255 is noise
-			unitID = cell(nSegments, 1);
 			for n = 1:nSegments
-				% find unique unit IDs
-				unitID{n} = unique(Segment(n).UnitID);
 				% store timestamps for units with ID 0 - should
 				% probably figure out a way to store/sort all unitIDs at some
 				% point........
-				obj.Probes(n).t = Segment(n).TimeStamp(Segment(n).UnitID == 0);
-				obj.Probes(n).cluster = Segment(n).SourceInfo.ProbeInfo;
-			end
+				% also, convert to microseconds (from seconds!!!)
+				obj.Probes(n).name = Segment(n).SourceInfo.ProbeInfo;
+				obj.Probes(n).cluster = unique(Segment(n).UnitID);
+				obj.Probes(n).Nclusters = length(obj.Probes(n).cluster);
+				obj.Probes(n).t = cell(obj.Probes(n).Nclusters, 1);
+				% loop through units - id 0 will usually be first, junk is 255
+				for u = 1:obj.Probes(n).Nclusters
+					obj.Probes(n).t{u} = ...
+						1e6 * Segment(n).TimeStamp(Segment(n).UnitID == ...
+																		obj.Probes(n).cluster(u));
+				end	% END Nclusters loop
+			end	% END nSegments loop
 			clear Segment
 			obj.Nprobes = nSegments;
 			if nargout
@@ -433,36 +440,229 @@ classdef Data < handle
 		end	% END loadProbes
 		%------------------------------------------------------------------------
 		%------------------------------------------------------------------------
+
+		%------------------------------------------------------------------------
+		function H = plotRasterAndPSTH(obj, varargin)
+		%------------------------------------------------------------------------
+		% Plots rasters of grouped data
+		%------------------------------------------------------------------------
+		% H = Data.plotRasterAndPSTH
+		%	with no arguments, method will plot probe 1 with default binwidth
+		%	
+		% H = Data.plotRasterAndPSTH('probe', probenum)
+		%	'probe' option will select probenum for plotting
+		%
+		% H = Data.plotRasterAndPSTH('binwidth', psth_bin_width)
+		%	'binwidth' sets PSTH binsize (in milliseconds)
+		%------------------------------------------------------------------------
+			
+			%------------------------------------------------
+			% ensure that probenum is in bounds
+			%------------------------------------------------
+			probenum = 1;
+			plotopts.binwidth = 5;
+			if ~isempty(varargin)
+				a = 1;
+				while a <= length(varargin)
+					switch upper(varargin{a})	
+						case 'PROBE'
+							probenum = varargin{a+1};
+							a = a + 2;
+						case 'BINWIDTH'
+							plotopts.binwidth = varargin{a+1};
+							a = a + 2;
+						otherwise
+							error('%s: unknown option %s', mfilename, varargin{a});
+					end
+				end				
+			end
+			if ~between(probenum, 1, length(obj.Probes))
+				error('%s: probe must be in range [1:%d]', mfilename, ...
+																	length(obj.Probes));
+			end
+			%------------------------------------------------
+			% get the spikes struct for probe 1
+			%------------------------------------------------
+			S = obj.getSpikesForProbe(probenum);
+			%------------------------------------------------
+			% loop through groups
+			%------------------------------------------------
+			ngroups = length(S);
+			% initialize H to hold figures
+			H = cell(ngroups, 1);
+			for g = 1:ngroups
+				% get Stimulus List indices for this group
+				Sindx = obj.Stimuli.GroupList{g};
+				nlevels = length(Sindx);
+				allspikes = cell(nlevels, 1);			
+				% loop through stim indices
+				for n = 1:nlevels
+					% convert spiketimes to milliseconds
+					allspikes{n} = cell(length(S(g).spikes{n}), 1);
+					for t = 1:length(S(g).spikes{n})
+						allspikes{n}{t} = 0.001*S(g).spikes{n}{t};
+					end
+				end
+				figure
+				H{g} = rasterpsthmatrix(allspikes, plotopts);
+			end	% END g		
+		end	% END plotRastersAndPSTH
+		%------------------------------------------------------------------------
+		%------------------------------------------------------------------------
 		
+		%------------------------------------------------------------------------
+		function H = plotRasters(obj, varargin)
+		%------------------------------------------------------------------------
+		% H = Data.plotRasters(probenum)
+		%------------------------------------------------------------------------
+		% Plots rasters of grouped data.  if probenum is not specified, 
+		% Data.Probes(1) will be used!
+		%------------------------------------------------------------------------
+			
+			%------------------------------------------------
+			% ensure that probenum is in bounds
+			%------------------------------------------------
+			probenum = 1;
+			if ~isempty(varargin)
+				probenum = varargin{1};
+				if ~between(probenum, 1, length(obj.Probes))
+					error('%s: probe must be in range [1:%d]', mfilename, ...
+																		length(obj.Probes));
+				end
+			end
+			%------------------------------------------------
+			% get the spikes struct for probe 1
+			%------------------------------------------------
+			S = obj.getSpikesForProbe(probenum);
+			%------------------------------------------------
+			% loop through groups
+			%------------------------------------------------
+			ngroups = length(S);
+			% initialize H to hold figures
+			H = zeros(ngroups, 1);
+			for g = 1:ngroups
+				H(g) = figure(g);
+				% get Stimulus List indices for this group
+				Sindx = obj.Stimuli.GroupList{g};
+				% loop through stim indices
+				for n = 1:length(Sindx)
+					subplot(length(Sindx), 1, n)
+					% convert spiketimes to milliseconds
+					spikes = cell(length(S(g).spikes{n}), 1);
+					for t = 1:length(S(g).spikes{n})
+						spikes{t} = 0.001*S(g).spikes{n}{t};
+					end
+					rasterplot(spikes, [0 1200])
+					s = Sindx(n);
+					if isa(class(obj.Stimuli.S{s, 2}), 'DW.Wav')
+						tstr1 = fullfile(obj.Stimuli.S{s, 2}.Filepath, ...
+															obj.Stimuli.S{s, 2}.Filename);
+						tstr2 = sprintf('Atten = %d', obj.Stimuli.S{s, 2}.Attenuation);
+						title([tstr2 '   ' tstr1], 'Interpreter', 'none');
+					end
+				end
+				xlabel('ms')
+			end	% END g		
+		end	% END plotRasters
+		%------------------------------------------------------------------------
+		%------------------------------------------------------------------------
 		
-		function spikes = getSpikesForStimulusGroup(obj, groupnum, probenum)
+		%------------------------------------------------------------------------
+		function S = getSpikesForProbe(obj, probenum)
+		%------------------------------------------------------------------------
+		% S = Data.getSpikesForProbe(probenum)
+		%------------------------------------------------------------------------
+		% Stimuli are split by stimulus characteristics (e.g., wav filename,
+		% frequency) and then grouped into common values with different 
+		% attenuation settings.
+		% Spiketimes for all groups in Data.Stimuli.GroupList are retrieved 
+		% using this method for one probe
+		%------------------------------------------------------------------------
+		% S is a (ngroups X 1) struct array with fields:
+		%	name			DataWave name for this probe
+		%	spikes		[natten x 1] cell array of spiketime data, where each 
+		%	 				element is a cell array of [ntrials x 1] vectors of spiketimes
+		% 
+		% 		to obtain the spikes for sweep (trial) 20 of attenuation  1
+		% 		and stimulus group 2, call S(2).spikes{1}{20} :
+		% 
+		% 			>> S(2).spikes{1}{20}
+		% 					ans =
+		% 						1.0e+05 *
+		% 
+		% 						 2.1662
+		% 						 2.5055
+		% 						 8.2955
+		% 
+		%------------------------------------------------------------------------
+		
+			% ensure that probenum is in bounds
+			if ~between(probenum, 1, length(obj.Probes))
+				error('%s: probe must be in range [1:%d]', mfilename, ...
+																	length(obj.Probes));
+			end
+			% # of groups available
+			ngroups = length(obj.Stimuli.GroupList);
+			S = repmat( struct('spikes', {}, 'name', []), ngroups, 1);
+			% get spikes for 0 unit
+			for g = 1:ngroups
+				S(g).spikes = obj.getSpikesForStimGroup(g, probenum, 0);
+				S(g).name = obj.Probes(probenum).name;
+			end
+		end	% END getSpikesByGroup
+		%------------------------------------------------------------------------
+		%------------------------------------------------------------------------
+		
+		%------------------------------------------------------------------------
+		function spikes = getSpikesForStimGroup(obj, groupnum, probenum, unitnum)
+		%------------------------------------------------------------------------
+		% spikes = Data.getSpikesForStimGroup(groupnum, probenum)
+		%------------------------------------------------------------------------
+		% Stimuli are split by stimulus characteristics (e.g., wav filename,
+		% frequency) and then grouped into common values with different 
+		% attenuation settings.
+		% Spiketimes for each group in Data.Stimuli.GroupList are retrieved 
+		% using this method.
+		%------------------------------------------------------------------------
+		
 			% # of groups available
 			ngroups = length(obj.Stimuli.GroupList);
 			% check to make sure groupnum is within bounds
 			if ~between(groupnum, 1, ngroups)
-				error('%s: group must be in range [1:%d]', mfilename, ngroups)
+				error('%s: group must be in range [1:%d]', mfilename, ngroups);
 			end
 			if ~between(probenum, 1, length(obj.Probes))
 				error('%s: probe must be in range [1:%d]', mfilename, ...
 																		length(obj.Probes));
 			end
+			% check unitnum
+			unitchk = (unitnum == obj.Probes(probenum).cluster);
+			if ~any(unitchk)
+				fprintf('%s: units in probe %d are:\n', mfilename, probenum)
+				fprintf('\t%d\n', obj.Probes(probenum).cluster)
+				error('%s: unit %d not found!', mfilename, unitnum)
+			else
+				unitid = find(unitchk);
+				unitid = unitid(1);
+			end
+			
 			% get the list of stimuli for this group
 			Sindx = obj.Stimuli.GroupList{groupnum};
 			% allocate spikes vector
 			spikes = cell(length(Sindx), 1);
-			% get timestamps (in seconds!)
-			Spiketimes = obj.Probes(probenum).t;
-			% convert to microseconds
-			Spiketimes = 1e6 * Spiketimes;
+			% get timestamps (should be in microseconds!)
+			Spiketimes = obj.Probes(probenum).t{unitid};
 			% loop through the groups
 			for sloop = 1:length(Sindx)
 				s = Sindx(sloop);
 				% get the spikes for this stimulus
 				spikes{sloop} = find_valid_timestamps(Spiketimes, ...
 																  obj.Stimuli.Sweepstart{s}, ...
-																	obj.Stimuli.Sweepend{s});
+																  obj.Stimuli.Sweepend{s});
 			end
 		end	% END getSpikes
+		%------------------------------------------------------------------------
+		%------------------------------------------------------------------------
 		
 		
 		
