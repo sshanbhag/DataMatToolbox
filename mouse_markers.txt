@@ -1,0 +1,1 @@
+OutputTimestampR, OutputTime+DelayR, FixedDelayR, 68 AmplitudeR, 68 FrequencyR, 68 TimeShiftR, 68 RampUpR, 68 HoldTimeR, PA5idR,3ýøØsÖ
