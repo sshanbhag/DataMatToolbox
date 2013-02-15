@@ -35,7 +35,7 @@ end
 %********* repetition rate (bat)
 % filename = '12-12-2012--2854_RepRate0.ddf';
 %********* syllables, sorted spikes (bat)
-% filename = '01-03-2013--2961_syllable_block_new_sorted.ddf';
+filename = '01-03-2013--2961_syllable_block_new_sorted.ddf';
 %********* syllables, sorted spikes, multispikes (bat)
 % filename = '01-03-2013--2961_syllable_block_new_sorted.ddf';
 %********* freq/response area, sorted spikes (bat)
@@ -45,7 +45,7 @@ end
 %********* Combination sensitivity, Multichannel recording (mouse)
 % filename = '834_012913_combosens_1_spikes_sorted_1_small.ddf';
 %********* multichannel (mouse)
-filename = '834_020613_C_up_O_down_1_spikes_sorted.ddf'
+% filename = '834_020613_C_up_O_down_1_spikes_sorted.ddf';
 % generate matfile name for output of converted .ddf data
 [~, matfile] = fileparts(filename);
 matfile = [matfile '.mat'];

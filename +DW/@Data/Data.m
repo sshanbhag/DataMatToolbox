@@ -454,12 +454,16 @@ classdef Data < handle
 		%
 		% H = Data.plotRasterAndPSTH('binwidth', psth_bin_width)
 		%	'binwidth' sets PSTH binsize (in milliseconds)
+		%
+		% H = Data.plotRasterAndPSTH('unit', unitnumber)
+		%	'unit' selects unit to display
 		%------------------------------------------------------------------------
 			
 			%------------------------------------------------
 			% ensure that probenum is in bounds
 			%------------------------------------------------
 			probenum = 1;
+			unitnum = 0;
 			plotopts.binwidth = 5;
 			if ~isempty(varargin)
 				a = 1;
@@ -470,6 +474,9 @@ classdef Data < handle
 							a = a + 2;
 						case 'BINWIDTH'
 							plotopts.binwidth = varargin{a+1};
+							a = a + 2;
+						case 'UNIT'
+							unitnum = varargin{a+1};
 							a = a + 2;
 						otherwise
 							error('%s: unknown option %s', mfilename, varargin{a});
@@ -483,7 +490,7 @@ classdef Data < handle
 			%------------------------------------------------
 			% get the spikes struct for probe 1
 			%------------------------------------------------
-			S = obj.getSpikesForProbe(probenum);
+			S = obj.getSpikesForProbe(probenum, unitnum);
 			%------------------------------------------------
 			% loop through groups
 			%------------------------------------------------
@@ -494,7 +501,8 @@ classdef Data < handle
 				% get Stimulus List indices for this group
 				Sindx = obj.Stimuli.GroupList{g};
 				nlevels = length(Sindx);
-				allspikes = cell(nlevels, 1);			
+				allspikes = cell(nlevels, 1);
+				plotopts.rowlabels = cell(nlevels, 1);
 				% loop through stim indices
 				for n = 1:nlevels
 					% convert spiketimes to milliseconds
@@ -502,7 +510,9 @@ classdef Data < handle
 					for t = 1:length(S(g).spikes{n})
 						allspikes{n}{t} = 0.001*S(g).spikes{n}{t};
 					end
+					plotopts.rowlabels{n} = sprintf('%d', obj.Stimuli.S{Sindx(n), 2}.Attenuation);
 				end
+				plotopts.columnlabels{1} = sprintf('%s: %s', obj.fname, obj.Stimuli.S{Sindx(n), 2}.Filename);
 				figure
 				H{g} = rasterpsthmatrix(allspikes, plotopts);
 			end	% END g		
@@ -568,7 +578,7 @@ classdef Data < handle
 		%------------------------------------------------------------------------
 		
 		%------------------------------------------------------------------------
-		function S = getSpikesForProbe(obj, probenum)
+		function S = getSpikesForProbe(obj, probenum, varargin)
 		%------------------------------------------------------------------------
 		% S = Data.getSpikesForProbe(probenum)
 		%------------------------------------------------------------------------
@@ -601,12 +611,21 @@ classdef Data < handle
 				error('%s: probe must be in range [1:%d]', mfilename, ...
 																	length(obj.Probes));
 			end
+			
+			% select unit
+			if isempty(varargin)
+				% default unit
+				unitnum = 0;
+			else
+				unitnum = varargin{1};
+			end
+			
 			% # of groups available
 			ngroups = length(obj.Stimuli.GroupList);
 			S = repmat( struct('spikes', {}, 'name', []), ngroups, 1);
 			% get spikes for 0 unit
 			for g = 1:ngroups
-				S(g).spikes = obj.getSpikesForStimGroup(g, probenum, 0);
+				S(g).spikes = obj.getSpikesForStimGroup(g, probenum, unitnum);
 				S(g).name = obj.Probes(probenum).name;
 			end
 		end	% END getSpikesByGroup
