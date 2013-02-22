@@ -4,7 +4,12 @@
 % DataMat Toolbox
 % Class Definition
 %-----------------------------------------------------------------------------
-%		Properties:
+%	Properties:
+% 		t					
+% 		wforms
+% 		cluster
+% 		nclusters
+% 		name
 %-----------------------------------------------------------------------------
 % See also: DWdata, Marker
 %-----------------------------------------------------------------------------
@@ -18,6 +23,8 @@
 % Revisions:
 %	25 Jan 2013 (SJS): finally working on this, incorporating NeuroShare
 %								bits
+%	20 Feb 2013 (SJS): added wform property to store waveforms
+%	 -	changed Nclusters to nclusters
 %-----------------------------------------------------------------------------
 % TO DO:
 %
@@ -39,8 +46,9 @@ classdef Probe < handle
 	%------------------------------------------------------------------------
 	properties
 		t
+		wforms
 		cluster
-		Nclusters
+		nclusters
 		name
 	end	% end of properties
 	%------------------------------------------------------------------------
@@ -88,14 +96,36 @@ classdef Probe < handle
 		%---------------------------------------------------------------------
 		function out = findClusters(obj)
 		%---------------------------------------------------------------------	
-
-			% find unique cluster id values
+		% find unique cluster id values
+		%---------------------------------------------------------------------
 			out = unique(obj.cluster);
-			obj.Nclusters = out;
+			if isempty(obj.nclusters)
+				obj.nclusters = out;
+			end
 		end	% END findClusters
 		%---------------------------------------------------------------------
 		%---------------------------------------------------------------------
 
+		%---------------------------------------------------------------------
+		function wmat = getWaveformsForCluster(obj, clusternum)
+		%---------------------------------------------------------------------
+		% wmat is a [nwavepoints X ntimestamps] array of spike waveforms
+		%---------------------------------------------------------------------
+			% make sure clusternum is inbounds!
+			if ~any(clusternum == obj.cluster)
+				warning('%s: clusternum %d not found!', mfilename, clusternum)
+				fprintf('\tvalid clusters:\t');
+				fprintf('%d ', obj.cluster);
+				fprintf('\n');
+				wmat = [];
+				return
+			else
+				wmat =  cell2mat(obj.wforms{clusternum == obj.cluster})';
+			end
+		end	% END getWaveformsForCluster
+		%---------------------------------------------------------------------
+		%---------------------------------------------------------------------
+		
 		%---------------------------------------------------------------------
 		%---------------------------------------------------------------------
 		% Overloaded Methods

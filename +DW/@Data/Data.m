@@ -16,7 +16,7 @@
 %     obj.Stimulus;   %really this should be a class too...
 %     obj.fullfname;  %full file name
 %-----------------------------------------------------------------------------
-% See also: loadDWfile (function)
+% See also: loadDWfile (function0)
 %-----------------------------------------------------------------------------
 
 %-----------------------------------------------------------------------------
@@ -42,6 +42,7 @@
 %		interface object (@NS)
 %	31 Jan 2013 (SJS): reworking to avoid segmentation faults 
 %	12 Feb 2013 (SJS): added plotting routines
+%	22 Feb 2013 (SJS): modifying get spikes to allow for pre/post spike time
 %-----------------------------------------------------------------------------
 % TO DO: lots....
 %-----------------------------------------------------------------------------
@@ -64,7 +65,6 @@ classdef Data < handle
 		fpath			%path to file
 		fname			%name of file
 		fext			%file extension
-% 		DDF			% neuroshare interface object
 		Info			% DWinfo object
 		Markers		% Marker object array
 		Background	% really this should be a class too...
@@ -111,16 +111,47 @@ classdef Data < handle
 		%  a dialog box to get a filename if the fileName provided does not exist.
 		%---------------------------------------------------------------------	
 
-			% first, parse input and verify
-			if nargin == 0
+			%--------------------------------------------------------
+			% Check inputs
+			%--------------------------------------------------------
+			% if no inputs, return
+			if isempty(varargin)
 				return
 			end
-			% D struct was provided
-			obj.initFromStruct(varargin{1});
-			% check if a filename was provided
-			if nargin > 1
+			
+			% if 1 input, need to perform a few checks
+			if length(varargin) == 1
+				% check if varargin{1} was directly passed in from
+				% a subclass (using obj@DW.Stimulus(varargin) syntax)
+				if strcmpi(inputname(1), 'varargin')
+					% make local copy of varargin{1}
+					tmp = varargin{1};
+					if length(tmp) == 1
+						% tmp is D structure
+						obj.initFromStruct(tmp{1});
+					elseif length(tmp) == 2
+						% caller provided D structure and filename
+						obj.initFromStruct(tmp{1});
+						obj.fullfname = tmp{2};
+						[obj.fpath, obj.fname, obj.fext] = fileparts(tmp{2});
+					else
+						fprintf('%s: strange inputs... ', mfilename);
+						fprintf('%s\t', tmp);
+						fprintf('\n');
+						error('%s: invalid inputs', mfilename);
+					end
+					clear tmp
+				else
+					% only D struct provided
+					obj.initFromStruct(varargin{1});
+				end
+			elseif length(varargin) == 2
+				% caller provided D struct and filename
+				obj.initFromStruct(varargin{1});
 				obj.fullfname = varargin{2};
 				[obj.fpath, obj.fname, obj.fext] = fileparts(varargin{2});
+			else
+				error('%s: invalid input args', mfilename);
 			end
 		end	% END Data CONSTRUCTOR
 		%------------------------------------------------------------------------
@@ -138,6 +169,9 @@ classdef Data < handle
 		%------------------------------------------------------------------------
 		% Data.initFromStruct
 		%------------------------------------------------------------------------
+		%	Takes information from NeuroShare data struct D and initializes
+		%	Data object properties 
+		%------------------------------------------------------------------------
 		
 			% store info bits in obj.Info!
 			infotags = {'FileType', 'EntityCount', 'TimeStampResolution', ...
@@ -147,18 +181,12 @@ classdef Data < handle
 			for n = 1:length(infotags)
 				obj.Info.(infotags{n}) = D.(infotags{n});
 			end
-% 			% store other bits in obj.DDF!
-% 			ddftags = {'EntityInfo', 'EventList', 'AnalogList', 'SegmentList', ...
-% 							'NeuralList', 'nNeural', 'nSegment', 'nAnalog', 'nEvent'};
-% 			for n = 1:length(ddftags)
-% 				obj.DDF.(ddftags{n}) = D.(ddftags{n});
-% 			end
 			% store Markers
 			obj.loadMarkers(D.Event);
 			% convert to stimuli
 			obj.loadStimuli;
 			% convert segments to Probes
-			obj.loadProbes(D.Segment);
+			obj.loadProbesFromSegment(D.Segment);
 			% get sweep times
 			obj.Stimuli.extractTimeFromMarkers(obj.Markers);
 			% find stimulus groups (same apart from attenuation)
@@ -380,9 +408,9 @@ classdef Data < handle
 		%------------------------------------------------------------------------
 		
 		%------------------------------------------------------------------------
-		function varargout = loadProbes(obj, Segment)
+		function varargout = loadProbesFromSegment(obj, Segment)
 		%------------------------------------------------------------------------
-		% Probes = Data.loadProbes
+		% Probes = Data.loadProbesFromSegment
 		%------------------------------------------------------------------------
 			DW.DataWaveDefaults	% load defaults
 			%-----------------------------------------------------------
@@ -399,7 +427,81 @@ classdef Data < handle
 				warning('%s: there are no Segment entities in data!', mfilename);
 				return
 			else
+				fprintf('%s: Loading probe data from Segment entities\n', ...
+									mfilename);
 				nSegments = length(Segment);
+			end
+		
+			%-----------------------------------------------------------
+			% the segment entities have the spiketimes
+			% as well as the spike snippets (if stored).  The Neural
+			% entitites could be used, but are somewhat redundant and 
+			% do not have the snippet waveforms.  
+			%-----------------------------------------------------------
+			% create the Probe object
+			obj.Probes = DW.Probe;
+			if nSegments > 1
+				obj.Probes(nSegments, 1) = DW.Probe;
+			end	
+			
+			% pull out timestamps based on unit ID
+			% according to Neuroshare, unit 0 is uncategorized, 255 is noise
+			% this is not necessarily true
+			for n = 1:nSegments
+				% store timestamps for units with ID 0 - should
+				% probably figure out a way to store/sort all unitIDs at some
+				% point........
+				% also, convert to microseconds (from seconds!!!)
+				obj.Probes(n).name = Segment(n).SourceInfo.ProbeInfo;
+				obj.Probes(n).cluster = unique(Segment(n).UnitID);
+				obj.Probes(n).nclusters = length(obj.Probes(n).cluster);
+				obj.Probes(n).t = cell(obj.Probes(n).nclusters, 1);
+				obj.Probes(n).wforms = cell(obj.Probes(n).nclusters, 1);
+				% loop through units - id 0 will usually be first, junk is 255
+				for u = 1:obj.Probes(n).nclusters
+					% convert timestamp to usec from seconds
+					obj.Probes(n).t{u} = ...
+									1e6 * Segment(n).TimeStamp(...
+										Segment(n).UnitID == obj.Probes(n).cluster(u));
+					obj.Probes(n).wforms{u} = ...
+									Segment(n).WaveForm(...
+										Segment(n).UnitID == obj.Probes(n).cluster(u));	
+				end	% END Nclusters loop
+			end	% END nSegments loop
+			clear Segment
+			obj.Nprobes = nSegments;
+			if nargout
+				varargout{1} = unitID;
+			end
+		end	% END loadProbesFromSegmentData
+		%------------------------------------------------------------------------
+		%------------------------------------------------------------------------
+
+		%------------------------------------------------------------------------
+		function varargout = loadProbesFromNeural(obj, Neural)
+		%------------------------------------------------------------------------
+		% Probes = Data.loadProbesFromNeural
+		%	uses neural entities to load probe information.  this is less
+		% preferable than getting unit info from the Segment entities, since
+		% the Neural entities do not have waveform snippets that can be used
+		% to examine the unit quality!
+		%------------------------------------------------------------------------
+			DW.DataWaveDefaults	% load defaults
+			%-----------------------------------------------------------
+			% load markers if they haven't been loaded yet
+			%-----------------------------------------------------------
+			if isempty(obj.Markers)
+				obj.loadMarkers
+			end
+			if ~obj.Nmarkers
+				error('%s: no markers in Data!')
+			end
+			% check if there are any segment entities in the data
+			if isempty(Neural)
+				warning('%s: there are no Neural entities in data!', mfilename);
+				return
+			else
+				nNeural = length(Neural);
 			end
 		
 			%-----------------------------------------------------------
@@ -410,37 +512,116 @@ classdef Data < handle
 			%-----------------------------------------------------------
 			% create the Probe object
 			obj.Probes = DW.Probe;
-			if nSegments > 1
-				obj.Probes(nSegments, 1) = DW.Probe;
+			if nNeural > 1
+				obj.Probes(nNeural, 1) = DW.Probe;
 			end	
 			
 			% pull out timestamps based on unit ID
 			% according to Neuroshare, unit 0 is uncatergorized, 255 is noise
-			for n = 1:nSegments
+			for n = 1:nNeural
 				% store timestamps for units with ID 0 - should
 				% probably figure out a way to store/sort all unitIDs at some
 				% point........
 				% also, convert to microseconds (from seconds!!!)
-				obj.Probes(n).name = Segment(n).SourceInfo.ProbeInfo;
-				obj.Probes(n).cluster = unique(Segment(n).UnitID);
-				obj.Probes(n).Nclusters = length(obj.Probes(n).cluster);
-				obj.Probes(n).t = cell(obj.Probes(n).Nclusters, 1);
-				% loop through units - id 0 will usually be first, junk is 255
-				for u = 1:obj.Probes(n).Nclusters
-					obj.Probes(n).t{u} = ...
-						1e6 * Segment(n).TimeStamp(Segment(n).UnitID == ...
-																		obj.Probes(n).cluster(u));
-				end	% END Nclusters loop
+				keyboard
+				obj.Probes(n).name = Neural(n).Info.ProbeInfo;
+				obj.Probes(n).cluster = Neural(n).Info.SourceUnitID;
+				obj.Probes(n).nclusters = 1;
+				obj.Probes(n).t = Neural(n).TimeStamps;
 			end	% END nSegments loop
-			clear Segment
-			obj.Nprobes = nSegments;
+			obj.Nprobes = nNeural;
 			if nargout
-				varargout{1} = unitID;
+				varargout{1} = obj.Probes;
 			end
-		end	% END loadProbes
+		end	% END loadProbesFromNeuralData
 		%------------------------------------------------------------------------
 		%------------------------------------------------------------------------
+		
+		%------------------------------------------------------------------------
+		function varargout = plotUnitWaveforms(obj, varargin)
+		%------------------------------------------------------------------------
+		% Plots overlaid waveforms of spikes
+		%------------------------------------------------------------------------
+		% H = Data.plotUnitWaveforms
+		%	with no arguments, method will plot data from all probes and units
+		%	in individual figures
+		%	
+		% H = Data.plotUnitWaveforms('probe', probenum)
+		%	'probe' option will select probenum for plotting
+		%
+		% H = Data.plotUnitWaveforms('unit', unitnumber)
+		%	'unit' selects unit to display. unitnumber must match a unit ID
+		%	for the Probes
+		%------------------------------------------------------------------------
+		
+			%------------------------------------------------
+			% ensure that probenum is in bounds
+			%------------------------------------------------
+			% defaults
+			probenum = [];
+			unitnum = [];
+			if ~isempty(varargin)
+				a = 1;
+				while a <= length(varargin)
+					switch upper(varargin{a})	
+						case 'PROBE'
+							probenum = varargin{a+1};
+							if ~between(probenum, 1, length(obj.Probes))
+								error('%s: probe must be in range [1:%d]', ...
+													mfilename, length(obj.Probes));
+							end
+							a = a + 2;
+						case 'UNIT'
+							unitnum = varargin{a+1};
+							a = a + 2;
+						otherwise
+							error('%s: unknown option %s', mfilename, varargin{a});
+					end	% END switch
+				end	% END while
+			end	% END if ~isempty(varargin)
+	
+			% if probenum is empty, use all probes
+			if isempty(probenum)
+				probenum = 1:obj.Nprobes;
+			end
 
+			% loop through probes
+			fIndex = 1;
+			for pindx = 1:length(probenum)
+				p = probenum(pindx);
+				% check unit
+				if isempty(unitnum)
+					unitnum = obj.Probes(p).cluster;
+				end
+				for uindx = 1:length(unitnum)
+					u = unitnum(uindx);
+					% check for matches
+					if any(u == obj.Probes(p).cluster)
+						H(fIndex) = figure; %#ok<AGROW>
+						W = obj.Probes(p).getWaveformsForCluster(u);
+						if ~isempty(W)
+							plot(W);
+							titlestr = { ...
+								sprintf('Probe %d Unit %d', p, u), ...
+								sprintf('%s', obj.Probes(p).name), ...
+								sprintf('%d waveforms', length(obj.Probes(p).t{uindx})), ...
+							};
+							title(titlestr, 'Interpreter', 'none');
+						end
+						fIndex = fIndex + 1;
+					else
+						fprintf('Unit %d not found for Probe %d\n', u, p);
+					end
+				end	% END unit loop
+			end	% END probe loop
+			if nargout
+				varargout{1} = H;
+			end
+		end	% END plotUnitWaveforms
+		%------------------------------------------------------------------------
+		%------------------------------------------------------------------------
+		
+		
 		%------------------------------------------------------------------------
 		function H = plotRasterAndPSTH(obj, varargin)
 		%------------------------------------------------------------------------
@@ -488,9 +669,9 @@ classdef Data < handle
 																	length(obj.Probes));
 			end
 			%------------------------------------------------
-			% get the spikes struct for probe 1
+			% get the spikes struct for probe and unit
 			%------------------------------------------------
-			S = obj.getSpikesForProbe(probenum, unitnum);
+			S = obj.getSpikesForProbe(probenum, 'unit', unitnum);
 			%------------------------------------------------
 			% loop through groups
 			%------------------------------------------------
@@ -533,17 +714,21 @@ classdef Data < handle
 			% ensure that probenum is in bounds
 			%------------------------------------------------
 			probenum = 1;
+			unitnum = 0;
 			if ~isempty(varargin)
 				probenum = varargin{1};
 				if ~between(probenum, 1, length(obj.Probes))
 					error('%s: probe must be in range [1:%d]', mfilename, ...
 																		length(obj.Probes));
 				end
+				if length(varargin) == 2
+					unitnum = varargin{2};
+				end
 			end
 			%------------------------------------------------
 			% get the spikes struct for probe 1
 			%------------------------------------------------
-			S = obj.getSpikesForProbe(probenum);
+			S = obj.getSpikesForProbe(probenum, 'unit', unitnum, 'offset', [100 0]);
 			%------------------------------------------------
 			% loop through groups
 			%------------------------------------------------
@@ -562,7 +747,7 @@ classdef Data < handle
 					for t = 1:length(S(g).spikes{n})
 						spikes{t} = 0.001*S(g).spikes{n}{t};
 					end
-					rasterplot(spikes, [0 1200])
+					rasterplot(spikes, [-100 1200])
 					s = Sindx(n);
 					if isa(class(obj.Stimuli.S{s, 2}), 'DW.Wav')
 						tstr1 = fullfile(obj.Stimuli.S{s, 2}.Filepath, ...
@@ -581,12 +766,19 @@ classdef Data < handle
 		function S = getSpikesForProbe(obj, probenum, varargin)
 		%------------------------------------------------------------------------
 		% S = Data.getSpikesForProbe(probenum)
+		% S = Data.getSpikesForProbe(probenum, 'unit', unitnum)
+		% S = Data.getSpikesForProbe(probenum, 'offset', [pretime posttime])
 		%------------------------------------------------------------------------
 		% Stimuli are split by stimulus characteristics (e.g., wav filename,
 		% frequency) and then grouped into common values with different 
 		% attenuation settings.
 		% Spiketimes for all groups in Data.Stimuli.GroupList are retrieved 
 		% using this method for one probe
+		%
+		% If spikes are desired from before the stim onset timestamp or after 
+		% the next stim onset timestamp, a second input argument of form
+		% [pretime posttime] may be included.  times must be in milliseconds
+		%
 		%------------------------------------------------------------------------
 		% S is a (ngroups X 1) struct array with fields:
 		%	name			DataWave name for this probe
@@ -604,86 +796,181 @@ classdef Data < handle
 		% 						 2.5055
 		% 						 8.2955
 		% 
+		%		more generally: for sweep SWEEP, atten ATT and stim group STIM:
+		%		
+		%			S(STIM).spikes{ATT}{SWEEP}
 		%------------------------------------------------------------------------
 		
+			%--------------------------------------------------
 			% ensure that probenum is in bounds
+			%--------------------------------------------------
 			if ~between(probenum, 1, length(obj.Probes))
 				error('%s: probe must be in range [1:%d]', mfilename, ...
 																	length(obj.Probes));
 			end
-			
-			% select unit
-			if isempty(varargin)
-				% default unit
-				unitnum = 0;
-			else
-				unitnum = varargin{1};
+			%--------------------------------------------------	
+			% check varargin
+			%--------------------------------------------------
+			% default unitnum is 0
+			unitnum = 0;
+			% set offset to empty
+			offset = [];
+			% check optional input args
+			argn = 1;
+			while argn <= length(varargin)
+				switch upper(varargin{argn})
+					case 'UNIT'
+						unitnum = varargin{argn + 1};
+						argn = argn + 2;
+					case 'OFFSET'
+						offset = varargin{argn + 1};
+						argn = argn + 2;
+					otherwise
+						warning('%s: Unknown option %s', mfilename, varargin{argn});
+						argn = argn + 2;
+				end
 			end
-			
+			%--------------------------------------------------
 			% # of groups available
+			%--------------------------------------------------
 			ngroups = length(obj.Stimuli.GroupList);
+			%--------------------------------------------------
+			% get spikes for unit
+			%--------------------------------------------------
 			S = repmat( struct('spikes', {}, 'name', []), ngroups, 1);
-			% get spikes for 0 unit
-			for g = 1:ngroups
-				S(g).spikes = obj.getSpikesForStimGroup(g, probenum, unitnum);
-				S(g).name = obj.Probes(probenum).name;
-			end
+			if isempty(offset)
+				% no offset provided
+				for g = 1:ngroups
+					S(g).spikes = obj.getSpikesForStimGroup(g, probenum, unitnum);
+					S(g).name = obj.Probes(probenum).name;
+				end
+			else
+				% use pre/post offset to sweep timestamps
+				for g = 1:ngroups
+					S(g).spikes = ...
+							obj.getSpikesForStimGroup(g, probenum, unitnum, offset);
+					S(g).name = obj.Probes(probenum).name;
+				end
+			end	% END if
 		end	% END getSpikesByGroup
 		%------------------------------------------------------------------------
 		%------------------------------------------------------------------------
 		
 		%------------------------------------------------------------------------
-		function spikes = getSpikesForStimGroup(obj, groupnum, probenum, unitnum)
+		function spikes = getSpikesForStimGroup(obj, group, probe, unit, varargin)
 		%------------------------------------------------------------------------
-		% spikes = Data.getSpikesForStimGroup(groupnum, probenum)
+		% spikes = Data.getSpikesForStimGroup(groupnum, probenum, unitnum)
 		%------------------------------------------------------------------------
 		% Stimuli are split by stimulus characteristics (e.g., wav filename,
 		% frequency) and then grouped into common values with different 
 		% attenuation settings.
+		%
 		% Spiketimes for each group in Data.Stimuli.GroupList are retrieved 
 		% using this method.
+		%
+		% By default, only spikes between the each Stimulus output timestamp and
+		% the following stimulus's output timestamp will be collected.  
+		% To extend this time, provide an additional input parameter that is
+		% a 1 X 2 vector of pre-stimulus time and post-sweep time in milliseconds:
+		%
+		%	spikes = Data.getSpikesForStimGroup(1, 2, 255, [100 200])
+		%
+		%		which will get spikes for group 1, probe 2, unit id 255 and
+		%		include spikes 100 ms before the stimulus sweep timestamp and 
+		%		200 ms after the following stimulus timestamp.  If the stimulus
+		%		timestamps are, for example, 1000 ms apart, this will include 
+		%		spikes in a 1300 ms total window.
+		%
 		%------------------------------------------------------------------------
 		
+			%--------------------------------------------------
+			% check to make sure group is within bounds
+			%--------------------------------------------------
 			% # of groups available
 			ngroups = length(obj.Stimuli.GroupList);
-			% check to make sure groupnum is within bounds
-			if ~between(groupnum, 1, ngroups)
+			if ~between(group, 1, ngroups)
 				error('%s: group must be in range [1:%d]', mfilename, ngroups);
 			end
-			if ~between(probenum, 1, length(obj.Probes))
+			%--------------------------------------------------
+			% check probe number
+			%--------------------------------------------------
+			if ~between(probe, 1, length(obj.Probes))
 				error('%s: probe must be in range [1:%d]', mfilename, ...
 																		length(obj.Probes));
 			end
-			% check unitnum
-			unitchk = (unitnum == obj.Probes(probenum).cluster);
+			%--------------------------------------------------
+			% check unit
+			%--------------------------------------------------
+			unitchk = (unit == obj.Probes(probe).cluster);
 			if ~any(unitchk)
-				fprintf('%s: units in probe %d are:\n', mfilename, probenum)
-				fprintf('\t%d\n', obj.Probes(probenum).cluster)
-				error('%s: unit %d not found!', mfilename, unitnum)
+				fprintf('%s: units in probe %d are:\n', mfilename, probe)
+				fprintf('\t%d\n', obj.Probes(probe).cluster)
+				error('%s: unit %d not found!', mfilename, unit)
 			else
 				unitid = find(unitchk);
 				unitid = unitid(1);
 			end
-			
+			%--------------------------------------------------
+			% check for pre/post time
+			%--------------------------------------------------
+			if ~isempty(varargin)
+				% assign to pre and post sweeptime (convert to usec)
+				presweeptime = 1000 * varargin{1}(1);
+				postsweeptime = 1000 * varargin{1}(2);
+			else
+				presweeptime = 0;
+				postsweeptime = 0;
+			end
+			%--------------------------------------------------
 			% get the list of stimuli for this group
-			Sindx = obj.Stimuli.GroupList{groupnum};
+			%--------------------------------------------------
+			Sindx = obj.Stimuli.GroupList{group};
+			%--------------------------------------------------
 			% allocate spikes vector
+			%--------------------------------------------------
 			spikes = cell(length(Sindx), 1);
+			%--------------------------------------------------
 			% get timestamps (should be in microseconds!)
-			Spiketimes = obj.Probes(probenum).t{unitid};
+			%--------------------------------------------------
+			Spiketimes = obj.Probes(probe).t{unitid};
+			%--------------------------------------------------
 			% loop through the groups
+			%--------------------------------------------------
 			for sloop = 1:length(Sindx)
 				s = Sindx(sloop);
-				% get the spikes for this stimulus
-				spikes{sloop} = find_valid_timestamps(Spiketimes, ...
-																  obj.Stimuli.Sweepstart{s}, ...
-																  obj.Stimuli.Sweepend{s});
-			end
+				% subtract and add the pre and post times from sweepstart and 
+				% sweep end timestamps
+				tstart = obj.Stimuli.Sweepstart{s} - presweeptime;
+				tend = obj.Stimuli.Sweepend{s} + postsweeptime;
+				% get the spikes for this stimulus, centered re: Sweepstart
+				% timestamp
+				spikes{sloop} = find_valid_timestamps(Spiketimes, tstart, tend, ...
+																	obj.Stimuli.Sweepstart{s});
+			end	% END sloop
 		end	% END getSpikes
 		%------------------------------------------------------------------------
 		%------------------------------------------------------------------------
 		
-		
+		%------------------------------------------------------------------------
+		function out = listProbeInfo(obj)
+		%------------------------------------------------------------------------
+			if isempty(obj.Nprobes) || ~obj.Nprobes
+				warning('%s: Probe data are not available!', mfilename)
+				out = [];
+				return
+			end
+			out.name =  cell(obj.Nprobes, 1);
+			out.cluster = zeros(obj.Nprobes, 1);
+			out.ntimestamps = zeros(obj.Nprobes, 1);
+
+			for n = 1:obj.Nprobes
+				out.name{n} = obj.Probes(n).name;
+				out.cluster(n) = obj.Probes(n).cluster;
+				out.ntimestamps(n) = length(obj.Probes(n).t);
+			end
+		end	% END listProbeInfo
+		%------------------------------------------------------------------------
+		%------------------------------------------------------------------------
 		
 		
 	end	% End of methods

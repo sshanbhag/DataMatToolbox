@@ -5,7 +5,7 @@
 %------------------------------------------------------------
 close all; clear all;
 FORCEFLAG = 0;
-
+FILENUM = 6;
 %------------------------------------------------------------
 %------------------------------------------------------------
 %% file names
@@ -26,33 +26,33 @@ end
 %------------------------------------------------------------
 % datafiles
 %------------------------------------------------------------
-%********* BBN rate level function (bat)
-% filename = '12-12-2012--2854_BBNrate.ddf';
-%********* frequency tuning (bat)
-% filename = '12-12-2012--2854_FreqScan2.ddf';
-%********* vocal strings (bat)
-% filename = '12-12-2012--2854_strings block.ddf';
-%********* repetition rate (bat)
-% filename = '12-12-2012--2854_RepRate0.ddf';
-%********* syllables, sorted spikes (bat)
-filename = '01-03-2013--2961_syllable_block_new_sorted.ddf';
-%********* syllables, sorted spikes, multispikes (bat)
-% filename = '01-03-2013--2961_syllable_block_new_sorted.ddf';
-%********* freq/response area, sorted spikes (bat)
-% filename = '829_01-05-2013--2729_FRA_Sorted.ddf';
-%********* repetition rate, sorted spikes (bat)
-% filename = '829_01-05-2013--2729_repRate20_Sorted.ddf';
+
+% MOUSE
 %********* Combination sensitivity, Multichannel recording (mouse)
-% filename = '834_012913_combosens_1_spikes_sorted_1_small.ddf';
+%**** CRASHES NEUROSHARE MATLAB API (not NeuroExplorer)
+% filename = '834_012913_combosens_1_spikes_sorted_1_small.ddf'
 %********* multichannel (mouse)
 % filename = '834_020613_C_up_O_down_1_spikes_sorted.ddf';
+
+% BAT
+batfiles = { ...
+	'12-12-2012--2854_BBNrate.ddf', ...		%	 BBN rate level function
+	'12-12-2012--2854_FreqScan2.ddf', ...	% frequency tuning (bat)
+	'12-12-2012--2854_strings block.ddf', ...		% vocal strings (bat)
+	'12-12-2012--2854_RepRate0.ddf', ...		% repetition rate (bat)
+	'01-03-2013--2961_syllable_block_new_sorted.ddf', ...	% syllables, sorted spikes, multispikes (bat)
+	'829_01-05-2013--2729_FRA_Sorted.ddf', ...		% freq/response area, sorted spikes (bat)
+	'829_01-05-2013--2729_repRate20_Sorted.ddf', ...		% repetition rate, sorted spikes (bat)
+	};
+filename = batfiles{FILENUM};
+
 % generate matfile name for output of converted .ddf data
 [~, matfile] = fileparts(filename);
 matfile = [matfile '.mat'];
 
 %------------------------------------------------------------
 %------------------------------------------------------------
-%% convert to matfile or load matfile
+%% convert DDF data to matfile OR load matfile
 %------------------------------------------------------------
 %------------------------------------------------------------
 if ~exist(fullfile(datapath, matfile), 'file') || FORCEFLAG
@@ -73,8 +73,14 @@ end
 %% create Data Object
 %------------------------------------------------------------
 %------------------------------------------------------------
-d = DW.Data(D, fullfile(datapath, filename));
+d = DW.FRAdata(D, fullfile(datapath, filename));
 
+
+%------------------------------------------------------------
+%------------------------------------------------------------
+%% save Data Object
+%------------------------------------------------------------
+%------------------------------------------------------------
 save( fullfile(datapath, ['Dobj_' matfile]), 'd', 'D');
 
 
