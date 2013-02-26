@@ -1,4 +1,4 @@
-function validtimes = find_valid_timestamps(timestamps, winstart, winend, varargin)
+function varargout = find_valid_timestamps(timestamps, winstart, winend, varargin)
 %------------------------------------------------------------------------
 % validtimes = find_valid_timestamps(timestamps, winstart, winend)
 % validtimes = find_valid_timestamps(timestamps, winstart, winend, winref)
@@ -19,10 +19,14 @@ function validtimes = find_valid_timestamps(timestamps, winstart, winend, vararg
 %	winstart			vector (or single value) of window start time
 %	winend			vector (or single value) of window end time
 %
+%	Optional:
+% 		winref		vector (or single value) of reference time
+% 		
 % Output Arguments:
 %	validtimes		cell array of valid timestamps.  cell array will have
 %						length equal to # of winstart (and winend) values
 %
+%	validindices	cell array of valid indices
 %------------------------------------------------------------------------
 % See also: 
 %------------------------------------------------------------------------
@@ -69,14 +73,21 @@ end
 %------------------------------------------------------------------------
 % allocate spikes vector
 validtimes = cell(nwin, 1);
+validindices = validtimes;
 % loop through the groups
 for w = 1:nwin
 	% find spikes that are within the current window
 	validSpikes = (winstart(w) < timestamps) & (timestamps < winend(w));
+	validindices{w} = validSpikes;
 	% store spiketimes (relative to sweep start)
 	if ~isempty(validSpikes)
 		validtimes{w} = timestamps(validSpikes) - winref(w);
 	else
 		validtimes{w} = [];
 	end
+end
+
+varargout{1} = validtimes;
+if nargout == 2
+	varargout{2} = validindices;
 end

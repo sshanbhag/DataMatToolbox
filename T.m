@@ -15,7 +15,8 @@ classdef T < handle
 		
 		%---------------------------------------------------------------------
 		%---------------------------------------------------------------------
-		function varargout = getmatchproperties(obj)			
+		function varargout = getmatchproperties(obj)
+			nargin
 			%-----------------------------------------------
 			% list the properties to match here.  
 			% property_type char vector has 'n' for numeric type, 'c' for char

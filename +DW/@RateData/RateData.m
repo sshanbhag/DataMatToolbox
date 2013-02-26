@@ -95,7 +95,7 @@ classdef RateData < DW.Data
 			if nargin == 0
 				return
 			end
-		end	% END FRAdata CONSTRUCTOR
+		end	% END RateData CONSTRUCTOR
 		%------------------------------------------------------------------------
 		%------------------------------------------------------------------------
 
@@ -106,7 +106,7 @@ classdef RateData < DW.Data
 		%------------------------------------------------------------------------
 		
 		%------------------------------------------------------------------------
-		function plotFRA(obj, probenum, unitnum, frawin, varargin)
+		function plot(obj, probenum, unitnum, frawin, varargin)
 		%------------------------------------------------------------------------
 		%	FRAdata.plotFRA(probenum, unitnum, frawin)
 		%	FRAdata.plotFRA(probenum, unitnum, frawin, 1)
@@ -114,7 +114,8 @@ classdef RateData < DW.Data
 		%------------------------------------------------------------------------
 			
 			%------------------------------------------------
-			% get the spikes if empty or user has provided force flag
+			% get the spike counts if empty or user has 
+			% provided force flag
 			%------------------------------------------------
 			if isempty(obj.SpikeTimes) || isempty(obj.SpikeCount) || ~isempty(varargin)
 				obj.computeFRA(probenum, unitnum, frawin);

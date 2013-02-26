@@ -173,7 +173,9 @@ classdef Data < handle
 		%	Data object properties 
 		%------------------------------------------------------------------------
 		
+			%-------------------------------------------------------
 			% store info bits in obj.Info!
+			%-------------------------------------------------------
 			infotags = {'FileType', 'EntityCount', 'TimeStampResolution', ...
 								'TimeSpan', 'AppName', 'Time_Year', 'Time_Month', ...
 								'Time_Day', 'Time_Hour', 'Time_Min', 'Time_Sec', ...
@@ -181,15 +183,44 @@ classdef Data < handle
 			for n = 1:length(infotags)
 				obj.Info.(infotags{n}) = D.(infotags{n});
 			end
+			%-------------------------------------------------------
 			% store Markers
-			obj.loadMarkers(D.Event);
+			%-------------------------------------------------------
+			if ~isfield(D, 'Event')
+				fprintf('%s Error: no Event entities in %s\n', ...
+																		mfilename, inputname(1));
+				return;
+			elseif D.nEvent == 0
+				fprintf('%s Error: nEvent = %d\n', mfilename, D.nEvent);
+				return;
+			else
+				obj.loadMarkers(D.Event);
+			end
+			%-------------------------------------------------------
 			% convert to stimuli
+			%-------------------------------------------------------
 			obj.loadStimuli;
+			%-------------------------------------------------------
 			% convert segments to Probes
-			obj.loadProbesFromSegment(D.Segment);
+			%-------------------------------------------------------
+			if ~isfield(D, 'Segment')
+				fprintf('%s Error: no Segment entities in %s\n', ...
+																		mfilename, inputname(1));
+				return;
+			elseif D.nSegment == 0
+				fprintf('%s Error: nSegment = %d\n', mfilename, D.nSegment);
+				return;
+			else
+				obj.loadProbesFromSegment(D.Segment);
+				obj.loadBackground;
+			end
+			%-------------------------------------------------------
 			% get sweep times
+			%-------------------------------------------------------
 			obj.Stimuli.extractTimeFromMarkers(obj.Markers);
+			%-------------------------------------------------------
 			% find stimulus groups (same apart from attenuation)
+			%-------------------------------------------------------
 			obj.Stimuli.findCommon;
 		end	% END initFromStruct
 		%------------------------------------------------------------------------
@@ -263,7 +294,8 @@ classdef Data < handle
 			% check to ensure that both L and R Entities were found
 			if ~all( any(EventID == L) & any(EventID == R) )
 				% if not abort
-				error('%s: Markers for both (L and R) channels not found!', mfilename);
+				error('%s: Markers for both (L and R) channels not found!', ...
+																						mfilename);
 			end
 			% check MarkerEvents
 			MarkerEvents = find(EventID);
@@ -273,8 +305,10 @@ classdef Data < handle
 								mfilename, nMarkerEvents);
 			end
 			% make sure # of events are the same
-			if ~(Events(MarkerEvents(1)).EventCount == Events(MarkerEvents(2)).EventCount)
-				error('%s: EventCount mismatch between L and R channels!', mfilename);
+			if ~(Events(MarkerEvents(1)).EventCount == ...
+														Events(MarkerEvents(2)).EventCount)
+				error('%s: EventCount mismatch between L and R channels!', ...
+																						mfilename);
 			else
 				EventCount = Events(MarkerEvents(1)).EventCount;
 				obj.Nmarkers = EventCount;
@@ -294,14 +328,12 @@ classdef Data < handle
 			% full array. 
 			obj.Markers = DW.Marker;
 			obj.Markers(EventCount, 1) = DW.Marker;
-
 			% loop through the events
 			for n = 1:EventCount
 				% parse strings into cell arrays; to preserve empty fields, do NOT
 				% treat successive delimiters/whitespace as one (in call to csvscan)
 				tmpR = csvscan(Events(evR).Data{n}, 0);
 				tmpL = csvscan(Events(evL).Data{n}, 0);
-
 				% ASSUME that one of the lists will not have an outputfile field.
 				% pad with empty values 
 				if length(tmpR) ~= MARKER_NBASE
@@ -354,7 +386,6 @@ classdef Data < handle
 				% set timestamp
 				obj.Markers(n).setTimestamp([	Events(evL).TimeStamp(n)	...
 														Events(evR).TimeStamp(n) ]);
-				
 				% set ID
 				obj.Markers(n).setID(n);
 				clear elist
@@ -438,6 +469,7 @@ classdef Data < handle
 			% entitites could be used, but are somewhat redundant and 
 			% do not have the snippet waveforms.  
 			%-----------------------------------------------------------
+			obj.Nprobes = nSegments;			
 			% create the Probe object
 			obj.Probes = DW.Probe;
 			if nSegments > 1
@@ -447,12 +479,13 @@ classdef Data < handle
 			% pull out timestamps based on unit ID
 			% according to Neuroshare, unit 0 is uncategorized, 255 is noise
 			% this is not necessarily true
-			for n = 1:nSegments
+			for n = 1:obj.Nprobes
 				% store timestamps for units with ID 0 - should
 				% probably figure out a way to store/sort all unitIDs at some
 				% point........
 				% also, convert to microseconds (from seconds!!!)
 				obj.Probes(n).name = Segment(n).SourceInfo.ProbeInfo;
+				obj.Probes(n).samprate = Segment(n).Info.SampleRate;
 				obj.Probes(n).cluster = unique(Segment(n).UnitID);
 				obj.Probes(n).nclusters = length(obj.Probes(n).cluster);
 				obj.Probes(n).t = cell(obj.Probes(n).nclusters, 1);
@@ -465,11 +498,11 @@ classdef Data < handle
 										Segment(n).UnitID == obj.Probes(n).cluster(u));
 					obj.Probes(n).wforms{u} = ...
 									Segment(n).WaveForm(...
-										Segment(n).UnitID == obj.Probes(n).cluster(u));	
+										Segment(n).UnitID == obj.Probes(n).cluster(u));
 				end	% END Nclusters loop
 			end	% END nSegments loop
+			
 			clear Segment
-			obj.Nprobes = nSegments;
 			if nargout
 				varargout{1} = unitID;
 			end
@@ -538,6 +571,69 @@ classdef Data < handle
 		%------------------------------------------------------------------------
 		
 		%------------------------------------------------------------------------
+		function varargout = loadBackground(obj, varargin)
+		%------------------------------------------------------------------------
+		% Probes = Data.loadBackground
+		%------------------------------------------------------------------------
+			fprintf('%s: loading Background spikes from Probes...\n', mfilename);
+			%-----------------------------------------------------------
+			% make sure probes are loaded!
+			%-----------------------------------------------------------
+			if isempty(obj.Nprobes)
+				error('%s: no probes loaded!', mfilename);
+			end
+			% default bg windows
+			bgwindow =	{	[0 30], ...
+								[(obj.Info.TimeSpan - 30)	obj.Info.TimeSpan], ...
+							};
+			% if user provided them, use them
+			if nargin == 2
+				bgwindow = varargin{1};
+			end
+			nwindows = length(bgwindow);
+			
+			%-----------------------------------------------------------
+			% create Background object
+			%-----------------------------------------------------------
+			obj.Background = DW.Probe;
+			if obj.Nprobes > 1
+				obj.Background(obj.Nprobes, 1) = DW.Probe;
+			end
+			
+			% more or less, copy probe data.  need to get timestamps for each
+			% unit for the background windows
+			for n = 1:obj.Nprobes
+				% also, convert to microseconds (from seconds!!!)
+				obj.Background(n).name = obj.Probes(n).name;
+				obj.Background(n).samprate = obj.Probes(n).samprate;
+				obj.Background(n).cluster = obj.Probes(n).cluster;
+				obj.Background(n).nclusters = obj.Probes(n).nclusters;
+				
+				% find spikes within windows
+				obj.Background(n).t = cell(obj.Probes(n).nclusters, nwindows);
+				obj.Background(n).wforms = cell(obj.Probes(n).nclusters, nwindows);
+				
+				% loop through units - id 0 will usually be first, junk is 255
+				for u = 1:obj.Probes(n).nclusters
+					for w = 1:nwindows
+					% convert timestamp to usec from seconds
+						[obj.Background(n).t{u, w}, tempi] = ...
+								find_valid_timestamps(	obj.Probes(n).t{u}, ...
+																1e6 * bgwindow{w}(1), ...
+																1e6 * bgwindow{w}(2)	);
+						obj.Background(n).wforms{u, w} = ...
+														obj.Probes(n).wforms{u}(tempi{1});
+					end	% END nwindows loop
+				end	% END Nclusters loop
+			end	% END nSegments loop
+			if nargout
+				varargout{1} = obj.Background;
+			end
+					
+		end	% END function
+		
+		
+		%------------------------------------------------------------------------
 		function varargout = plotUnitWaveforms(obj, varargin)
 		%------------------------------------------------------------------------
 		% Plots overlaid waveforms of spikes
@@ -600,13 +696,16 @@ classdef Data < handle
 						H(fIndex) = figure; %#ok<AGROW>
 						W = obj.Probes(p).getWaveformsForCluster(u);
 						if ~isempty(W)
-							plot(W);
+							[r, c] = size(W);
+							tvec = (1000/obj.Probes(p).samprate) * (0:(r-1));
+							plot(tvec, W);
 							titlestr = { ...
 								sprintf('Probe %d Unit %d', p, u), ...
 								sprintf('%s', obj.Probes(p).name), ...
 								sprintf('%d waveforms', length(obj.Probes(p).t{uindx})), ...
 							};
 							title(titlestr, 'Interpreter', 'none');
+							xlabel('milliseconds');
 						end
 						fIndex = fIndex + 1;
 					else
@@ -621,9 +720,8 @@ classdef Data < handle
 		%------------------------------------------------------------------------
 		%------------------------------------------------------------------------
 		
-		
 		%------------------------------------------------------------------------
-		function H = plotRasterAndPSTH(obj, varargin)
+		function varargout = plotRasterAndPSTH(obj, varargin)
 		%------------------------------------------------------------------------
 		% Plots rasters of grouped data
 		%------------------------------------------------------------------------
@@ -638,6 +736,11 @@ classdef Data < handle
 		%
 		% H = Data.plotRasterAndPSTH('unit', unitnumber)
 		%	'unit' selects unit to display
+		%
+		% H = Data.plotRasterAndPSTH('offset', [pretime posttime])
+		%	If spikes are desired from before the stim onset timestamp or after 
+		%	the next stim onset timestamp, an 'offset' option of form
+		%	[pretime posttime] may be included.  times must be in milliseconds
 		%------------------------------------------------------------------------
 			
 			%------------------------------------------------
@@ -646,6 +749,11 @@ classdef Data < handle
 			probenum = 1;
 			unitnum = 0;
 			plotopts.binwidth = 5;
+			offset = [0 0];
+			% !!!! this really needs to be determined by the 
+			% timestamps, but there's not an easy way at the moment... use
+			% this for now......
+			plotopts.timelimits = [0 1000];
 			if ~isempty(varargin)
 				a = 1;
 				while a <= length(varargin)
@@ -659,6 +767,14 @@ classdef Data < handle
 						case 'UNIT'
 							unitnum = varargin{a+1};
 							a = a + 2;
+						case 'OFFSET'
+							offset = varargin{a+1};
+							% make sure pretime is correct sign (should be
+							% positive)
+							offset(1) = abs(offset(1));
+							plotopts.timelimits(1) = plotopts.timelimits(1) - offset(1);
+							plotopts.timelimits(2) = plotopts.timelimits(2) + offset(2);
+							a = a + 2;
 						otherwise
 							error('%s: unknown option %s', mfilename, varargin{a});
 					end
@@ -667,11 +783,14 @@ classdef Data < handle
 			if ~between(probenum, 1, length(obj.Probes))
 				error('%s: probe must be in range [1:%d]', mfilename, ...
 																	length(obj.Probes));
+			else
+				fprintf('%s: plotting raster/psth for probe %d, unit %d\n', ...
+												mfilename, probenum, unitnum);
 			end
 			%------------------------------------------------
 			% get the spikes struct for probe and unit
 			%------------------------------------------------
-			S = obj.getSpikesForProbe(probenum, 'unit', unitnum);
+			S = obj.getSpikesForProbe(probenum, 'unit', unitnum, 'offset', offset);
 			%------------------------------------------------
 			% loop through groups
 			%------------------------------------------------
@@ -691,12 +810,20 @@ classdef Data < handle
 					for t = 1:length(S(g).spikes{n})
 						allspikes{n}{t} = 0.001*S(g).spikes{n}{t};
 					end
-					plotopts.rowlabels{n} = sprintf('%d', obj.Stimuli.S{Sindx(n), 2}.Attenuation);
+					plotopts.rowlabels{n} = sprintf('%d', ...
+													obj.Stimuli.S{Sindx(n), 2}.Attenuation);
 				end
-				plotopts.columnlabels{1} = sprintf('%s: %s', obj.fname, obj.Stimuli.S{Sindx(n), 2}.Filename);
+				plotopts.columnlabels{1} = sprintf('%s: %s', ...
+										obj.fname, obj.Stimuli.S{Sindx(n), 2}.Filename);
 				figure
 				H{g} = rasterpsthmatrix(allspikes, plotopts);
-			end	% END g		
+			end	% END g
+			if nargout
+				varargout{1} = H;
+			end
+			if nargout == 2
+				varargout{2} = S;
+			end
 		end	% END plotRastersAndPSTH
 		%------------------------------------------------------------------------
 		%------------------------------------------------------------------------
@@ -777,7 +904,9 @@ classdef Data < handle
 		%
 		% If spikes are desired from before the stim onset timestamp or after 
 		% the next stim onset timestamp, a second input argument of form
-		% [pretime posttime] may be included.  times must be in milliseconds
+		% [pretime posttime] may be included.  times must be in milliseconds.
+		% Note that times will be referenced to the offset start time
+		% (stim_onset_timestamp - pretime)
 		%
 		%------------------------------------------------------------------------
 		% S is a (ngroups X 1) struct array with fields:
@@ -873,13 +1002,25 @@ classdef Data < handle
 		% To extend this time, provide an additional input parameter that is
 		% a 1 X 2 vector of pre-stimulus time and post-sweep time in milliseconds:
 		%
+ 		%	spikes = Data.getSpikesForStimGroup(group, probe, unit, [pre post])
+		%	
+		%	e.g.,
+		%	
 		%	spikes = Data.getSpikesForStimGroup(1, 2, 255, [100 200])
 		%
-		%		which will get spikes for group 1, probe 2, unit id 255 and
+		%		This will get spikes for group 1, probe 2, unit id 255 and
 		%		include spikes 100 ms before the stimulus sweep timestamp and 
 		%		200 ms after the following stimulus timestamp.  If the stimulus
 		%		timestamps are, for example, 1000 ms apart, this will include 
-		%		spikes in a 1300 ms total window.
+		%		spikes in a 1300 ms total window.  
+		%
+		%	Note that pre-stim onset time is POSITIVE, such that the offset 
+		%	sweep timestamp will be computed as:
+		%			start_time = original_start_time - pre
+		%			end_time = original_end_time + post
+		%	or, for our example, 
+		%			start_time = original_start_time - 100
+		%			end_time = original_end_time + 200
 		%
 		%------------------------------------------------------------------------
 		
@@ -938,14 +1079,20 @@ classdef Data < handle
 			%--------------------------------------------------
 			for sloop = 1:length(Sindx)
 				s = Sindx(sloop);
-				% subtract and add the pre and post times from sweepstart and 
-				% sweep end timestamps
+				% add the pre and post times from sweepstart and 
+				% sweep end timestamps; note that it is assumed that
+				% the presweeptime is > 0 
 				tstart = obj.Stimuli.Sweepstart{s} - presweeptime;
 				tend = obj.Stimuli.Sweepend{s} + postsweeptime;
 				% get the spikes for this stimulus, centered re: Sweepstart
 				% timestamp
 				spikes{sloop} = find_valid_timestamps(Spiketimes, tstart, tend, ...
 																	obj.Stimuli.Sweepstart{s});
+				%{
+				% get the spikes for this stimulus, centered re: Sweepstart
+				% timestamp
+				spikes{sloop} = find_valid_timestamps(Spiketimes, tstart, tend);
+				%}
 			end	% END sloop
 		end	% END getSpikes
 		%------------------------------------------------------------------------

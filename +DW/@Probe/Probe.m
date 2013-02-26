@@ -9,6 +9,7 @@
 % 		wforms
 % 		cluster
 % 		nclusters
+%		samprate
 % 		name
 %-----------------------------------------------------------------------------
 % See also: DWdata, Marker
@@ -25,6 +26,7 @@
 %								bits
 %	20 Feb 2013 (SJS): added wform property to store waveforms
 %	 -	changed Nclusters to nclusters
+%	24 Feb 2013 (SJS): added sample rate property
 %-----------------------------------------------------------------------------
 % TO DO:
 %
@@ -49,6 +51,7 @@ classdef Probe < handle
 		wforms
 		cluster
 		nclusters
+		samprate
 		name
 	end	% end of properties
 	%------------------------------------------------------------------------

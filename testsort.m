@@ -5,7 +5,7 @@
 %------------------------------------------------------------
 close all; clear all;
 FORCEFLAG = 0;
-FILENUM = 6;
+FILENUM = 1;
 %------------------------------------------------------------
 %------------------------------------------------------------
 %% file names
@@ -36,15 +36,19 @@ end
 
 % BAT
 batfiles = { ...
-	'12-12-2012--2854_BBNrate.ddf', ...		%	 BBN rate level function
-	'12-12-2012--2854_FreqScan2.ddf', ...	% frequency tuning (bat)
-	'12-12-2012--2854_strings block.ddf', ...		% vocal strings (bat)
-	'12-12-2012--2854_RepRate0.ddf', ...		% repetition rate (bat)
 	'01-03-2013--2961_syllable_block_new_sorted.ddf', ...	% syllables, sorted spikes, multispikes (bat)
 	'829_01-05-2013--2729_FRA_Sorted.ddf', ...		% freq/response area, sorted spikes (bat)
 	'829_01-05-2013--2729_repRate20_Sorted.ddf', ...		% repetition rate, sorted spikes (bat)
 	};
+% filetype
+battype = { ...
+	'RLF', ...
+	'FRA', ...
+	'RLF', ...
+	};
+	
 filename = batfiles{FILENUM};
+datatype = battype{FILENUM};
 
 % generate matfile name for output of converted .ddf data
 [~, matfile] = fileparts(filename);
@@ -73,7 +77,34 @@ end
 %% create Data Object
 %------------------------------------------------------------
 %------------------------------------------------------------
-d = DW.FRAdata(D, fullfile(datapath, filename));
+if strcmpi(datatype, 'FRA')
+	% load 
+	d = DW.FRAdata(D, fullfile(datapath, filename));
+	% plot unit waveforms (overlaid)
+	d.plotUnitWaveforms;
+elseif strcmp(datatype, 'RLF')
+	d = DW.RateData(D, fullfile(datapath, filename));
+	% plot unit waveforms (overlaid)
+	d.plotUnitWaveforms;
+else
+	error('%s: Unknown data type %s', mfilename, datatype);
+end
+
+%------------------------------------------------------------
+%------------------------------------------------------------
+%% plot appropriate to type
+%------------------------------------------------------------
+%------------------------------------------------------------
+if strcmpi(datatype, 'FRA')
+	% plot FRA data, using window from 0 to 1000 msec
+	d.plotFRA(1, 255, [0 1000])
+
+elseif strcmp(datatype, 'RLF')
+	% plot rasters/psth for each stimulus, for unit 255
+	d.plotRasterAndPSTH('probe', 1, 'unit', 255, 'offset', [-100 0])
+else
+	error('%s: Unknown data type %s', mfilename, datatype);
+end
 
 
 %------------------------------------------------------------

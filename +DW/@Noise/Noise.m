@@ -17,6 +17,8 @@
 % Created: 18 January, 2012 (SJS)
 %
 % Revisions:
+%	25 Feb 2013 (SJS): removed Type setting in constructor (Type property
+%							 was removed from Data class)
 %-----------------------------------------------------------------------------
 % TO DO:
 %-----------------------------------------------------------------------------
@@ -62,7 +64,7 @@ classdef Noise < DW.Stimulus
 		% Noise()	when called with no arguments, returns empty
 		%				Noise object
 		%---------------------------------------------------------------------
-			DataWaveDefaults;
+			DW.DataWaveDefaults;
 			%--------------------------------------------------------
 			% call superclass constructor
 			%--------------------------------------------------------
@@ -70,8 +72,6 @@ classdef Noise < DW.Stimulus
 			%--------------------------------------------------------
 			% Noise-specific init
 			%--------------------------------------------------------
-			% set Type (def. in Stimulus) to NOISE
-			obj.Type = 'NOISE';
 			if isempty(varargin)
 				return
 			elseif length(varargin) == 1
@@ -95,7 +95,7 @@ classdef Noise < DW.Stimulus
 		%---------------------------------------------------------------------
 		function obj = setValsFromMarker(obj, Marker, Channel)
 		%---------------------------------------------------------------------
-			DataWaveDefaults;
+			DW.DataWaveDefaults;
 			% set frequency
 			if Channel == R
 				obj.LowerFreq = Marker.BBNlowerFreqR;
