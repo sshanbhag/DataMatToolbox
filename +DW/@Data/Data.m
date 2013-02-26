@@ -650,7 +650,11 @@ classdef Data < handle
 		%	the next stim onset timestamp, an 'offset' option of form
 		%	[pretime posttime] may be included.  times must be in milliseconds
 		%------------------------------------------------------------------------
-			
+		%
+		% NEED TO REWORK OUTPUT format!!!!
+		%	- customized for each data type???
+		%
+		%
 			%------------------------------------------------
 			% ensure that inputs are in bounds
 			%------------------------------------------------
@@ -673,7 +677,7 @@ classdef Data < handle
 			% get spikes for unit, all stimulus groups
 			%--------------------------------------------------
 			S = repmat( struct('spikes', {}, 'name', []), ngroups, 1);
-			% use pre/post window to sweep timestamps
+			% use psth window as limit for timestamps
 			for g = 1:ngroups
 				S(g).spikes = obj.getSpikesForStim(g, probenum, unitnum, ...
 																	'window', psthwin);
