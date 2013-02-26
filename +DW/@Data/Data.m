@@ -201,6 +201,14 @@ classdef Data < handle
 			%-------------------------------------------------------
 			obj.loadStimuli;
 			%-------------------------------------------------------
+			% get sweep times
+			%-------------------------------------------------------
+			obj.Stimuli.extractTimeFromMarkers(obj.Markers);
+			%-------------------------------------------------------
+			% find stimulus groups (same apart from attenuation)
+			%-------------------------------------------------------
+			obj.Stimuli.findCommon;
+			%-------------------------------------------------------
 			% convert segments to Probes
 			%-------------------------------------------------------
 			if ~isfield(D, 'Segment')
@@ -214,14 +222,6 @@ classdef Data < handle
 				obj.loadProbesFromSegment(D.Segment);
 				obj.loadBackground;
 			end
-			%-------------------------------------------------------
-			% get sweep times
-			%-------------------------------------------------------
-			obj.Stimuli.extractTimeFromMarkers(obj.Markers);
-			%-------------------------------------------------------
-			% find stimulus groups (same apart from attenuation)
-			%-------------------------------------------------------
-			obj.Stimuli.findCommon;
 		end	% END initFromStruct
 		%------------------------------------------------------------------------
 		%------------------------------------------------------------------------
@@ -631,7 +631,97 @@ classdef Data < handle
 			end
 					
 		end	% END function
+		%------------------------------------------------------------------------
+		%------------------------------------------------------------------------
+
+		%------------------------------------------------------------------------
+		%------------------------------------------------------------------------
+		% Analysis methods
+		%------------------------------------------------------------------------
+		%------------------------------------------------------------------------
 		
+		function varargout = computePSTH(obj, probenum, unitnum, binsize, psthwin)
+		%------------------------------------------------------------------------
+		% computes psth for spike data
+		%------------------------------------------------------------------------
+		% H = Data.computePSTH(obj, probenum, unitnum, binsize, psthwin)
+		%	
+		%	If spikes are desired from before the stim onset timestamp or after 
+		%	the next stim onset timestamp, an 'offset' option of form
+		%	[pretime posttime] may be included.  times must be in milliseconds
+		%------------------------------------------------------------------------
+			
+			%------------------------------------------------
+			% ensure that inputs are in bounds
+			%------------------------------------------------
+			if ~between(probenum, 1, obj.Nprobes)
+				error('%s: probe must be in range [1:%d]', mfilename, obj.Nprobes);
+			end
+			if ~any(unitnum == obj.Probes(probenum).cluster)
+				error('%s: unit not found in Probe]', mfilename, probenum);
+			end
+			if binsize <= 0
+				error('%s: binsize must be greater than 0 ms', mfilename)
+			end
+			fprintf('%s: computing psth for probe %d, unit %d\n', ...
+												mfilename, probenum, unitnum);
+			%--------------------------------------------------
+			% # of groups available
+			%--------------------------------------------------
+			ngroups = length(obj.Stimuli.GroupList);
+			%--------------------------------------------------
+			% get spikes for unit, all stimulus groups
+			%--------------------------------------------------
+			S = repmat( struct('spikes', {}, 'name', []), ngroups, 1);
+			% use pre/post window to sweep timestamps
+			for g = 1:ngroups
+				S(g).spikes = obj.getSpikesForStim(g, probenum, unitnum, ...
+																	'window', psthwin);
+				S(g).name = obj.Probes(probenum).name;
+			end
+			
+			%------------------------------------------------
+			% loop through groups
+			%------------------------------------------------
+			ngroups = length(S);
+			% initialize H to hold figures
+			H = cell(ngroups, 1);
+			allspikes = cell(ngroups, 1);
+			for g = 1:ngroups
+				% get Stimulus List indices for this group
+				Sindx = obj.Stimuli.GroupList{g};
+				nlevels = length(Sindx);
+				H{g} = cell(nlevels, 1);
+				allspikes{g} = cell(nlevels, 1);
+				% loop through stim indices
+				for n = 1:nlevels
+					% convert spiketimes to milliseconds
+					allspikes{g}{n} = cell(length(S(g).spikes{n}), 1);
+					for t = 1:length(S(g).spikes{n})
+						allspikes{n}{t} = 0.001*S(g).spikes{n}{t};
+					end
+					% compute psth
+					[H{g}{n}, bins] = psth(allspikes{g}{n}, binsize, psthwin);
+				end
+			end	% END g
+			if any(nargout == [1 2 3])
+				varargout{1} = H;
+			end
+			if any(nargout == [2 3])
+				varargout{2} = bins;
+			end
+			if nargout == 3
+				varargout{3} = allspikes;
+			end
+		end	% END computePSTH		
+		
+		
+
+		%------------------------------------------------------------------------
+		%------------------------------------------------------------------------
+		% Plotting methods
+		%------------------------------------------------------------------------
+		%------------------------------------------------------------------------
 		
 		%------------------------------------------------------------------------
 		function varargout = plotUnitWaveforms(obj, varargin)
@@ -888,7 +978,13 @@ classdef Data < handle
 		end	% END plotRasters
 		%------------------------------------------------------------------------
 		%------------------------------------------------------------------------
-		
+
+		%------------------------------------------------------------------------
+		%------------------------------------------------------------------------
+		% Spike access methods
+		%------------------------------------------------------------------------
+		%------------------------------------------------------------------------
+			
 		%------------------------------------------------------------------------
 		function S = getSpikesForProbe(obj, probenum, varargin)
 		%------------------------------------------------------------------------
@@ -970,25 +1066,25 @@ classdef Data < handle
 			if isempty(offset)
 				% no offset provided
 				for g = 1:ngroups
-					S(g).spikes = obj.getSpikesForStimGroup(g, probenum, unitnum);
+					S(g).spikes = obj.getSpikesForStim(g, probenum, unitnum);
 					S(g).name = obj.Probes(probenum).name;
 				end
 			else
 				% use pre/post offset to sweep timestamps
 				for g = 1:ngroups
-					S(g).spikes = ...
-							obj.getSpikesForStimGroup(g, probenum, unitnum, offset);
+					S(g).spikes = obj.getSpikesForStim(g, probenum, unitnum, ...
+																		'offset', offset);
 					S(g).name = obj.Probes(probenum).name;
 				end
 			end	% END if
-		end	% END getSpikesByGroup
+		end	% END getSpikesForProbe
 		%------------------------------------------------------------------------
 		%------------------------------------------------------------------------
 		
 		%------------------------------------------------------------------------
-		function spikes = getSpikesForStimGroup(obj, group, probe, unit, varargin)
+		function spikes = getSpikesForStim(obj, group, probe, unit, varargin)
 		%------------------------------------------------------------------------
-		% spikes = Data.getSpikesForStimGroup(groupnum, probenum, unitnum)
+		% spikes = Data.getSpikesForStim(group, probe, unit, <<options>>)
 		%------------------------------------------------------------------------
 		% Stimuli are split by stimulus characteristics (e.g., wav filename,
 		% frequency) and then grouped into common values with different 
@@ -999,14 +1095,15 @@ classdef Data < handle
 		%
 		% By default, only spikes between the each Stimulus output timestamp and
 		% the following stimulus's output timestamp will be collected.  
-		% To extend this time, provide an additional input parameter that is
-		% a 1 X 2 vector of pre-stimulus time and post-sweep time in milliseconds:
+		% To extend this time, you may provide an additional 'offset' option
+		% is a 1 X 2 vector of pre-stimulus time and post-sweep time
+		% in milliseconds:
 		%
- 		%	spikes = Data.getSpikesForStimGroup(group, probe, unit, [pre post])
+ 		%	spikes = Data.getSpikesForStim(group, probe, unit, 'offset', [pre post])
 		%	
 		%	e.g.,
 		%	
-		%	spikes = Data.getSpikesForStimGroup(1, 2, 255, [100 200])
+		%	spikes = Data.getSpikesForStim(1, 2, 255, 'offset', [100 200])
 		%
 		%		This will get spikes for group 1, probe 2, unit id 255 and
 		%		include spikes 100 ms before the stimulus sweep timestamp and 
@@ -1022,6 +1119,13 @@ classdef Data < handle
 		%			start_time = original_start_time - 100
 		%			end_time = original_end_time + 200
 		%
+		% Alternatively, you may specify a 'window', relative to the stimulus
+		% onset timestamp:
+		%
+		%	spikes = Data.getSpikesForStim(1, 2, 255, 'window', [-100 575]
+		%	
+		%	will return spikes that occurred between 100 ms before the stimulus
+		%	timestamp and 575 ms after.
 		%------------------------------------------------------------------------
 		
 			%--------------------------------------------------
@@ -1052,20 +1156,68 @@ classdef Data < handle
 				unitid = unitid(1);
 			end
 			%--------------------------------------------------
-			% check for pre/post time
+			% check for pre/post time offset or window
 			%--------------------------------------------------
+			wMode = [];
 			if ~isempty(varargin)
-				% assign to pre and post sweeptime (convert to usec)
-				presweeptime = 1000 * varargin{1}(1);
-				postsweeptime = 1000 * varargin{1}(2);
-			else
-				presweeptime = 0;
-				postsweeptime = 0;
+				argN = 1;
+				while argN <= length(varargin)
+					switch upper(varargin{argN})
+						case 'OFFSET'
+							% assign to pre and post sweeptime (convert to usec)
+							presweeptime = 1000 * varargin{argN+1}(1);
+							postsweeptime = 1000 * varargin{argN+1}(2);
+							wMode = 'OFFSET';
+							argN = argN + 2;
+						case 'WINDOW'
+							% assign to pre and post sweeptime (convert to usec)
+							presweeptime = 1000 * varargin{argN+1}(1);
+							postsweeptime = 1000 * varargin{argN+1}(2);
+							wMode = 'WINDOW';
+							argN = argN + 2;
+						otherwise
+							fprintf('%s.getSpikesForStim: unknown option %s\n', ...
+												mfilename, varargin{argN});
+							error(mfilename);
+					end
+				end	% END while argN
 			end
 			%--------------------------------------------------
 			% get the list of stimuli for this group
 			%--------------------------------------------------
 			Sindx = obj.Stimuli.GroupList{group};
+			%--------------------------------------------------
+			% figure out window
+			%--------------------------------------------------
+			% preallocate tstart and tend
+			tstart = cell(length(Sindx), 1);
+			tend = cell(length(Sindx), 1);
+			if isempty(wMode)
+				% loop through the groups
+				for sloop = 1:length(Sindx)
+					s = Sindx(sloop);
+					tstart{sloop} = obj.Stimuli.Sweepstart{s};
+					tend{sloop} = obj.Stimuli.Sweepend{s};
+				end
+			elseif strcmpi(wMode, 'OFFSET')
+				% loop through the groups and subtract presweeptime from the 
+				% sweepstart values and add postsweeptime to the sweepend
+				% values
+				for sloop = 1:length(Sindx)
+					s = Sindx(sloop);
+					tstart{sloop} = obj.Stimuli.Sweepstart{s} - abs(presweeptime);
+					tend{sloop} = obj.Stimuli.Sweepend{s} + postsweeptime;
+				end								
+			elseif strcmpi(wMode, 'WINDOW')
+				% loop through the groups and subtract presweeptime from the 
+				% sweepstart values and add postsweeptime to the sweepstart
+				% values
+				for sloop = 1:length(Sindx)
+					s = Sindx(sloop);
+					tstart{sloop} = obj.Stimuli.Sweepstart{s} - abs(presweeptime);
+					tend{sloop} = obj.Stimuli.Sweepstart{s} + postsweeptime;
+				end
+			end	% END if
 			%--------------------------------------------------
 			% allocate spikes vector
 			%--------------------------------------------------
@@ -1079,21 +1231,14 @@ classdef Data < handle
 			%--------------------------------------------------
 			for sloop = 1:length(Sindx)
 				s = Sindx(sloop);
-				% add the pre and post times from sweepstart and 
-				% sweep end timestamps; note that it is assumed that
-				% the presweeptime is > 0 
-				tstart = obj.Stimuli.Sweepstart{s} - presweeptime;
-				tend = obj.Stimuli.Sweepend{s} + postsweeptime;
 				% get the spikes for this stimulus, centered re: Sweepstart
 				% timestamp
-				spikes{sloop} = find_valid_timestamps(Spiketimes, tstart, tend, ...
+				spikes{sloop} = find_valid_timestamps(	Spiketimes, ...
+																	tstart{sloop}, ...
+																	tend{sloop}, ...
 																	obj.Stimuli.Sweepstart{s});
-				%{
-				% get the spikes for this stimulus, centered re: Sweepstart
-				% timestamp
-				spikes{sloop} = find_valid_timestamps(Spiketimes, tstart, tend);
-				%}
 			end	% END sloop
+			
 		end	% END getSpikes
 		%------------------------------------------------------------------------
 		%------------------------------------------------------------------------

@@ -1,3 +1,25 @@
+%-----------------------------------------------------------------------------
+% dwtester.m
+%-----------------------------------------------------------------------------
+% DataMat Toolbox
+%-----------------------------------------------------------------------------
+% script to demonstrate ddf file/data access using Neuroshare toolbox and
+% object-based analysis code in the DW package.
+%
+%-----------------------------------------------------------------------------
+% See also: +DW package
+%-----------------------------------------------------------------------------
+
+%-----------------------------------------------------------------------------
+% Sharad J. Shanbhag
+% sshanbhag@neomed.edu
+%-----------------------------------------------------------------------------
+% Created: 25 February, 2013 (SJS)
+%
+% Revisions:
+%-----------------------------------------------------------------------------
+
+
 %------------------------------------------------------------
 %------------------------------------------------------------
 %% initial setup
@@ -8,7 +30,9 @@ close all;
 % clear variables and classes
 clear classes;
 
-% FORCEFLAG set to 1 will re-convert the .ddf file to a .mat file
+% FORCEFLAG set to 1 will force conversion the .ddf file to a .mat file
+% if the .mat file does not exist for the selected .ddf file, then the file will
+% be automatically converted.
 FORCEFLAG = 0;
 
 % select the file to analyze from the datafiles list
@@ -34,12 +58,13 @@ switch computer
 	case {'MACI64', 'GLNX86', 'GLNXA64'}
 		% path to datafile for Mac or Linux
 		datapath = '/Users/sshanbhag/Work/Data/DataWave/DDFtest';
+	otherwise
+		error('%s: unknown computer', mfilename);
 end
 
 %------------------------------------------------------------
 % datafiles
 %------------------------------------------------------------
-
 % MOUSE
 %********* Combination sensitivity, Multichannel recording (mouse)
 %**** CRASHES NEUROSHARE MATLAB API (not NeuroExplorer)
@@ -54,12 +79,17 @@ batfiles = { ...
 	'829_01-05-2013--2729_repRate20_Sorted.ddf', ...		% repetition rate, sorted spikes (bat)
 	};
 % filetype
+%	RLF	= Rate Level Function (or any data that can fall under this
+%										category)
+%	FRA	= Frequency Response Area
 battype = { ...
 	'RLF', ...
 	'FRA', ...
 	'RLF', ...
 	};
-	
+
+% select the filename and datatype via the lists above and the FILENUM from
+% inital config
 filename = batfiles{FILENUM};
 datatype = battype{FILENUM};
 
@@ -73,14 +103,22 @@ matfile = [matfile '.mat'];
 %------------------------------------------------------------
 %------------------------------------------------------------
 if ~exist(fullfile(datapath, matfile), 'file') || FORCEFLAG
+	% if the matfile for this ddf file does not exist, OR FORCEFLAG == 1, 
+	% run convertDDF2MAT from the DW package to convert the .ddf data to a
+	% Matlab struct (D) and save the data struct to a mat file via Neuroshare.  
+	% The 'Event', 'Segment' and 'Neural' options tell the function to extract
+	% the Event (markers), Segment (waveforms) and Neural (spike times)
+	% Neuroshare entities
 	fprintf('%s: converting ddf file to mat file...\n', mfilename)
 	try
 		D = DW.convertDDF2MAT(fullfile(datapath,filename), 'EVENT', 'SEGMENT', 'NEURAL');
 	catch errMsg
+		% trap any errors
 		errMsg %#ok<NOPTS>
 	end
 	fprintf('%s: ....done\n', mfilename);
 else
+	% if the matfile exists, load it (saves time)
 	fprintf('%s: loading .mat file %s\n', mfilename, fullfile(datapath, matfile));
 	load(fullfile(datapath, matfile));
 end
@@ -90,17 +128,60 @@ end
 %% create Data Object
 %------------------------------------------------------------
 %------------------------------------------------------------
+% check the datatype - if it is FRA (Frequency Response Area), use the 
+% FRAdata class from the DW package to store/manage the data.  
+% If the datatype is RLF, use the RateData class.  Initialize the classes 
+% from the D struct obtained by convertDDF2MAT
 if strcmpi(datatype, 'FRA')
 	% load 
 	d = DW.FRAdata(D, fullfile(datapath, filename));
 	% plot unit waveforms (overlaid)
 	d.plotUnitWaveforms;
-elseif strcmp(datatype, 'RLF')
+	
+elseif strcmpi(datatype, 'RLF')
 	d = DW.RateData(D, fullfile(datapath, filename));
 	% plot unit waveforms (overlaid)
 	d.plotUnitWaveforms;
+
 else
 	error('%s: Unknown data type %s', mfilename, datatype);
+end
+
+%------------------------------------------------------------
+%------------------------------------------------------------
+%% get probe and unit number from user
+%------------------------------------------------------------
+%------------------------------------------------------------
+% Select Probe
+qFlag = 1;
+while qFlag
+	fprintf('Probes found:\t')
+	fprintf('%d ', 1:d.Nprobes);
+	fprintf('\n');
+ 	probenum = input('Select Probe: ');
+	if isempty(probenum)
+		fprintf('must select a probe number!\n\n')
+	elseif ~any(probenum == 1:d.Nprobes)
+		fprintf('please select a probe in range!\n\n')
+	else
+		qFlag = 0;
+	end
+end
+
+% Select Unit
+qFlag = 1;
+while qFlag
+	fprintf('\n\nUnits (clusters) for Probe %d:\t', probenum);
+	fprintf('%d ', d.Probes(probenum).cluster);
+	fprintf('\n');
+ 	unitnum = input('Select Unit (cluster #): ');
+	if isempty(unitnum)
+		fprintf('must select a unit number!\n\n')
+	elseif ~any(unitnum == d.Probes(probenum).cluster)
+		fprintf('please select a unit that is in range!\n\n')
+	else
+		qFlag = 0;
+	end
 end
 
 %------------------------------------------------------------
@@ -110,21 +191,36 @@ end
 %------------------------------------------------------------
 if strcmpi(datatype, 'FRA')
 	% plot FRA data, using window from 0 to 1000 msec
-	d.plotFRA(1, 255, [0 1000])
+	% 0 corresponds to the stimulus onset marker/timestamp
+	d.plotFRA(probenum, unitnum, [0 1000]);
 
 elseif strcmp(datatype, 'RLF')
-	% plot rasters/psth for each stimulus, for unit 255
-	d.plotRasterAndPSTH('probe', 1, 'unit', 255, 'offset', [-100 0])
+	% plot rasters/psth for each stimulus and attenuation
+	% individual stimuli will be plotted in separate figures (for all atten
+	% values)
+	d.plotRasterAndPSTH('probe', probenum, 'unit', unitnum, 'offset', [-100 0])
+	spikecount = d.countSpikes(probenum, unitnum, [0 50]);
 else
 	error('%s: Unknown data type %s', mfilename, datatype);
 end
 
+%------------------------------------------------------------
+%------------------------------------------------------------
+%% get 1 ms psths 
+% (format of output subject to revision
+% due to extremely poor organization at moment)
+%------------------------------------------------------------
+%------------------------------------------------------------
+binsize = 1;	% msec
+[PSTH, bins, spiketimes] = d.computePSTH(probenum, unitnum, binsize, [-100 1000]);
 
 %------------------------------------------------------------
 %------------------------------------------------------------
 %% save Data Object
 %------------------------------------------------------------
 %------------------------------------------------------------
+% write the data object.  for debugging use, the D struct 
+% is also saved, but this will ultimately be redundant...
 save( fullfile(datapath, ['Dobj_' matfile]), 'd', 'D');
 
 
