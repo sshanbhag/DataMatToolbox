@@ -38,6 +38,14 @@ FORCEFLAG = 0;
 % select the file to analyze from the datafiles list
 FILENUM = 1;
 
+% probenum and unitnum set to [] will cause script to ask for user input
+% otherwise, set them to desired value
+probenum = 1;
+unitnum = 255;
+
+% window for psth.  time in milliseconds relative to stimulus onset timestamp
+psthwin = [-100 1000];
+
 %------------------------------------------------------------
 %------------------------------------------------------------
 %% file names
@@ -74,6 +82,7 @@ end
 
 % BAT
 batfiles = { ...
+	'827_12-18-2012--2649_syllable block_Sorted.ddf', ...
 	'01-03-2013--2961_syllable_block_new_sorted.ddf', ...	% syllables, sorted spikes, multispikes (bat)
 	'829_01-05-2013--2729_FRA_Sorted.ddf', ...		% freq/response area, sorted spikes (bat)
 	'829_01-05-2013--2729_repRate20_Sorted.ddf', ...		% repetition rate, sorted spikes (bat)
@@ -152,37 +161,40 @@ end
 %% get probe and unit number from user
 %------------------------------------------------------------
 %------------------------------------------------------------
-% Select Probe
-qFlag = 1;
-while qFlag
-	fprintf('Probes found:\t')
-	fprintf('%d ', 1:d.Nprobes);
-	fprintf('\n');
- 	probenum = input('Select Probe: ');
-	if isempty(probenum)
-		fprintf('must select a probe number!\n\n')
-	elseif ~any(probenum == 1:d.Nprobes)
-		fprintf('please select a probe in range!\n\n')
-	else
-		qFlag = 0;
+% Select Probe if probenum is empty
+if isempty(probenum)
+	qFlag = 1;
+	while qFlag
+		fprintf('Probes found:\t')
+		fprintf('%d ', 1:d.Nprobes);
+		fprintf('\n');
+		probenum = input('Select Probe: ');
+		if isempty(probenum)
+			fprintf('must select a probe number!\n\n')
+		elseif ~any(probenum == 1:d.Nprobes)
+			fprintf('please select a probe in range!\n\n')
+		else
+			qFlag = 0;
+		end
 	end
-end
-
+end	% END if 
 % Select Unit
-qFlag = 1;
-while qFlag
-	fprintf('\n\nUnits (clusters) for Probe %d:\t', probenum);
-	fprintf('%d ', d.Probes(probenum).cluster);
-	fprintf('\n');
- 	unitnum = input('Select Unit (cluster #): ');
-	if isempty(unitnum)
-		fprintf('must select a unit number!\n\n')
-	elseif ~any(unitnum == d.Probes(probenum).cluster)
-		fprintf('please select a unit that is in range!\n\n')
-	else
-		qFlag = 0;
+if isempty(unitnum)
+	qFlag = 1;
+	while qFlag
+		fprintf('\n\nUnits (clusters) for Probe %d:\t', probenum);
+		fprintf('%d ', d.Probes(probenum).cluster);
+		fprintf('\n');
+		unitnum = input('Select Unit (cluster #): ');
+		if isempty(unitnum)
+			fprintf('must select a unit number!\n\n')
+		elseif ~any(unitnum == d.Probes(probenum).cluster)
+			fprintf('please select a unit that is in range!\n\n')
+		else
+			qFlag = 0;
+		end
 	end
-end
+end	% END if
 
 %------------------------------------------------------------
 %------------------------------------------------------------
@@ -199,7 +211,7 @@ elseif strcmp(datatype, 'RLF')
 	% individual stimuli will be plotted in separate figures (for all atten
 	% values)
 	d.plotRasterAndPSTH('probe', probenum, 'unit', unitnum, 'offset', [-100 0])
-	spikecount = d.countSpikes(probenum, unitnum, [0 50]);
+% 	spikecount = d.countSpikes(probenum, unitnum, [0 50]);
 else
 	error('%s: Unknown data type %s', mfilename, datatype);
 end
@@ -207,12 +219,22 @@ end
 %------------------------------------------------------------
 %------------------------------------------------------------
 %% get 1 ms psths 
-% (format of output subject to revision
-% due to extremely poor organization at moment)
+%------------------------------------------------------------
+% Format:
+% 	PSTH:	{# atten vals, # stim groups}, where each element
+% 			is a matrix of size [# sweeps (reps), # bins]
+% 
+% 	bins:	[1, length(psthwin(1):binsize:psthwin(2))] vector of 
+% 				time bins for PSTH.
+% 
+% 	spiketimes:	{# attenvals, # stim groups}  cell matrix, each element is
+% 					a cell vector, {# sweeps}, each containing a vector of
+% 					spiketimes (in milliseconds) for that sweep;
+% 
 %------------------------------------------------------------
 %------------------------------------------------------------
 binsize = 1;	% msec
-[PSTH, bins, spiketimes] = d.computePSTH(probenum, unitnum, binsize, [-100 1000]);
+[PSTH, bins, spiketimes] = d.computePSTH(probenum, unitnum, binsize, psthwin);
 
 %------------------------------------------------------------
 %------------------------------------------------------------

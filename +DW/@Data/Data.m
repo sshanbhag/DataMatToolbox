@@ -674,38 +674,61 @@ classdef Data < handle
 			%--------------------------------------------------
 			ngroups = length(obj.Stimuli.GroupList);
 			%--------------------------------------------------
+			% # of atten available
+			%--------------------------------------------------
+			natten = zeros(ngroups, 1);
+			for g = 1:ngroups
+				Sindx = obj.Stimuli.GroupList{g};
+				natten(g) = length(Sindx);
+			end
+			maxnatten = max(natten);
+			
+			%--------------------------------------------------
 			% get spikes for unit, all stimulus groups
 			%--------------------------------------------------
-			S = repmat( struct('spikes', {}, 'name', []), ngroups, 1);
-			% use psth window as limit for timestamps
-			for g = 1:ngroups
-				S(g).spikes = obj.getSpikesForStim(g, probenum, unitnum, ...
-																	'window', psthwin);
-				S(g).name = obj.Probes(probenum).name;
-			end
+% 			S = repmat( struct('spikes', {}, 'name', []), ngroups, 1);
+% 			% use psth window as limit for timestamps
+% 			for g = 1:ngroups
+% 				S(g).spikes = obj.getSpikesForStim(g, probenum, unitnum, ...
+% 																	'window', psthwin);
+% 				S(g).name = obj.Probes(probenum).name;
+% 			end
 			
+
+			%--------------------------------------------------
+			% allocate arrays
+			%--------------------------------------------------
+			
+			% compute # bins based on binsize and psthwin
+			bins = psthwin(1):binsize:psthwin(2);
+			nbins = length(bins);
+			% psth data in H will be {maxnatten, ngroups} with each element
+			% being a [nreps X nbins] array
+			H = cell(maxnatten, ngroups);
+			allspikes = cell(maxnatten, ngroups);
+
 			%------------------------------------------------
 			% loop through groups
 			%------------------------------------------------
-			ngroups = length(S);
-			% initialize H to hold figures
-			H = cell(ngroups, 1);
-			allspikes = cell(ngroups, 1);
+			% loop through # of stimulus groups (filenames, frequencies, etc.)
 			for g = 1:ngroups
-				% get Stimulus List indices for this group
-				Sindx = obj.Stimuli.GroupList{g};
-				nlevels = length(Sindx);
-				H{g} = cell(nlevels, 1);
-				allspikes{g} = cell(nlevels, 1);
-				% loop through stim indices
-				for n = 1:nlevels
-					% convert spiketimes to milliseconds
-					allspikes{g}{n} = cell(length(S(g).spikes{n}), 1);
-					for t = 1:length(S(g).spikes{n})
-						allspikes{n}{t} = 0.001*S(g).spikes{n}{t};
+				tmpspikes = obj.getSpikesForStim(g, ...
+															probenum, unitnum, ...
+															'window', psthwin);
+				% loop through # of attenuation values for this stim
+				for n = 1:natten(g)
+					% get spikes for this stim/atten level
+					allspikes{n, g} = tmpspikes{n};
+					nsweeps = length(allspikes{n, g});
+					H{n, g} = zeros(nsweeps, nbins);
+					% loop through sweeps
+					for t = 1:nsweeps
+						% convert spiketimes to milliseconds 
+						%  (required for psth() func)
+						allspikes{n, g}{t} = 0.001*allspikes{n, g}{t};
+						% compute psth
+						[H{n, g}(t, :), tbins] = psth(allspikes{n, g}{t}, binsize, psthwin);						
 					end
-					% compute psth
-					[H{g}{n}, bins] = psth(allspikes{g}{n}, binsize, psthwin);
 				end
 			end	% END g
 			if any(nargout == [1 2 3])
