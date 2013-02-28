@@ -1,10 +1,13 @@
 %-----------------------------------------------------------------------------
-% RateData.m < Data
+% ReprateData.m < Data
 %-----------------------------------------------------------------------------
 % DataMat Toolbox
 % DW Package
 % Class Definition
 %-----------------------------------------------------------------------------
+% Repetition rate data is used to analyze/store/display data from DataWave
+% experiments that vary the repetition rate of stimuli that are stored
+% in wav files.  These data are similar to those of RateData.
 %-----------------------------------------------------------------------------
 % See also: Data (class), FRAdata
 %-----------------------------------------------------------------------------
@@ -30,18 +33,16 @@
 %*****************************************************************************
 %*****************************************************************************
 %*****************************************************************************
-classdef RateData < DW.Data
+classdef ReprateData < DW.Data
 	%------------------------------------------------------------------------
 	%------------------------------------------------------------------------
 	%------------------------------------------------------------------------
 	% Define protected properties
 	%------------------------------------------------------------------------
 	properties (SetAccess = protected)
-		Frequencies
+		SyllWavNames
+		Reprates
 		AttenLevels		
-		Nfreqs
-		sortedFreqs
-		sortFreqsX
 		sortedAtten
 		sortAttX
 		attcount
@@ -77,7 +78,7 @@ classdef RateData < DW.Data
 		%------------------------------------------------------------------------
 		% Initializes the object
 		%------------------------------------------------------------------------
-		function obj = RateData(varargin)
+		function obj = ReprateData(varargin)
 		%---------------------------------------------------------------------	
 		%	RateData(<fileName>) 
 		%	Constructor method
