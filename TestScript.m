@@ -36,7 +36,7 @@ clear classes;
 FORCEFLAG = 0;
 
 % select the file to analyze from the datafiles list
-FILENUM = 1;
+FILENUM = 2;
 
 % probenum and unitnum set to [] will cause script to ask for user input
 % otherwise, set them to desired value
@@ -93,6 +93,7 @@ batfiles = { ...
 %	FRA	= Frequency Response Area
 battype = { ...
 	'RLF', ...
+	'RLF', ...
 	'FRA', ...
 	'RLF', ...
 	};
@@ -144,17 +145,27 @@ end
 if strcmpi(datatype, 'FRA')
 	% load 
 	d = DW.FRAdata(D, fullfile(datapath, filename));
-	% plot unit waveforms (overlaid)
-	d.plotUnitWaveforms;
 	
 elseif strcmpi(datatype, 'RLF')
 	d = DW.RateData(D, fullfile(datapath, filename));
-	% plot unit waveforms (overlaid)
-	d.plotUnitWaveforms;
 
 else
 	error('%s: Unknown data type %s', mfilename, datatype);
 end
+
+%------------------------------------------------------------
+%------------------------------------------------------------
+%% plot waveforms
+%------------------------------------------------------------
+%------------------------------------------------------------
+if isempty(probenum) || isempty(unitnum)
+	% plot unit waveforms (overlaid) for all probes and units
+	d.plotUnitWaveforms;
+else
+	% plot unit waveforms (overlaid) for selected probe and unit
+	d.plotUnitWaveforms('probe', probenum, 'unit', unitnum);
+end
+
 
 %------------------------------------------------------------
 %------------------------------------------------------------
@@ -231,10 +242,20 @@ end
 % 					a cell vector, {# sweeps}, each containing a vector of
 % 					spiketimes (in milliseconds) for that sweep;
 % 
+%	StimInfo		struct
+% 		StimInfo.AttenVals	{# attenvals, # stim groups} array
+% 									of attenuation values for each atten/stim group
+% 									combination
+% 		StimInfo.VarValues	{# attenvals, # stim groups} array
+% 									of stimulus variable.  will depend on stimulus
+% 									type.  Wav stimuli will have .wav filename, 
+% 									Tone will have Frequency, noise will have
+% 									low and upper freq vals
 %------------------------------------------------------------
 %------------------------------------------------------------
 binsize = 1;	% msec
-[PSTH, bins, spiketimes] = d.computePSTH(probenum, unitnum, binsize, psthwin);
+[PSTH, bins, spiketimes, StimInfo] = d.computePSTH(probenum, unitnum, binsize, psthwin);
+
 
 %------------------------------------------------------------
 %------------------------------------------------------------

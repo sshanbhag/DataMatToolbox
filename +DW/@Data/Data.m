@@ -650,11 +650,7 @@ classdef Data < handle
 		%	the next stim onset timestamp, an 'offset' option of form
 		%	[pretime posttime] may be included.  times must be in milliseconds
 		%------------------------------------------------------------------------
-		%
-		% NEED TO REWORK OUTPUT format!!!!
-		%	- customized for each data type???
-		%
-		%
+
 			%------------------------------------------------
 			% ensure that inputs are in bounds
 			%------------------------------------------------
@@ -682,23 +678,9 @@ classdef Data < handle
 				natten(g) = length(Sindx);
 			end
 			maxnatten = max(natten);
-			
-			%--------------------------------------------------
-			% get spikes for unit, all stimulus groups
-			%--------------------------------------------------
-% 			S = repmat( struct('spikes', {}, 'name', []), ngroups, 1);
-% 			% use psth window as limit for timestamps
-% 			for g = 1:ngroups
-% 				S(g).spikes = obj.getSpikesForStim(g, probenum, unitnum, ...
-% 																	'window', psthwin);
-% 				S(g).name = obj.Probes(probenum).name;
-% 			end
-			
-
 			%--------------------------------------------------
 			% allocate arrays
 			%--------------------------------------------------
-			
 			% compute # bins based on binsize and psthwin
 			bins = psthwin(1):binsize:psthwin(2);
 			nbins = length(bins);
@@ -706,7 +688,6 @@ classdef Data < handle
 			% being a [nreps X nbins] array
 			H = cell(maxnatten, ngroups);
 			allspikes = cell(maxnatten, ngroups);
-
 			%------------------------------------------------
 			% loop through groups
 			%------------------------------------------------
@@ -731,19 +712,74 @@ classdef Data < handle
 					end
 				end
 			end	% END g
-			if any(nargout == [1 2 3])
+			if any(nargout == 1:4)
 				varargout{1} = H;
 			end
-			if any(nargout == [2 3])
+			if any(nargout == 2:4)
 				varargout{2} = bins;
 			end
-			if nargout == 3
+			if any(nargout == 3:4)
 				varargout{3} = allspikes;
 			end
+			if nargout == 4
+				varargout{4} = obj.getStimInfo;
+			end
 		end	% END computePSTH		
+		%------------------------------------------------------------------------
+		%------------------------------------------------------------------------
+	
 		
+		%------------------------------------------------------------------------
+		%------------------------------------------------------------------------
+		% Information methods
+		%------------------------------------------------------------------------
+		%------------------------------------------------------------------------
+			
+		%------------------------------------------------------------------------
+		function StimInfo = getStimInfo(obj)
+		%------------------------------------------------------------------------
 		
-
+			% get # groups
+			ngroups = length(obj.Stimuli.GroupList);
+			% assume same # of levels for all groups!
+			nlevels = length(obj.Stimuli.GroupList{1});
+			% allocate StimInfo bits
+			StimInfo.VarValues = cell(nlevels, ngroups);
+			StimInfo.AttenValues = cell(nlevels, ngroups);
+			
+			% loop through groups
+			for g = 1:ngroups
+				nlevels = length(obj.Stimuli.GroupList{g});
+				% loop through levels
+				for n = 1:nlevels
+					% get list of Stimuli for this group
+					gIndx = obj.Stimuli.GroupList{g}(n);
+					% get channel index (1 = L, 2 = R)
+					cIndx = DW.chan2indx(obj.Stimuli.Channel(gIndx));
+					% get Attenuation value
+					StimInfo.AttenValues{n, g} = obj.Stimuli.S{gIndx, cIndx}.Attenuation;
+					% varValue is stimulus type dependent
+					switch(class(obj.Stimuli.S{gIndx, cIndx}))
+						case 'DW.Wav'
+							[t1, t2, t3] = fileparts(obj.Stimuli.S{gIndx, cIndx}.Filename);
+							StimInfo.VarValues{n, g} = [t2 t3];
+						case 'DW.Noise'
+							tmp1 = obj.Stimuli.S{gIndx, cIndx}.LowerFreq;
+							tmp2 = obj.Stimuli.S{gIndx, cIndx}.UpperFreq;
+							StimInfo.VarValues{n, g} = sprintf('Noise %.1f - %.1f', tmp1, tmp2);
+							clear tmp1 tmp2;				
+						case 'DW.Tone'
+							StimInfo.VarValues{n, g} = obj.Stimuli.S{gIndx, cIndx}.Frequency;
+						case 'double'
+							StimInfo.VarValues{n, g} = [];
+						otherwise 
+							warning('%s: unknown stim class %s', mfilename, ...
+																		class(obj.Stimuli.S{gIndx, cIndx}));
+							StimInfo.VarValues{n, g} = 'unknown';
+					end
+				end
+			end
+		end	% END getStimInfo METHOD
 		%------------------------------------------------------------------------
 		%------------------------------------------------------------------------
 		% Plotting methods
