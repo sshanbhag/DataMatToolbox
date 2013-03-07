@@ -250,7 +250,7 @@ classdef Data < handle
 			% parse Markers
 			%-----------------------------------------------------------			
 			% From Neuroshare/DataWave, each channel's stimulus Marker
-			% is stored in an individual Event entity: the left (channel
+			% is stored in an individual Event entity. the left (channel
 			% 1) marker is in EventID = 1, the right (channel 2) is in 
 			% EventId 2.
 			% 
@@ -259,6 +259,13 @@ classdef Data < handle
 			%	EventID == 0 --> non-marker entity
 			%	EventID == 1 --> L channel markers
 			%	EventID == 2 --> R channel markers
+			%
+			% 7 Mar 2013 (SJS): issue: some inconsistency in files.
+			%	need to rethink assignment, since some files do not
+			%	have L (or R) markers, and thus only 2 Events.
+			%	
+			%	Also, the # of L and R markers may not match!
+			%
 			%-----------------------------------------------------------			
 			EventID = zeros(nEvents, 1);
 
@@ -291,36 +298,44 @@ classdef Data < handle
 				end
 			end
 
+			evL = find(EventID == L);
+			evR = find(EventID == R);
+			
+			fprintf('Left Markers -> Event(%d)\n', evL);
+			fprintf('Right Markers -> Event(%d)\n', evR);
+			
 			% check to ensure that both L and R Entities were found
 			if ~all( any(EventID == L) & any(EventID == R) )
 				% if not abort
 				error('%s: Markers for both (L and R) channels not found!', ...
 																						mfilename);
 			end
+			
 			% check MarkerEvents
 			MarkerEvents = find(EventID);
-			nMarkerEvents = length(MarkerEvents);
-			if nMarkerEvents ~= 2
-				error('%s: nMarkerEvents is %d (must be equal to 2)',...
-								mfilename, nMarkerEvents);
+			if length(MarkerEvents) ~= 2
+				error('%s: # of MarkerEvents is %d (must be equal to 2)',...
+								mfilename, length(MarkerEvents));
 			end
+			evCount = [Events(MarkerEvents(1)).EventCount ...
+										Events(MarkerEvents(2)).EventCount];
 			% make sure # of events are the same
-			if ~(Events(MarkerEvents(1)).EventCount == ...
-														Events(MarkerEvents(2)).EventCount)
-				error('%s: EventCount mismatch between L and R channels!', ...
+			if ~(evCount(1) == evCount(2))
+				warning('%s: EventCount mismatch between L and R channels!', ...
 																						mfilename);
+				[EventCount, minindx] = min(evCount);
+				obj.Nmarkers = EventCount;
+				fprintf('Using lower count (%d)\n', obj.Nmarkers);
 			else
 				EventCount = Events(MarkerEvents(1)).EventCount;
 				obj.Nmarkers = EventCount;
 			end
 
-			evL = find(EventID == L);
-			evR = find(EventID == R);
-			fprintf('Left Markers -> Event(%d)\n', evL);
-			fprintf('Right Markers -> Event(%d)\n', evR);
+
 
 			%-----------------------------------------------------------			
-			% allocate Markers object array
+			% allocate Markers object array - need to figure out soln
+			% for only 1 channel of markers....
 			%-----------------------------------------------------------			
 			% Matlab thinks obj.Markers is a double, and will throw an
 			% an error.  so, we trick Matlab in order to do so:  first, need to
@@ -490,6 +505,8 @@ classdef Data < handle
 				obj.Probes(n).nclusters = length(obj.Probes(n).cluster);
 				obj.Probes(n).t = cell(obj.Probes(n).nclusters, 1);
 				obj.Probes(n).wforms = cell(obj.Probes(n).nclusters, 1);
+				obj.Probes(n).time_units = 1e-6;
+				obj.Probes(n).nwindows = 1;
 				% loop through units - id 0 will usually be first, junk is 255
 				for u = 1:obj.Probes(n).nclusters
 					% convert timestamp to usec from seconds
@@ -561,6 +578,8 @@ classdef Data < handle
 				obj.Probes(n).cluster = Neural(n).Info.SourceUnitID;
 				obj.Probes(n).nclusters = 1;
 				obj.Probes(n).t = Neural(n).TimeStamps;
+				obj.Probes(n).time_units = 1e-6;
+				obj.Probes(n).nwindows = 1;
 			end	% END nSegments loop
 			obj.Nprobes = nNeural;
 			if nargout
@@ -608,6 +627,8 @@ classdef Data < handle
 				obj.Background(n).samprate = obj.Probes(n).samprate;
 				obj.Background(n).cluster = obj.Probes(n).cluster;
 				obj.Background(n).nclusters = obj.Probes(n).nclusters;
+				obj.Background(n).time_units = 1e-6;
+				obj.Background(n).nwindows = nwindows;
 				
 				% find spikes within windows
 				obj.Background(n).t = cell(obj.Probes(n).nclusters, nwindows);
@@ -966,8 +987,24 @@ classdef Data < handle
 					plotopts.rowlabels{n} = sprintf('%d', ...
 													obj.Stimuli.S{Sindx(n), 2}.Attenuation);
 				end
-				plotopts.columnlabels{1} = sprintf('%s: %s', ...
+				% get column labels from stimulus properties
+				switch class(obj.Stimuli.S{Sindx(n), 2})
+					case 'DW.Noise'
+						plotopts.columnlabels{1} = ...
+									sprintf('%s: BBN %.1f - %.1f Hz', ...
+										obj.fname, ...
+										obj.Stimuli.S{Sindx(n), 2}.LowerFreq, ...
+										obj.Stimuli.S{Sindx(n), 2}.UpperFreq	);
+					case 'DW.Wav'
+						plotopts.columnlabels{1} = sprintf('%s: %s', ...
 										obj.fname, obj.Stimuli.S{Sindx(n), 2}.Filename);
+					case 'DW.Tone'
+						plotopts.columnlabels{1} = sprintf('%s: Tone %.1f Hz', ...
+										obj.fname, obj.Stimuli.S{Sindx(n), 2}.Freq);
+					otherwise
+						plotopts.columnlabels{1} = sprintf('%s: %s', ...
+										obj.fname, class(obj.Stimuli.S{Sindx(n), 2}));
+				end
 				figure
 				H{g} = rasterpsthmatrix(allspikes, plotopts);
 			end	% END g
@@ -1196,7 +1233,7 @@ classdef Data < handle
 			%--------------------------------------------------
 			% # of groups available
 			ngroups = length(obj.Stimuli.GroupList);
-			if ~between(group, 1, ngroups)
+			if (group < 1) || (group > ngroups)
 				error('%s: group must be in range [1:%d]', mfilename, ngroups);
 			end
 			%--------------------------------------------------

@@ -9,10 +9,16 @@ function varargout = find_valid_timestamps(timestamps, winstart, winend, varargi
 % For proper behaviour, please ensure that time units for timestamps
 % and windows are the same.
 %
-% To reference times to an alternative "0" time, provide winref as input
+% By default, the returned timestamps will be referenced to the time 
+% provided in winstart.  This is done under the assumption that each
+% winstart value is the start of a "sweep" or stimulus presentation and
+% spiketimes are best interpreted relative to that timestamp.
+%
+% To reference times to an alternative "zero" time, provide winref as input
 % (in same units as timestamps, please).
 %
-% returns cell array validtimes
+% ¡The timestamps may be returned unaltered by using 0 as the winref value!
+%
 %%------------------------------------------------------------------------
 % Input Arguments:
 % 	timestamps		vector of timestamps
@@ -41,6 +47,7 @@ function varargout = find_valid_timestamps(timestamps, winstart, winend, varargi
 %	21 Feb 2013 (SJS): changed return validtimes to {[]} when 
 %								timestamps is empty for consistency
 %	22 Feb 2013 (SJS): added optional input winref
+%	6 Mar 2013 (SJS): added some info to help docs.
 %------------------------------------------------------------------------
 
 %------------------------------------------------------------------------
@@ -62,8 +69,11 @@ if isempty(varargin)
 	% if no winref provided, use default winstart
 	winref = winstart;
 else
+	% otherwise, use the provided value as reference time
 	winref = varargin{1};
 	if length(winref) == 1
+		% if winref is a single value, create a vector the length of the
+		% number of time windows for use in each "sweep"
 		winref = winref * ones(size(winstart));
 	end
 end
@@ -87,6 +97,9 @@ for w = 1:nwin
 	end
 end
 
+%------------------------------------------------------------------------
+% assign outputs
+%------------------------------------------------------------------------
 varargout{1} = validtimes;
 if nargout == 2
 	varargout{2} = validindices;

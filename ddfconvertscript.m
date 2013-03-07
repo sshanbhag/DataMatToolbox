@@ -8,11 +8,13 @@ datapath = 'G:\';
 matpath = 'Z:\Marie\batmat';
 ddffilelist = dir(fullfile(datapath, '*.ddf'));
 save('ddflist.mat', 'ddffilelist');
+nDDFfiles = length(ddffilelist);
+fprintf('Found %d .DDF file in %s\n\n', nDDFfiles, datapath);
 
 %------------------------------------------------------------
 %% convert to matfiles
 %------------------------------------------------------------
-for n = 1:length(ddffilelist)
+for n = 1:nDDFfiles
 	ddffile = fullfile(datapath, ddffilelist(n).name);
 	[tmppath, tmpfile, tmpext] = fileparts(ddffile);
 	matfile = fullfile(matpath, [tmpfile '.mat']);
@@ -23,5 +25,7 @@ for n = 1:length(ddffilelist)
 		fprintf('\t%s\n\n', matfile);
  		D = DW.convertDDF2MAT(ddffile, 'MATFILE', matfile, 'EVENT', 'SEGMENT', 'NEURAL');
 		clear D;
+	else
+		fprintf('File %s already converted....\n\n', ddffile);
 	end
 end

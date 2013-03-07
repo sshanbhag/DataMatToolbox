@@ -135,7 +135,7 @@ tstart = 1000 * tstart;
 % compute tend
 tend = tstart + 1000*bgwin_duration;
 % find spike timestamps within this window
-[bgspikes, tmpindx] = find_valid_timestamps(spikes, tstart, tend); 
+[bgspikes, tmpindx] = find_valid_timestamps(spikes, tstart, tend, 0);
 % get the valid waveforms
 bgwaves = waves(cell2mat(tmpindx));
 

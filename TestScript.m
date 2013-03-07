@@ -166,7 +166,6 @@ else
 	d.plotUnitWaveforms('probe', probenum, 'unit', unitnum);
 end
 
-
 %------------------------------------------------------------
 %------------------------------------------------------------
 %% get probe and unit number from user
@@ -255,6 +254,7 @@ end
 %------------------------------------------------------------
 binsize = 1;	% msec
 [PSTH, bins, spiketimes, StimInfo] = d.computePSTH(probenum, unitnum, binsize, psthwin);
+
 
 
 %------------------------------------------------------------
