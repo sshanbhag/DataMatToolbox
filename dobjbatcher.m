@@ -1,29 +1,37 @@
+clear all
+close all
+clear classes
 
 %------------------------------------------------------------
 %% file names
 %------------------------------------------------------------
 DLLName = 'C:\DataWave\DWShared\nsDWFile.dll';
-datapath = 'E:\Bat - SingleCh Restrained\batmat';
-dobjpath = 'E:\Bat - SingleCh Restrained\batmat\matfiles';
-matfilelist = dir(fullfile(datapath, '*.mat'));
+inputpath = 'F:\Work\Data\DataWave\batmat\convertedDDF';
+dobjoutpath = 'F:\Work\Data\DataWave\batmat\dobj';
+% matfilelist = dir(fullfile(inputpath, '*.mat'));
+matfilelist(1).name = '826_11-30-2012--3468_syllables block_Sorted.mat';
+% matfilelist(1).name = '827_01-03-2013--2961_RepRate0_Sorted.mat';
 
 %------------------------------------------------------------
 %% create Data Object
 %------------------------------------------------------------
-for n = 1%:length(matfilelist)
+n = 1;
+
+% for n = 1:length(matfilelist)
 	
 	probenum = 1;
 	unitnum = 255;
 	
-	matfile = fullfile(datapath, matfilelist(n).name);
+	matfile = fullfile(inputpath, matfilelist(n).name);
 	[tmppath, tmpfile, tmpext] = fileparts(matfile);
-	dobjfile = fullfile(dobjpath, [tmpfile '.mat']);
+	dobjfile = fullfile(dobjoutpath, [tmpfile '.mat']);
 
 	% load matfile to get D 
-	fprintf('%s: loading .mat file %s\n', mfilename, fullfile(datapath, matfile));
+	fprintf('%s: loading .mat file %s\n', mfilename, fullfile(inputpath, matfile));
 	load(matfile);
 	
-	d = DW.RateData(D, fullfile(datapath, matfile));
+	%% convert to obj
+	d = DW.RateData(D, fullfile(inputpath, matfile));
 	% plot unit waveforms (overlaid)
 	d.plotUnitWaveforms('probe', probenum, 'unit', unitnum);
 	
@@ -35,16 +43,7 @@ for n = 1%:length(matfilelist)
 	%------------------------------------------------------------
 	% write the data object.  for debugging use, the D struct 
 	% is also saved, but this will ultimately be redundant...
-	save( fullfile(datapath, ['Dobj_' matfile]), 'd', 'probenum', 'unitnum');
+% 	save( fullfile(inputpath, ['Dobj_' matfile]), 'd', 'probenum', 'unitnum');
 
-	
-	
-% 	if ~exist(dobjfile, 'file')
-% 		fprintf('Converting:\n');
-% 		fprintf('\t%s\n', matfile);
-% 		fprintf('\t\t--TO--\n');
-% 		fprintf('\t%s\n\n', dobjfile);
-%  		
-% 		clear D;
-% 	end
-end
+
+% end

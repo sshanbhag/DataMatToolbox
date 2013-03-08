@@ -297,18 +297,33 @@ classdef Data < handle
 					end
 				end
 			end
-
+			% find the event item that corresponds to L and R channels
 			evL = find(EventID == L);
 			evR = find(EventID == R);
-			
 			fprintf('Left Markers -> Event(%d)\n', evL);
 			fprintf('Right Markers -> Event(%d)\n', evR);
 			
 			% check to ensure that both L and R Entities were found
 			if ~all( any(EventID == L) & any(EventID == R) )
 				% if not abort
-				error('%s: Markers for both (L and R) channels not found!', ...
+				warning('%s: Markers for both (L and R) channels not found!', ...
 																						mfilename);
+				% fix
+				if isempty(evL)
+					% set evL to nEvents + 1 (add event)
+					evL = nEvents + 1;
+					EventID(evL) = L;
+					% use R channel as dummy event model
+					Events(evL) = fix_missing_markerchannel(Events(evR), L);
+				elseif isempty(evR)
+					% set evR to nEvents + 1 (add event)
+					evR = nEvents + 1;
+					EventID(evR) = R;
+					% use L channel as dummy event model
+					Events(evR) = fix_missing_markerchannel(Events(evL), R);
+				else
+					error('Unknown empty event!')
+				end
 			end
 			
 			% check MarkerEvents
@@ -321,6 +336,8 @@ classdef Data < handle
 										Events(MarkerEvents(2)).EventCount];
 			% make sure # of events are the same
 			if ~(evCount(1) == evCount(2))
+				% if they are not the same, use lowest common number of
+				% events
 				warning('%s: EventCount mismatch between L and R channels!', ...
 																						mfilename);
 				[EventCount, minindx] = min(evCount);
@@ -330,9 +347,7 @@ classdef Data < handle
 				EventCount = Events(MarkerEvents(1)).EventCount;
 				obj.Nmarkers = EventCount;
 			end
-
-
-
+			
 			%-----------------------------------------------------------			
 			% allocate Markers object array - need to figure out soln
 			% for only 1 channel of markers....
@@ -349,6 +364,7 @@ classdef Data < handle
 				% treat successive delimiters/whitespace as one (in call to csvscan)
 				tmpR = csvscan(Events(evR).Data{n}, 0);
 				tmpL = csvscan(Events(evL).Data{n}, 0);
+
 				% ASSUME that one of the lists will not have an outputfile field.
 				% pad with empty values 
 				if length(tmpR) ~= MARKER_NBASE
