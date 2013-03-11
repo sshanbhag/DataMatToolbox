@@ -679,13 +679,42 @@ classdef Data < handle
 		
 		function varargout = computePSTH(obj, probenum, unitnum, binsize, psthwin)
 		%------------------------------------------------------------------------
-		% computes psth for spike data
+		% computes psth for spike data on sweep-by-sweep basis
 		%------------------------------------------------------------------------
-		% H = Data.computePSTH(obj, probenum, unitnum, binsize, psthwin)
+		% H = Data.computePSTH(obj, probenum, unitnum, binsize)
+		%	H will be a {# attenuation valus, # stimulus groups} cell array.
+		%	each element of H will be a matrix of spike counts in the form of
+		%	(# sweeps, time bins). 
 		%	
+		% H = Data.computePSTH(obj, probenum, unitnum, binsize, psthwin)
+		%	Default behavior is to compute a PSTH from the stim onset timestamp
+		%	(i.e., the stimulus sweep timestamp) to the following stim onset
+		%	timestamp.
 		%	If spikes are desired from before the stim onset timestamp or after 
 		%	the next stim onset timestamp, an 'offset' option of form
-		%	[pretime posttime] may be included.  times must be in milliseconds
+		%	[pretime posttime] may be included.  Times must be in milliseconds
+		%	and are relative to the stimulus onset timestamp. e.g. a psthwin
+		%	value of [-100 575] will compute a PSTH using spikes that occurred 
+		%	from 100 ms before the stimulus timestamp and 575 ms after.
+		% 
+		%------------------------------------------------------------------------
+		% Input Arguments:
+		%	probenum		probe # for unit
+		%	unitnum		Neuroshare ID (usually 255 for 1st unit from Datawave)
+		%	binsize		PSTH bin width in milliseconds
+		%
+		%	Optional:
+		%		psthwin		optional time window for PSTH
+		%	
+		% Output Arguments
+		%	H				PSTH counts
+		%	bins			bin times (in milliseconds) for PSTH.  PSTH can 
+		%					be plotted using bins and H vectors using the bar() 
+		%					plotting function:
+		%						bar(bins, H{sweep, stim}, 1)
+		%	allspikes	cell array of spike times (¡in milliseconds!) used to
+		%					construct PSTH
+		%	StimInfo		information about stimuli
 		%------------------------------------------------------------------------
 
 			%------------------------------------------------
@@ -737,6 +766,7 @@ classdef Data < handle
 				for n = 1:natten(g)
 					% get spikes for this stim/atten level
 					allspikes{n, g} = tmpspikes{n};
+					% preallocate H array
 					nsweeps = length(allspikes{n, g});
 					H{n, g} = zeros(nsweeps, nbins);
 					% loop through sweeps
