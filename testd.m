@@ -40,4 +40,8 @@ d = DW.RateData(D, fullfile(matpath, matfile));
 % plot rasters/psth for each stimulus and attenuation
 % individual stimuli will be plotted in separate figures (for all atten
 % values)
-d.plotRasterAndPSTH('probe', probenum, 'unit', unitnum, 'offset', [-100 0])
+%d.plotRasterAndPSTH('probe', probenum, 'unit', unitnum, 'offset', [-100 0])
+
+%% compute 1 ms bin psth
+
+[H, bins, spikes, stiminf] = d.computePSTH(1, 255, 10, [-100 900])
