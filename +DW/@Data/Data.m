@@ -438,6 +438,7 @@ classdef Data < handle
 		%------------------------------------------------------------------------
 
 		%------------------------------------------------------------------------
+		%------------------------------------------------------------------------
 		function varargout = loadStimuli(obj)
 		%------------------------------------------------------------------------
 		% Stimuli = Data.loadStimuli
@@ -469,6 +470,7 @@ classdef Data < handle
 		%------------------------------------------------------------------------
 		%------------------------------------------------------------------------
 		
+		%------------------------------------------------------------------------
 		%------------------------------------------------------------------------
 		function varargout = loadProbesFromSegment(obj, Segment)
 		%------------------------------------------------------------------------
@@ -677,12 +679,14 @@ classdef Data < handle
 		%------------------------------------------------------------------------
 		%------------------------------------------------------------------------
 		
+		%------------------------------------------------------------------------
+		%------------------------------------------------------------------------
 		function varargout = computePSTH(obj, probenum, unitnum, binsize, psthwin)
 		%------------------------------------------------------------------------
 		% computes psth for spike data on sweep-by-sweep basis
 		%------------------------------------------------------------------------
 		% H = Data.computePSTH(obj, probenum, unitnum, binsize)
-		%	H will be a {# attenuation valus, # stimulus groups} cell array.
+		%	H will be a {# attenuation values, # stimulus groups} cell array.
 		%	each element of H will be a matrix of spike counts in the form of
 		%	(# sweeps, time bins). 
 		%	
@@ -779,6 +783,9 @@ classdef Data < handle
 					end
 				end
 			end	% END g
+			%------------------------------------------------
+			% Assign outputs
+			%------------------------------------------------
 			if any(nargout == 1:4)
 				varargout{1} = H;
 			end
@@ -803,9 +810,15 @@ classdef Data < handle
 		%------------------------------------------------------------------------
 			
 		%------------------------------------------------------------------------
+		%------------------------------------------------------------------------
 		function StimInfo = getStimInfo(obj)
 		%------------------------------------------------------------------------
+		%	StimInfo will be a {# attenuation values, # stimulus param} cell array.
+		%------------------------------------------------------------------------
 		
+			%--------------------------------------
+			% allocate some things for StimInfo
+			%--------------------------------------
 			% get # groups
 			ngroups = length(obj.Stimuli.GroupList);
 			% assume same # of levels for all groups!
@@ -813,7 +826,9 @@ classdef Data < handle
 			% allocate StimInfo bits
 			StimInfo.VarValues = cell(nlevels, ngroups);
 			StimInfo.AttenValues = cell(nlevels, ngroups);
-			
+			%--------------------------------------
+			% get and assign values to StimInfo arrays
+			%--------------------------------------
 			% loop through groups
 			for g = 1:ngroups
 				nlevels = length(obj.Stimuli.GroupList{g});
@@ -843,10 +858,36 @@ classdef Data < handle
 							warning('%s: unknown stim class %s', mfilename, ...
 																		class(obj.Stimuli.S{gIndx, cIndx}));
 							StimInfo.VarValues{n, g} = 'unknown';
-					end
-				end
-			end
+					end	% END switch class
+				end	% END nlevels Loop
+			end	% END ngroups Loop
 		end	% END getStimInfo METHOD
+		%------------------------------------------------------------------------
+		%------------------------------------------------------------------------
+		
+		%------------------------------------------------------------------------
+		%------------------------------------------------------------------------
+		function out = listProbeInfo(obj)
+		%------------------------------------------------------------------------
+			if isempty(obj.Nprobes) || ~obj.Nprobes
+				warning('%s: Probe data are not available!', mfilename)
+				out = [];
+				return
+			end
+			out.name =  cell(obj.Nprobes, 1);
+			out.cluster = zeros(obj.Nprobes, 1);
+			out.ntimestamps = zeros(obj.Nprobes, 1);
+
+			for n = 1:obj.Nprobes
+				out.name{n} = obj.Probes(n).name;
+				out.cluster(n) = obj.Probes(n).cluster;
+				out.ntimestamps(n) = length(obj.Probes(n).t);
+			end
+		end	% END listProbeInfo
+		%------------------------------------------------------------------------
+		%------------------------------------------------------------------------
+		
+		
 		%------------------------------------------------------------------------
 		%------------------------------------------------------------------------
 		% Plotting methods
@@ -1389,28 +1430,7 @@ classdef Data < handle
 		%------------------------------------------------------------------------
 		%------------------------------------------------------------------------
 		
-		%------------------------------------------------------------------------
-		function out = listProbeInfo(obj)
-		%------------------------------------------------------------------------
-			if isempty(obj.Nprobes) || ~obj.Nprobes
-				warning('%s: Probe data are not available!', mfilename)
-				out = [];
-				return
-			end
-			out.name =  cell(obj.Nprobes, 1);
-			out.cluster = zeros(obj.Nprobes, 1);
-			out.ntimestamps = zeros(obj.Nprobes, 1);
-
-			for n = 1:obj.Nprobes
-				out.name{n} = obj.Probes(n).name;
-				out.cluster(n) = obj.Probes(n).cluster;
-				out.ntimestamps(n) = length(obj.Probes(n).t);
-			end
-		end	% END listProbeInfo
-		%------------------------------------------------------------------------
-		%------------------------------------------------------------------------
-		
-		
+			
 	end	% End of methods
 	%------------------------------------------------------------------------
 	%------------------------------------------------------------------------

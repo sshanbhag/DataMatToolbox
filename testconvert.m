@@ -9,7 +9,7 @@ matpath = 'Z:\Marie\batmat';
 % ddffilelist = dir(fullfile(datapath, '*.ddf'));
 % save('ddflist.mat', 'ddffilelist');
 
-ddffilelist.name = '827_12-18-2012--2954_syllables block (30, 40)_Sorted.ddf';
+ddffilelist.name = '835_02-04-2013--2771_syllable block_Sorted (2).ddf';
 FORCEFLAG = 1;
 %------------------------------------------------------------
 %% convert to matfiles
