@@ -836,7 +836,7 @@ classdef Data < handle
 							StimInfo.VarValues{n, g} = sprintf('Noise %.1f - %.1f', tmp1, tmp2);
 							clear tmp1 tmp2;				
 						case 'DW.Tone'
-							StimInfo.VarValues{n, g} = obj.Stimuli.S{gIndx, cIndx}.Frequency;
+							StimInfo.VarValues{n, g} = obj.Stimuli.S{gIndx, cIndx}.Freq;
 						case 'double'
 							StimInfo.VarValues{n, g} = [];
 						otherwise 
