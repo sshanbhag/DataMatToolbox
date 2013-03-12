@@ -779,7 +779,7 @@ classdef Data < handle
 						%  (required for psth() func)
 						allspikes{n, g}{t} = 0.001*allspikes{n, g}{t};
 						% compute psth
-						[H{n, g}(t, :), tbins] = psth(allspikes{n, g}{t}, binsize, psthwin);						
+						[H{n, g}(t, :), tbins] = psth(allspikes{n, g}{t}, binsize, psthwin);
 					end
 				end
 			end	% END g

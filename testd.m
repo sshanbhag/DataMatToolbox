@@ -5,13 +5,15 @@ close all; clear all; clear classes;
 %% file names
 %------------------------------------------------------------
 %------------------------------------------------------------
-matpath = '/Users/sshanbhag/Work/Data/DataWave/batmat/convertedDDF'
+matpath = '/Users/sshanbhag/Work/Data/DataWave/batmat/convertedDDF';
 matfilelist = {	'827_12-18-2012--2649_BBNrate_Sorted.mat', ...
 						'829_01-10-2013--2859_strings block2_Sorted.mat', ...
 						'827_12-18-2012--2954_syllable block_Sorted.mat', ...
+						'826_12-12-2012--2653_freqScan_Sorted.mat', ...
+						'826_11-30-2012--3468_syllables block_Sorted.mat', ...
 					};
 nMatfiles = length(matfilelist);
-mIndx = 3;
+mIndx = 5;
 matfile = fullfile(matpath, matfilelist{mIndx});
 load(matfile)
 
@@ -45,3 +47,7 @@ d = DW.RateData(D, fullfile(matpath, matfile));
 %% compute 1 ms bin psth
 
 [H, bins, spikes, stiminf] = d.computePSTH(1, 255, 10, [-100 900])
+
+%% plot
+d.plotRasterAndPSTH('probe', probenum, 'unit', unitnum, 'offset', [-200
+    0])
