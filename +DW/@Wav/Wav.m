@@ -17,6 +17,8 @@
 % Created: 18 January, 2012 (SJS)
 %
 % Revisions:
+%	? day, 2013 (SJS): changed to use DW.fileparts so that PC behaviour for
+%		fileparts is used (path works successfully on all platforms)
 %-----------------------------------------------------------------------------
 % TO DO:
 %-----------------------------------------------------------------------------
@@ -96,9 +98,11 @@ classdef Wav < DW.Stimulus
 			DW.DataWaveDefaults;
 			% set frequency
 			if Channel == R
-				[obj.Filepath, tmpn, tmpx] = fileparts(Marker.WavFilenameR);
+				[obj.Filepath, tmpn, tmpx] = ...
+												DW.fileparts(Marker.WavFilenameR, 'PC');
 			else
-				[obj.Filepath, tmpn, tmpx] = fileparts(Marker.WavFilenameL);
+				[obj.Filepath, tmpn, tmpx] = ...
+												DW.fileparts(Marker.WavFilenameL, 'PC');
 			end
 			obj.Filename = [tmpn tmpx];
 			clear tmpn tmpx

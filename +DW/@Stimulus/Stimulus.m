@@ -100,10 +100,7 @@ classdef Stimulus < handle
 						% caller provided Marker and Channel as inputs
 						obj.buildStimulusFromMarker(tmp{1}, tmp{2});
 					else
-						fprintf('%s: strange inputs... ', mfilename);
-						fprintf('%s\t', tmp);
-						fprintf('\n');
-						error('%s: invalid inputs', mfilename);
+						fprintf('%s: empty or strange inputs... ', mfilename);
 					end
 					clear tmp
 				else

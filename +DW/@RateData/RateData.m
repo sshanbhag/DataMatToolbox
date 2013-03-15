@@ -106,10 +106,10 @@ classdef RateData < DW.Data
 		%------------------------------------------------------------------------
 		
 		%------------------------------------------------------------------------
-		function plot(obj, probenum, unitnum, frawin, varargin)
+		function plot(obj, probenum, unitnum, spikewin, varargin)
 		%------------------------------------------------------------------------
-		%	FRAdata.plotFRA(probenum, unitnum, frawin)
-		%	FRAdata.plotFRA(probenum, unitnum, frawin, 1)
+		%	RateData.plotFRA(probenum, unitnum, spikewin)
+		%	RateData.plotFRA(probenum, unitnum, spikewin, 1)
 		%			will force recomputation of the spike counts
 		%------------------------------------------------------------------------
 			
@@ -118,7 +118,7 @@ classdef RateData < DW.Data
 			% provided force flag
 			%------------------------------------------------
 			if isempty(obj.SpikeTimes) || isempty(obj.SpikeCount) || ~isempty(varargin)
-				obj.computeFRA(probenum, unitnum, frawin);
+				obj.countSpikes(probenum, unitnum, spikewin);
 			end
 			%------------------------------------------------
 			% plot as color patch

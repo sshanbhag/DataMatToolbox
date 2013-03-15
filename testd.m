@@ -6,14 +6,10 @@ close all; clear all; clear classes;
 %------------------------------------------------------------
 %------------------------------------------------------------
 matpath = '/Users/sshanbhag/Work/Data/DataWave/batmat/convertedDDF';
-matfilelist = {	'827_12-18-2012--2649_BBNrate_Sorted.mat', ...
-						'829_01-10-2013--2859_strings block2_Sorted.mat', ...
-						'827_12-18-2012--2954_syllable block_Sorted.mat', ...
-						'826_12-12-2012--2653_freqScan_Sorted.mat', ...
-						'826_11-30-2012--3468_syllables block_Sorted.mat', ...
+matfilelist = {	'832_02-14-2013--2469_repRate20_Sorted.mat', ...
 					};
 nMatfiles = length(matfilelist);
-mIndx = 5;
+mIndx = 1;
 matfile = fullfile(matpath, matfilelist{mIndx});
 load(matfile)
 
@@ -32,7 +28,7 @@ psthwin = [-100 1000];
 %% create data object
 %------------------------------------------------------------
 %------------------------------------------------------------
-d = DW.RateData(D, fullfile(matpath, matfile));
+d = DW.ReprateData(D, fullfile(matpath, matfile));
 
 %------------------------------------------------------------
 %------------------------------------------------------------
@@ -45,9 +41,7 @@ d = DW.RateData(D, fullfile(matpath, matfile));
 %d.plotRasterAndPSTH('probe', probenum, 'unit', unitnum, 'offset', [-100 0])
 
 %% compute 1 ms bin psth
-
-[H, bins, spikes, stiminf] = d.computePSTH(1, 255, 10, [-100 900])
+% [H, bins, spikes, stiminf] = d.computePSTH(1, 255, 10, [-100 900])
 
 %% plot
-d.plotRasterAndPSTH('probe', probenum, 'unit', unitnum, 'offset', [-200
-    0])
+% d.plotRasterAndPSTH('probe', probenum, 'unit', unitnum, 'offset', [-200 0])

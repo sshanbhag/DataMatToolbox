@@ -40,7 +40,7 @@ classdef ReprateData < DW.Data
 	% Define protected properties
 	%------------------------------------------------------------------------
 	properties (SetAccess = protected)
-		SyllWavNames
+		StimValues
 		Reprates
 		AttenLevels		
 		sortedAtten
@@ -80,7 +80,7 @@ classdef ReprateData < DW.Data
 		%------------------------------------------------------------------------
 		function obj = ReprateData(varargin)
 		%---------------------------------------------------------------------	
-		%	RateData(<fileName>) 
+		%	ReprateData(<fileName>) 
 		%	Constructor method
 		%	opens file called fileName (char) or opens
 		%  a dialog box to get a filename if the fileName provided does not exist.
@@ -96,7 +96,7 @@ classdef ReprateData < DW.Data
 			if nargin == 0
 				return
 			end
-		end	% END RateData CONSTRUCTOR
+		end	% END ReprateData CONSTRUCTOR
 		%------------------------------------------------------------------------
 		%------------------------------------------------------------------------
 
@@ -227,9 +227,9 @@ classdef ReprateData < DW.Data
 			%----------------------------------------------------------
 			% check if Frequencies and AttenLevels have been found
 			%----------------------------------------------------------
-			if isempty(obj.Frequencies) || isempty(obj.AttenLevels)
+			if isempty(obj.StimVals) || isempty(obj.AttenLevels)
 				% if not, find 'em
-				obj.findFreqAndAtten;
+				obj.findVals;
 			end
 			%----------------------------------------------------------
 			% get the spikes struct for probe and unit, and return it
@@ -258,7 +258,7 @@ classdef ReprateData < DW.Data
 				end
 			end
 			
-		end	% END getFRA
+		end	% END getSpikes
 		%------------------------------------------------------------------------
 		%------------------------------------------------------------------------
 	
@@ -271,13 +271,23 @@ classdef ReprateData < DW.Data
 		%------------------------------------------------------------------------
 		%------------------------------------------------------------------------
 		function countSpikes(obj, probenum, unitnum, countwin)
+		%--------------------------------------------------------------------
+		% Some Assumptions:
+		%	- repetition rate stimuli are wav files
+		%	- information about repetition rate is found in filename
+		%	- filename already has the path removed.
+		%--------------------------------------------------------------------
+			
+			
+			
+			
 			fprintf('%s: counting spikes for probe %d, unit %d, [%d-%d] window\n', ...
 									mfilename, probenum, unitnum, countwin(1), countwin(2));
 			%------------------------------------------------
 			% get the spikes
 			%------------------------------------------------
 			Spikes = obj.getSpikes('probe', probenum, 'unit', unitnum, ...
-										'window', frawin);
+										'window', countwin);
 			%------------------------------------------------
 			% sort variables and atten
 			%------------------------------------------------
@@ -342,10 +352,11 @@ classdef ReprateData < DW.Data
 		%------------------------------------------------------------------------
 	
 		%------------------------------------------------------------------------
-		function varargout = findFreqAndAtten(obj)
 		%------------------------------------------------------------------------
+		function findVars(obj)	
+		%-------------------------------------------------------
 		% assumption: stimuli delivered from only 1 speaker
-		%------------------------------------------------------------------------
+		%-------------------------------------------------------
 		
 			if isempty(obj.Stimuli)
 				error('%s: StimulusList is not initialized', mfilename);
@@ -353,37 +364,47 @@ classdef ReprateData < DW.Data
 			
 			% get channels for data
 			C = obj.Stimuli.getChannelAsNum;
-			obj.Frequencies = zeros(length(obj.Stimuli.GroupList), 1);
+			obj.StimValues = cell(length(obj.Stimuli.GroupList), 1);
 			obj.AttenLevels = cell(length(obj.Stimuli.GroupList), 1);
 			% loop through groups
 			for g = 1:length(obj.Stimuli.GroupList)
 				% get indices into C (and S) for this group
 				sind = obj.Stimuli.GroupList{g};
-				freqs = zeros(size(sind));
+				vals = cell(size(sind));
 				atts = zeros(size(sind));
 				fprintf('Group %d:\n', g);
 				% loop through indices
 				for s = 1:length(sind)
 					% get the stim object
 					sobj = obj.Stimuli.S{sind(s), C(sind(s))};
-					fprintf('\t%.0f\t\t%.2f\n', sobj.Freq, sobj.Attenuation);
-					freqs(s) = sobj.Freq;
+					switch class(sobj)
+						case 'DW.Wav'
+							tmpstruct.Filename = sobj.Filename;
+						case 'DW.Noise'
+							tmpstruct.LowerFreq = sobj.LowerFreq;
+							tmpstruct.UpperFreq = sobj.UpperFreq;
+						case 'DW.Tone'
+							tmpstruct.Freq = sobj.Freq;
+							tmpstruct.Phase = sobj.Phase;
+						otherwise
+							tmpstruct = class(sobj);
+					end
+					vals{s} = tmpstruct;
+					clear tmpstruct
 					atts(s) = sobj.Attenuation;
 				end
-				if any(freqs(1) ~= freqs)
-					fprintf('Grouping Error!\n');
-				end
-				obj.Frequencies(g) = freqs(1);
+ 				obj.StimValues{g} = vals;
 				obj.AttenLevels{g} = atts;
 			end
-		
+
 			if nargout
 				varargout{1} = C;
 			end
 
-		end	% END findFreqAndAtten
+		end	% END findVars
 		%------------------------------------------------------------------------
 		%------------------------------------------------------------------------
+
 		
 	end	% End of methods
 	%------------------------------------------------------------------------
