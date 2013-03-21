@@ -37,15 +37,15 @@ classdef RateData < DW.Data
 	% Define protected properties
 	%------------------------------------------------------------------------
 	properties (SetAccess = protected)
-		Frequencies
+		Variables
+		Nvars
+		sortedVars
+		sortVarsX
 		AttenLevels		
-		Nfreqs
-		sortedFreqs
-		sortFreqsX
+		Natten
 		sortedAtten
 		sortAttX
 		attcount
-		Natten
 		SpikeTimes
 		SpikeCount
 		MeanCount
@@ -108,8 +108,8 @@ classdef RateData < DW.Data
 		%------------------------------------------------------------------------
 		function plot(obj, probenum, unitnum, spikewin, varargin)
 		%------------------------------------------------------------------------
-		%	RateData.plotFRA(probenum, unitnum, spikewin)
-		%	RateData.plotFRA(probenum, unitnum, spikewin, 1)
+		%	RateData.plot(probenum, unitnum, spikewin)
+		%	RateData.plot(probenum, unitnum, spikewin, 1)
 		%			will force recomputation of the spike counts
 		%------------------------------------------------------------------------
 			
@@ -137,7 +137,7 @@ classdef RateData < DW.Data
 			% show color legend
 			colorbar
 			% deal with labels and title
-			xlabel('Log Frequency (kHz)');
+			xlabel('Vars');
 			ylabel('Attenuation (dB)');
  			title(	{	obj.fname, ...
 							sprintf('Avg Spike Count, [%d-%d] ms window', ...
@@ -179,6 +179,12 @@ classdef RateData < DW.Data
 
 		%------------------------------------------------------------------------
 		%------------------------------------------------------------------------
+		% Spike data methods
+		%------------------------------------------------------------------------
+		%------------------------------------------------------------------------
+		
+		%------------------------------------------------------------------------
+		%------------------------------------------------------------------------
 		function S = getSpikes(obj, varargin)
 		%------------------------------------------------------------------------
 		%
@@ -190,7 +196,7 @@ classdef RateData < DW.Data
 		%	'window', [tstart tend]
 		%		species time window for spikes (re: start of sweep) in millisec
 		%
-		%	out is a struct array (with # of elements in array == # freqs)
+		%	out is a struct array (with # of elements in array == # vars)
 		%		out(f).spikes = {# atten vals, 1} cell array of spike times (usec)
 		%		out(f).name = char string with spike name
 		%------------------------------------------------------------------------
@@ -226,9 +232,9 @@ classdef RateData < DW.Data
 			%----------------------------------------------------------
 			% check if Frequencies and AttenLevels have been found
 			%----------------------------------------------------------
-			if isempty(obj.Frequencies) || isempty(obj.AttenLevels)
+			if isempty(obj.Variables) || isempty(obj.AttenLevels)
 				% if not, find 'em
-				obj.findFreqAndAtten;
+				obj.findVarsAndAtten;
 			end
 			%----------------------------------------------------------
 			% get the spikes struct for probe and unit, and return it
@@ -257,10 +263,44 @@ classdef RateData < DW.Data
 				end
 			end
 			
-		end	% END getFRA
+		end	% END getSpikes
 		%------------------------------------------------------------------------
 		%------------------------------------------------------------------------
-	
+		
+		%------------------------------------------------------------------------
+		%------------------------------------------------------------------------
+		function Spikes = getSpikesForVarAndAtten(obj, probe, unit, Var, Atten, varargin)
+			
+			% check Var and Atten to make sure they exist!
+			[vcheck, vindx] = obj.isVar(Var);
+			if vcheck == 0
+				error('%s: var not found', mfilename)
+			elseif length(vindx) > 1
+				warning('more than 1 instance of Var %s found!', Var)
+				fprintf('...using first instance\n');
+				vindx = min(vindx);
+			end
+			[acheck, aindx] = obj.isAtten(Atten, Var);
+			if acheck == 0
+				error('%s: atten not found for Var', mfilename)
+			end
+
+			%------------------------------------------------
+			% get the spikes
+			%------------------------------------------------				
+			if ~isempty(varargin)
+				spikewin = varargin{1};	
+				allSpikes = obj.getSpikes('probe', probe, 'unit', unit, ...
+													'window', spikewin);			
+			else
+				allSpikes = obj.getSpikes('probe', probe, 'unit', unit);				
+			end
+			Spikes = allSpikes(vindx).spikes{aindx{1}};
+			
+		end	% end getSpikesForVarAndAtten
+		%------------------------------------------------------------------------
+		%------------------------------------------------------------------------
+		
 		%------------------------------------------------------------------------
 		%------------------------------------------------------------------------
 		% Analysis
@@ -276,26 +316,8 @@ classdef RateData < DW.Data
 			% get the spikes
 			%------------------------------------------------
 			Spikes = obj.getSpikes('probe', probenum, 'unit', unitnum, ...
-										'window', frawin);
-			%------------------------------------------------
-			% sort variables and atten
-			%------------------------------------------------
-			% count number of different tone frequencies
-			obj.Nfreqs = length(obj.Frequencies);
-			% sort freqs from low to high, keeping indices
-			[obj.sortedFreqs, obj.sortFreqsX] = sort(obj.Frequencies);
-			% sort the atten levels - a little more complicated due to 
-			% there being a list of atten vals for each individual frequency
-			obj.sortedAtten = cell(obj.Nfreqs, 1);
-			obj.sortAttX = cell(obj.Nfreqs, 1);
-			obj.attcount = zeros(obj.Nfreqs, 1);
-			% loop through the frequencies
-			for f = 1:obj.Nfreqs
-				[obj.sortedAtten{f}, obj.sortAttX{f}] = sort(obj.AttenLevels{f});
-				obj.attcount(f) = length(obj.sortedAtten{f});
-			end
-			% find max # of atten levels
-			obj.Natten = max(obj.attcount);	
+										'window', countwin);
+
 			%------------------------------------------------
 			% get the spike times for each sorted freq and 
 			% level and count # of spikes
@@ -305,9 +327,9 @@ classdef RateData < DW.Data
 			obj.SpikeCount = cell(obj.Natten, obj.Nfreqs);
 			obj.MeanCount = zeros(obj.Natten, obj.Nfreqs);
 			obj.StdDevCount = zeros(obj.Natten, obj.Nfreqs);
-			% loop through frequencies (sorted)
-			for f = 1:obj.Nfreqs
-				fIndx = obj.sortFreqsX(f);
+			% loop through vars (sorted)
+			for f = 1:obj.Nvars
+				fIndx = obj.sortVarsX(f);
 				% loop through attenuation from low to high
 				for a = 1:obj.Natten
 					aIndx = obj.sortAttX{f}(a);
@@ -327,8 +349,8 @@ classdef RateData < DW.Data
 			%------------------------------------------------
 			% compute mean and std dev spike count
 			%------------------------------------------------
-			% loop through frequencies (sorted)
-			for f = 1:obj.Nfreqs
+			% loop through vars (sorted)
+			for f = 1:obj.Nvars
 				% loop through attenuation from low to high
 				for a = 1:obj.Natten
 					obj.MeanCount(a, f) = mean(obj.SpikeCount{a, f});
@@ -336,12 +358,18 @@ classdef RateData < DW.Data
 				end	% END a LOOP
 			end	% END f LOOP
 	
-		end	% END computeFRA
+		end	% END countSpikes
 		%------------------------------------------------------------------------
 		%------------------------------------------------------------------------
-	
+
 		%------------------------------------------------------------------------
-		function varargout = findFreqAndAtten(obj)
+		%------------------------------------------------------------------------
+		% Data Info/Property methods
+		%------------------------------------------------------------------------
+		%------------------------------------------------------------------------
+		
+		%------------------------------------------------------------------------
+		function varargout = findVarsAndAtten(obj)
 		%------------------------------------------------------------------------
 		% assumption: stimuli delivered from only 1 speaker
 		%------------------------------------------------------------------------
@@ -352,35 +380,134 @@ classdef RateData < DW.Data
 			
 			% get channels for data
 			C = obj.Stimuli.getChannelAsNum;
-			obj.Frequencies = zeros(length(obj.Stimuli.GroupList), 1);
+			% initialize object arrays for storing parameters
+			% use a cell array for variables, since vars might be strings
+			obj.Variables = cell(length(obj.Stimuli.GroupList), 1);
 			obj.AttenLevels = cell(length(obj.Stimuli.GroupList), 1);
 			% loop through groups
 			for g = 1:length(obj.Stimuli.GroupList)
 				% get indices into C (and S) for this group
 				sind = obj.Stimuli.GroupList{g};
-				freqs = zeros(size(sind));
-				atts = zeros(size(sind));
+				% create temporary arrays
+				tmpvars = cell(size(sind));
+				tmpatts = zeros(size(sind));
 				fprintf('Group %d:\n', g);
 				% loop through indices
 				for s = 1:length(sind)
 					% get the stim object
 					sobj = obj.Stimuli.S{sind(s), C(sind(s))};
-					fprintf('\t%.0f\t\t%.2f\n', sobj.Freq, sobj.Attenuation);
-					freqs(s) = sobj.Freq;
-					atts(s) = sobj.Attenuation;
+					% act depending on stim object type!
+					switch(class(sobj))
+						case 'DW.Wav'
+							tmpvars{s} = sobj.Filename;
+							fprintf('\t%s\t\t%.2f\n', sobj.Filename, sobj.Attenuation);
+						case 'DW.Tone'
+							tmpvars{s} = sobj.Freq;
+							fprintf('\t%.0f\t\t%.2f\n', sobj.Freq, sobj.Attenuation);
+						case 'DW.Noise'
+							tmpvars{s} = sprintf('Noise %.1f - %.0f', sobj.LowerFreq, sobj.UpperFreq);
+							fprintf('\t[%.1f %.1f]\t\t%.2f\n', ...
+										sobj.LowerFreq, sobj.UpperFreq, sobj.Attenuation);
+						otherwise
+							error('%s: unknown stim type %s', mfilename, class(sobj));
+					end
+					tmpatts(s) = sobj.Attenuation;
 				end
-				if any(freqs(1) ~= freqs)
+				if ~all(strcmpi(tmpvars{1}, tmpvars))
 					fprintf('Grouping Error!\n');
 				end
-				obj.Frequencies(g) = freqs(1);
-				obj.AttenLevels{g} = atts;
+				obj.Variables{g} = tmpvars{1};
+				obj.AttenLevels{g} = tmpatts;
 			end
-		
+
+			%------------------------------------------------
+			% sort variables and atten
+			%------------------------------------------------
+			% count number of different tone frequencies
+			obj.Nvars = length(obj.Variables);
+			% sort vars from low to high, keeping indices
+			[obj.sortedVars, obj.sortVarsX] = sort(obj.Variables);
+			% sort the atten levels - a little more complicated due to 
+			% there being a list of atten vals for each individual variable
+			obj.sortedAtten = cell(obj.Nvars, 1);
+			obj.sortAttX = cell(obj.Nvars, 1);
+			obj.attcount = zeros(obj.Nvars, 1);
+			% loop through the frequencies
+			for f = 1:obj.Nvars
+				[obj.sortedAtten{f}, obj.sortAttX{f}] = sort(obj.AttenLevels{f});
+				obj.attcount(f) = length(obj.sortedAtten{f});
+			end
+			% find max # of atten levels
+			obj.Natten = max(obj.attcount);				
+			
 			if nargout
 				varargout{1} = C;
 			end
 
-		end	% END findFreqAndAtten
+		end	% END findVarsAndAtten
+		%------------------------------------------------------------------------
+		%------------------------------------------------------------------------
+				
+		%------------------------------------------------------------------------
+		%------------------------------------------------------------------------
+		function [yesno, vindices] = isVar(obj, Var)
+			
+			yesno = 0;
+			vindices = [];
+			% check if Var is number
+			if isnumeric(Var)
+				vtest = zeros(obj.Nvars);
+				for t = 1:obj.Nvars
+					vtest = all(Var == obj.Variables{t})
+				end
+				if any(vtest)
+					vindices = find(vtest);
+					yesno = 1;
+				end				
+			% if not number, use strcmpi
+			else
+				vtest = strcmpi(Var, obj.Variables);
+				if any(vtest)
+					vindices = find(vtest);
+					yesno = 1;
+				end
+			end			
+		end	% END isVar
+		%------------------------------------------------------------------------
+		%------------------------------------------------------------------------
+		
+		%------------------------------------------------------------------------
+		%------------------------------------------------------------------------
+		function [yesno, aindices] = isAtten(obj, Atten, varargin)
+			
+			yesno = 0;
+			aindices = {};
+			
+			% process varargin
+			if ~isempty(varargin)
+				% look for variable in obj.Variables
+				[tmp, vindices] = obj.isVar(varargin{1});
+				% if not found, throw error
+				if ~tmp
+					error('isAtten: var not found!');
+				end
+			else
+				% search all vars
+				vindices = 1:obj.Nvars;
+			end
+			
+			atest = zeros(length(vindices), 1);
+			aindices = cell(length(vindices), 1);
+			for n = 1:length(atest)
+				aindices{n} = find(Atten == obj.AttenLevels{vindices(n)});
+				atest(n) = any(aindices{n});
+			end
+			
+			if any(atest)
+				yesno = 1;
+			end
+			
+		end	% END isAtten
 		%------------------------------------------------------------------------
 		%------------------------------------------------------------------------
 		

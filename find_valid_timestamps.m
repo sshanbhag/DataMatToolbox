@@ -62,7 +62,10 @@ end
 % make sure there are some timestamps to check!
 if isempty(timestamps)
 % 	fprintf('Warning %s: no timestamps in %s\n', mfilename, inputname(1))
-	validtimes = {[]};
+	varargout{1} = {[]};
+	if nargout == 2
+		varargout{2} = {[]};
+	end
 	return
 end
 if isempty(varargin)
