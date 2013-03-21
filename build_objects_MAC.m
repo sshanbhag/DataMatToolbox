@@ -25,7 +25,6 @@ end
 
 %% process filenames
 nfiles = length(dobjfiles)
-nfiles = 10;
 FORCEFLAG = 1;
 
 for n = 1:nfiles
