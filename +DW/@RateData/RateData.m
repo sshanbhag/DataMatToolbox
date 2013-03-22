@@ -402,7 +402,8 @@ classdef RateData < DW.Data
 							tmpvars{s} = sobj.Filename;
 							fprintf('\t%s\t\t%.2f\n', sobj.Filename, sobj.Attenuation);
 						case 'DW.Tone'
-							tmpvars{s} = sobj.Freq;
+							% convert Freq from number to string
+							tmpvars{s} = sprintf('%d', sobj.Freq);
 							fprintf('\t%.0f\t\t%.2f\n', sobj.Freq, sobj.Attenuation);
 						case 'DW.Noise'
 							tmpvars{s} = sprintf('Noise %.1f - %.0f', sobj.LowerFreq, sobj.UpperFreq);
@@ -425,7 +426,7 @@ classdef RateData < DW.Data
 			%------------------------------------------------
 			% count number of different tone frequencies
 			obj.Nvars = length(obj.Variables);
-			% sort vars from low to high, keeping indices
+			% assume Variables is already a cell array of strings
 			[obj.sortedVars, obj.sortVarsX] = sort(obj.Variables);
 			% sort the atten levels - a little more complicated due to 
 			% there being a list of atten vals for each individual variable

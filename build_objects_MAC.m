@@ -24,6 +24,7 @@ else
 end
 
 %% process filenames
+% dobjfiles = {'Dobj_826_12-06-2012--3006_FreqScan2_Sorted_255.mat'}
 nfiles = length(dobjfiles)
 FORCEFLAG = 1;
 
