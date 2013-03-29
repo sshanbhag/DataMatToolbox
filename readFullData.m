@@ -45,7 +45,7 @@ end
 fclose(fp);
 
 %% save data
-save(matfile, '-MAT', 'FullData', 'header', 'nlines', 'ncolumns', 'datafile');
+save(fullmatfile, '-MAT', 'FullData', 'header', 'nlines', 'ncolumns', 'datafile');
 
 %% create UnitData (information-only for FullData)
 

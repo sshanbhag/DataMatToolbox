@@ -47,6 +47,14 @@ else
 	searchfields = {searchfields};
 end
 
+if isstruct(fieldnames)
+	tmpf = fieldnames.fields;
+	clear fieldnames;
+	fieldnames = tmpf;
+	clear tmpf;
+end
+
+
 %------------------------------------------------------------------------
 % First, find which column of D contains each searchfield
 %------------------------------------------------------------------------
