@@ -1,0 +1,50 @@
+{\rtf1\ansi\ansicpg1252\cocoartf1038\cocoasubrtf360
+{\fonttbl\f0\fnil\fcharset0 Calibri;\f1\fnil\fcharset0 LucidaGrande;}
+{\colortbl;\red255\green255\blue255;\red0\green0\blue255;}
+\margl1440\margr1440\vieww17960\viewh17000\viewkind0
+\deftab720
+\pard\pardeftab720\ql\qnatural
+
+\f0\fs30 \cf0 Mismatched L/R:\
+827_12-18-12_2954_syll block.ddf ------> 827_12-18-2012--2954_syllable block_Sorted.mat\
+829_01-22-13_2746_RepRate0_25only.ddf  ---->  829_01-22-2013--2746_RepRate0_25only_Sorted.mat\
+\'a0\
+No Markers:\
+829_01-10-13_2859_string block2.ddf ---> 829_01-10-2013--2859_strings block2_Sorted.ddf : size is 226 kb\
+\
+For the file \'93829_01-10-13_2859_string block2.ddf\'94, you were saying it looks like there are no markers present. I just double-checked the sorted ddf file in datawave and both markers are there and have equal number of markers. So not sure why the neuroshare decided it didn\'92t like that file?\
+\
+\'a0827_12-18-12_2954_syllable block(-30, -40).ddf   ---> renamed ----> 827_12-18-2012--2954_syllables block_30and40_Sorted.ddf\
+** not found, 827_12-18-2012--2954_syllables block (30, 40)_Sorted.ddf was found\
+\
+And the 4
+\fs24 \super th
+\fs30 \nosupersub  error it gave was to \'a0\'93827_12-18-12_2954_syllable block(-30, -40)\'94. I can\'92t remember what the first error was but I was wondering if it didn\'92t like the naming with the comma, so I re-named this file to \'93827_12-18-2012--2954_syllables block_30and40_Sorted\'94. However there was still an error that said:\
+\'a0\
+\pard\pardeftab720\li960\ql\qnatural
+\cf0 Left Markers -> Event(3)\
+Right Markers -> Event(2)\
+??? Error using ==> Data.Data>Data.loadMarkers at 342\
+%d: length(tmpR) > MARKER_NBASE\
+\'a0\
+Error in ==> Data.Data>Data.initFromStruct at 197\
+\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 obj.loadMarkers(D.Event);\
+\'a0\
+Error in ==> Data.Data>Data.Data at 134\
+\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 obj.initFromStruct(tmp\{1\});\
+\'a0\
+Error in ==> RateData.RateData>RateData.RateData at 91\
+\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 obj = {\field{\*\fldinst{HYPERLINK "mailto:obj@DW.Data"}}{\fldrslt \cf2 \ul \ulc2 obj@DW.Data}}(varargin);\
+\'a0\
+Error in ==> dobjbatcher at 46\
+\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 d = DW.RateData(D, fullfile(datapath, matfile));\
+\pard\pardeftab720\ql\qnatural
+\cf0 \'a0\
+835_02-04-2013--2771_syllable block_Sorted (2).ddf\
+And the last error was just that there was no unit 255 found in one of my files, so there must have been a mistake there with the saving. I went back and re-sorted this file, and it\'92s called \'93835_02-04-2013--2771_syllable block_Sorted (2).ddf\'94 on abernas (in Bat Restrained Sorted Files_complete). Can you run the ddf conversion on this file so I can work the mat?\
+\'a0\
+Thanks,
+\f1 \uc0\u8232 
+\f0 Marie\
+\'a0829_01-22-2013--2746_RepRate0_25only_Sorted
+\fs28 \'a0}

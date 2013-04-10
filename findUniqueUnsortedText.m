@@ -26,6 +26,7 @@ function [uniqueText, uniqueIndices, NuniqueText] = findUniqueUnsortedText(strin
 % Created: 21 March, 2013 (SJS)
 %
 % Revisions:
+%	10 Apr 2013 (SJS): overhauled algorithm for speed
 %------------------------------------------------------------------------
 
 %------------------------------------------------------------------------
@@ -46,6 +47,35 @@ if ~iscell(strings_to_search)
 	end
 end
 
+%------------------------------------------------------------------------
+%------------------------------------------------------------------------
+% new algorithm
+%------------------------------------------------------------------------
+%------------------------------------------------------------------------
+
+% use unique to find unique vals in sorted format
+[sorted_unique, sorted_indices] = unique(strings_to_search);
+% sort the sorted indices (this will put the sorted indices back to 
+% original, unsorted order...)
+[unsorted_vals, unsorted_indx] = sort(sorted_indices);
+% reorganize tmp
+uniqueText = sorted_unique(unsorted_indx);
+% # of unique values
+NuniqueText = length(uniqueText);
+% locations of unique strings in strings_to_search
+if any(nargout == [2 3])
+	uniqueIndices = cell(NuniqueText, 1);
+	for n = 1:NuniqueText
+		uniqueIndices{n} = find(strncmp(uniqueText{n}, strings_to_search, length(uniqueText{n})));
+	end
+end
+
+%------------------------------------------------------------------------
+%------------------------------------------------------------------------
+% OLD SLOW ALGORITHM!!!!
+%------------------------------------------------------------------------
+%------------------------------------------------------------------------
+%{
 
 %------------------------------------------------------------------------
 %------------------------------------------------------------------------
@@ -140,3 +170,6 @@ while runFlag && (NuniqueText <= Nmarkers)
 		end	% end of "if ~isempty(uniqueCheck)"
 	end	% end of "if ~sum(matchindices)"
 end	% end of "while runFlag && (NuniqueText <= Nmarkers)"
+
+
+%}

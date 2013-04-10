@@ -98,36 +98,42 @@ for n = 1:length(FRAlist)
 
 			%------------------------------------------------------------
 			%------------------------------------------------------------
-			%% convert to obj
+			% convert to obj
 			%------------------------------------------------------------
 			%------------------------------------------------------------
 			d = DW.FRAdata(D, matfile);
 			
-			%------------------------------------------------------------
-			%------------------------------------------------------------
-			%% plot unit waveforms (overlaid)
-			%------------------------------------------------------------
-			%------------------------------------------------------------
-			d.plotUnitWaveforms('probe', probenum, 'unit', unitnum);
-			drawnow	
-			% save figure
-			saveas(gcf, fullfile(figoutpath, [tmpfile '_wforms.fig']), 'fig')
-			saveas(gcf, fullfile(figoutpath, [tmpfile '_wforms.jpg']), 'jpg')
+			% double-check that this probe and unit exist
+			unitchk = (unitnum == d.Probes(probenum).cluster);
+			
+			if any(unitchk)
+
+				%------------------------------------------------------------
+				%------------------------------------------------------------
+				% plot unit waveforms (overlaid)
+				%------------------------------------------------------------
+				%------------------------------------------------------------
+				d.plotUnitWaveforms('probe', probenum, 'unit', unitnum);
+				drawnow	
+				% save figure
+				saveas(gcf, fullfile(figoutpath, [tmpfile '_wforms.fig']), 'fig')
+				saveas(gcf, fullfile(figoutpath, [tmpfile '_wforms.jpg']), 'jpg')
+
+				%------------------------------------------------------------
+				%------------------------------------------------------------
+				% plot FRA
+				%------------------------------------------------------------
+				%------------------------------------------------------------
+				d.plotFRA(probenum, unitnum, [0 800], 1);
+				drawnow
+				% save figure
+				saveas(gcf, fullfile(figoutpath, [tmpfile '_FRAsurf.fig']), 'fig')
+				saveas(gcf, fullfile(figoutpath, [tmpfile '_FRAsurf.jpg']), 'jpg')
+			end
 			
 			%------------------------------------------------------------
 			%------------------------------------------------------------
-			%% plot FRA
-			%------------------------------------------------------------
-			%------------------------------------------------------------
-			d.plotFRA(probenum, unitnum, [0 800], 1);
-			drawnow
-			% save figure
-			saveas(gcf, fullfile(figoutpath, [tmpfile '_FRAsurf.fig']), 'fig')
-			saveas(gcf, fullfile(figoutpath, [tmpfile '_FRAsurf.jpg']), 'jpg')
-
-			%------------------------------------------------------------
-			%------------------------------------------------------------
-			%% save Data Object
+			% save Data Object
 			%------------------------------------------------------------
 			%------------------------------------------------------------
 			% write the data object.  for debugging use, the D struct 
