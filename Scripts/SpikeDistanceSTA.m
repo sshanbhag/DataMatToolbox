@@ -40,19 +40,21 @@ stringfile = 'AllSpkTrains_AllUnits0to800_strings.mat';
 syllfile = 'AllSpkTrains_AllUnits0to800_syllables.mat';
 
 % select data input file
-datafile = stringfile;
+datafile = syllfile;
 % build output file name
 [~, outfile] = fileparts(datafile);
 outfile = [outfile '_SDMout.mat'];
+outfile = 'tmp.mat';
 
 %-------------------------------------------------------------------------
 % SDM settings
 %-------------------------------------------------------------------------
 % cost (q) in 1/seconds
 q = [0 2.^(-1:8)];
+q = q(1:2);
 % exponent
 z = -2;
-UnitList = 0;
+UnitList = 1;
 Nshuf = 100;		% # of shuffled tests
 Ncost = length(q);
 
@@ -122,8 +124,9 @@ opts.clustering_exponent = z;
 % use parallel computation method, speeds up multiple q calculation
 opts.parallel = 1;
 % miscellaneous things
-opts.unoccupied_bins_strategy = -1;
+opts.unoccupied_bins_strategy = 1;
 opts.possible_words = 'recommended';
+opts.variance_estimation_method = {'jack'};
 
 %------------------------------------------------------------------------------
 %------------------------------------------------------------------------------

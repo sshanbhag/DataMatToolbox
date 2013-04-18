@@ -93,4 +93,4 @@ elseif Hvalue >= HSe(4),
 else
     HProb = [0.2];
 end;
-disp(HProb);
+%disp(HProb);

@@ -1,10 +1,16 @@
 %------------------------------------------------------------------------
-% CompareMethods_RealData
+% CountsData
 %------------------------------------------------------------------------
-% compares matlab script based spike distance metric calculation with
-% STAtoolkit implementation.  Test spiketrain data are from 
-% stringfile = 'AllSpkTrains_AllUnits0to800_strings.mat';
-% syllfile = 'AllSpkTrains_AllUnits0to800_syllables.mat';
+% examines spike count data
+%	Files:
+% 		Counts_Syllables_0-100.csv
+% 		Counts_Syllables_0-200.csv
+% 		Counts_Syllables_0-400.csv
+% 		Counts_Syllables_0-800.csv
+% 		Counts_Strings_0-100.csv
+% 		Counts_Strings_0-200.csv
+% 		Counts_Strings_0-400.csv
+% 		Counts_Strings_0-800.csv
 % 
 %------------------------------------------------------------------------
 
@@ -12,11 +18,9 @@
 % sharad shanbhag
 % sshanbhag@neomed.edu
 %------------------------------------------------------------------------
-% Created 13 April, 2013;
+% Created 19 April, 2013;
 %
 %------------------------------------------------------------------------
-
-
 
 %------------------------------------------------------------------------
 %------------------------------------------------------------------------
@@ -37,29 +41,43 @@ clear all;
 %------------------------------------------------------------------------
 %------------------------------------------------------------------------
 datapath = '/Users/sshanbhag/Work/Data/DataWave/batmat/AllSpkTrains_AllUnits';
-stringfile = 'AllSpkTrains_AllUnits0to800_strings.mat';
-syllfile = 'AllSpkTrains_AllUnits0to800_syllables.mat';
+stringfiles = {	'Counts_Strings_0-100.csv', ...
+						'Counts_Strings_0-200.csv', ...
+						'Counts_Strings_0-400.csv', ...
+						'Counts_Strings_0-800.csv'	};
+syllfiles = {	'Counts_Syllables_0-100.csv', ...
+					'Counts_Syllables_0-200.csv', ...
+					'Counts_Syllables_0-400.csv', ...
+					'Counts_Syllables_0-800.csv'	};
 
 %-------------------------------------------------------------------------
-% SDM settings
+% settings
 %-------------------------------------------------------------------------
-% cost (q) in 1/seconds
-q = [0 2.^(-1:5)];
-q = q(1:2);
-% exponent
-z = -2;
 Unit = 1;
 Nbootstrap = 10;		% # of shuffled tests
 
 %-------------------------------------------------------------------------
-% load spike trains 
+% load spike count data 
 %-------------------------------------------------------------------------
-% MG settings:
-%load('E:\Bat - SingleCh Restrained\batmat\Converted Dobj files\ALL Dobj files2\AllSpkTrains_testnewinfo_sec_0to100_strings.mat');
-%load('E:\Bat - SingleCh Restrained\batmat\Converted Dobj files\ALL Dobj files2\AllSpkTrains_TestArray_2.mat');
 
-% SJS 
-load(fullfile(datapath, syllfile));
+% string data
+Nstringdatafiles = length(stringfiles);
+stringdata = cell(Nstringdatafiles, 1);
+for n = 1:Nstringdatafiles
+	stringdata{n} = csvread(fullfile(datapath, stringfiles{n}));
+end
+% syllable data
+Nsylldatafiles = length(syllfiles);
+sylldata = cell(Nsylldatafiles, 1);
+for n = 1:Nsylldatafiles
+	sylldata{n} = csvread(fullfile(datapath, syllfiles{n}));
+end
+
+
+
+
+return
+
 
 %-------------------------------------------------------------------------
 % some values from data
