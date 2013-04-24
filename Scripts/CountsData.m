@@ -24,16 +24,71 @@
 
 %------------------------------------------------------------------------
 %------------------------------------------------------------------------
-% set path to toolbox
+% set path to toolboxes
 %------------------------------------------------------------------------
 %------------------------------------------------------------------------
+
+%------------------------------------------------
+% STA toolkit
+%------------------------------------------------
 tmp = which('metric');
 if isempty(tmp)
-	fprintf('%s: setting up Spike paths...', mfilename)
-	addpath(genpath('/Users/sshanbhag/Work/Code/Matlab/dev/Toolboxes/STAkitMAC'))
+	fprintf('%s: setting up STAkit paths...', mfilename)
+	tmppath = '/Users/sshanbhag/Work/Code/Matlab/stable/Toolbox/STAkitMAC';
+	if exist(tmppath, 'dir')
+		addpath(genpath(tmppath))
+	else
+		error('%s: path to STAkit (SpikeTrainAnalysis Toolbox) not found', ...
+						mfilename);
+	end
 	fprintf('... done \n\n')
 end
-clear all;
+clear tmp tmppath;
+%------------------------------------------------
+% Information Breakdown Toolbox
+%------------------------------------------------
+tmp = which('information');
+if isempty(tmp)
+	tmppath = '/Users/sshanbhag/Work/Code/Matlab/stable/Toolbox/InfoBreakdownToolbox';
+	fprintf('%s: setting up InfoBreakdownToolbox paths...', mfilename)
+	if exist(tmppath, 'dir')
+		addpath(genpath(tmppath))
+	else
+		error('%s: path to InfoBreakdownToolbox not found', mfilename);
+	end
+	fprintf('... done \n\n')
+end
+clear tmp tmppath;
+
+%-------------------------------------------------------------------------
+%-------------------------------------------------------------------------
+% settings/options
+%-------------------------------------------------------------------------
+%-------------------------------------------------------------------------
+
+Unit = 1;
+Nbootstrap = 10;		% # of shuffled tests
+
+%------------------------------------------------
+% STA
+%------------------------------------------------
+q = [0 2.^(-1:5)];
+q = q(1:2);
+z = -2;
+
+% settings for STAtoolkit
+% possible settings: {'plugin', 'tpmc', 'jack', 'ma', 'bub', 'chaoshen', 'ww',
+% 'nsb'}
+opts.entropy_estimation_method = {'tpmc'};
+opts.shift_cost = q;
+opts.start_time = 0;
+opts.end_time = .8;
+opts.metric_family = 0;
+opts.clustering_exponent = z;	
+opts.parallel = 1;
+opts.unoccupied_bins_strategy = -1;
+opts.possible_words = 'recommended';
+
 
 %------------------------------------------------------------------------
 %------------------------------------------------------------------------
@@ -49,12 +104,6 @@ syllfiles = {	'Counts_Syllables_0-100.csv', ...
 					'Counts_Syllables_0-200.csv', ...
 					'Counts_Syllables_0-400.csv', ...
 					'Counts_Syllables_0-800.csv'	};
-
-%-------------------------------------------------------------------------
-% settings
-%-------------------------------------------------------------------------
-Unit = 1;
-Nbootstrap = 10;		% # of shuffled tests
 
 %-------------------------------------------------------------------------
 % load spike count data 
@@ -73,26 +122,24 @@ for n = 1:Nsylldatafiles
 	sylldata{n} = csvread(fullfile(datapath, syllfiles{n}));
 end
 
-
-
-
-return
-
+%-------------------------------------------------------------------------
+% select data
+%-------------------------------------------------------------------------
+data = sylldata{4};
 
 %-------------------------------------------------------------------------
 % some values from data
 %-------------------------------------------------------------------------
 % # of trials, stimuli, units
 % depends on test type
-[nRows, Trials] = size(AllSpkTrains);
+[nRows, Trials] = size(data);
 Conditions = 13; %13 for Type 1 (syllables) ; 8 for strings
 nUnits = nRows/Conditions;
 
-Ncost = length(q);
-
+return
 %------------------------------------------------------------------------------
 %------------------------------------------------------------------------------
-%% compare different methods for calculating spkd (spike distance metric)
+%% compare different methods for calculating information
 %------------------------------------------------------------------------------
 %------------------------------------------------------------------------------
 

@@ -338,7 +338,7 @@ for U = 1:1
 					% distance metric for all trials
 					for C2 = 1:Conditions
 						for T2=1:Trials
-							Dspike(C2,T2) = (spkdmex(ShufTrains{C1,T1}', ShufTrains{C2,T2}', Cost)).^z;
+							Dspike(C2,T2) = (spkdmex(ShufTrains{C1,T1}, ShufTrains{C2,T2}, Cost)).^z;
 						end;
 					end;
 
@@ -383,59 +383,3 @@ for U = 1:1
 	
 	
 	
-	
-	
-	%-------------------------------------------------------------------------
-	% then, use STAtoolkit
-	%-------------------------------------------------------------------------
-	fprintf('%s\n', sepstr);
-	fprintf('STA toolkit:\n')
-	fprintf('%s\n', sepstr);
-	%-------------------------------------------------------------------------
-	% settings for STAtoolkit
-	% possible settings: {'plugin', 'tpmc', 'jack', 'ma', 'bub', 'chaoshen', 'ww',
-	% 'nsb'}
-	opts.entropy_estimation_method = {'plugin'};
-	opts.shift_cost = q;
-	opts.start_time = 0;
-	opts.end_time = .8;
-	opts.metric_family = 0;
-	opts.clustering_exponent = z;	
-	opts.parallel = 1;
-	opts.unoccupied_bins_strategy = -1;
-	opts.possible_words = 'recommended';
-	Ncost = length(opts.shift_cost);
-
-	% build input using spikes2sta function
-	Sin = spikes2sta(SpkTrains, 'timescale', 1, 'timeresolution', 1, ...
-								'start_time', opts.start_time, 'end_time', opts.end_time);
-	% call STAtoolkit function metric_shuf (same as metric, but also does shuffled
-	% data procedure to check random floor
-	tic
-	[STAresults{U}, STAshuf{U}] = metric_shuf(Sin, opts, Nshuf);
-	% pull out value for different q values
-	for Cindex = 1:Ncost
-		fprintf('----------------------\n')
-		fprintf('\t q = %.2f\n', opts.shift_cost(Cindex));
-		fprintf('----------------------\n')	
-		fprintf('\tH_sta: %.4f\n', STAresults{U}(Cindex).table.information.value);
-		fprintf('\tConfusion Matrix:\n')
-		% NOTE that confusion matrix from STA toolkit is TRANSPOSE of from from long
-		% (slow) method!!!
-		display_matrix(STAresults{U}(Cindex).cm', '%.2f');
-	
-		% get all the shuffled information bits
-		hshuf = zeros(Nshuf, 1);
-		for n = 1:Nshuf
-			hshuf(n) = STAshuf{U}(Cindex, n).table.information.value;
-		end		
-		fprintf('\tShuffled Data:\n');
-		fprintf('\t\tmean:\t%.4f\n', mean(hshuf));
-		fprintf('\t\tstd:\t%.4f\n', std(hshuf));
-		fprintf('\n')
-	end
-	fprintf('\n')
-	sta_time = toc;
-	fprintf('STAtoolkit method took %f seconds\n', sta_time);
-
-end	% END U loop

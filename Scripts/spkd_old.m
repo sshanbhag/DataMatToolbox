@@ -1,4 +1,3 @@
-
 function d=spkd(tli,tlj,cost)
 %%Matlab code for Spike Time Metric
 %
