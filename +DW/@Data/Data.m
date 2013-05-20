@@ -1282,7 +1282,7 @@ classdef Data < handle
 		% Spiketimes for each group in Data.Stimuli.GroupList are retrieved 
 		% using this method.
 		%
-		% By default, only spikes between the each Stimulus output timestamp and
+		% By default, only spikes between each Stimulus output timestamp and
 		% the following stimulus's output timestamp will be collected.  
 		% To extend this time, you may provide an additional 'offset' option
 		% is a 1 X 2 vector of pre-stimulus time and post-sweep time
