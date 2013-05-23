@@ -1,7 +1,7 @@
 %----------------------------------------------------------------------------
 % settings
 %----------------------------------------------------------------------------
-SAVEFLAG = 0;
+SAVEFLAG = 1;
 
 %----------------------------------------------------------------------------
 % specify files, paths
@@ -84,7 +84,7 @@ attencol = finddatacolumn('atten', unitheader.fields);
 %----------------------------------------------------------------------------
 %% process files
 %----------------------------------------------------------------------------
-for n = 1:nfiles
+for n = 1:3
 
 	% load file
 	load(fullfile(dobjpath, filenames{n}), 'd');
@@ -234,47 +234,24 @@ for n = 1:nfiles
 	
 	plotopts.filelabel = d.fname;
 
+	figure
 	[H, opts] = rasterpsthmatrix(AllSpikes, plotopts);
-	set(gcf, 'Position', [680 81 1028 877]);
-	
+	set(gcf, 'Position', [680 81 1100 900]);
+	set(gcf, 'Name', d.fname);
+	orient(gcf, 'landscape');
+	set(gcf, 'PaperPosition', [0.25 0.1 10.5 8.1])
 	drawnow
+	
 	
 	if SAVEFLAG
 		saveas(gcf, fullfile(outputpath, d.fname), 'fig');
-		saveas(gcf, fullfile(outputpath, d.fname), 'png');
+		epsfile = fullfile(outputpath, [d.fname '.eps']);
+		pdffile = fullfile(outputpath, [d.fname '.pdf']);
+		print(gcf, '-depsc2', epsfile);
+		system(sprintf('ps2pdf %s %s', epsfile, pdffile))
 	end
 	
 	
-	return
-	
-	
-	
-	
-%%	
-	
-	for s = 1:length(SpikeData)
-		figure(s)
-		rlabels = cell(length(RatesForStim{s}), 1);
-		for rl = 1:length(RatesForStim{s})
-			rlabels{rl} = sprintf('rate: %d', RatesForStim{s}(rl));
-		end
-		plotopts.filelabel = CallInfo(StimList(s)).call;
-		plotopts.idlabel = [CallInfo(StimList(s)).id ':' CallInfo(StimList(s)).call];
-		plotopts.rowlabels = rlabels;
-		plotopts.timelimits = spikewin;
-		plotopts.raster_tickmarker = '.';
-		plotopts.raster_ticksize = 12;
-		plotopts.vertgap = 0.015;
-		plotopts.plotgap = 0.002;
-		[H, opts] = rasterpsthmatrix(SpikeData{s}, plotopts);
-		drawnow
-		if SAVEFLAG
-			set(gcf, 'Position', [680 149 531 900]);
-			figname = [d.fname '_' plotopts.filelabel];
-			saveas(gcf, fullfile(outputpath, figname), 'fig');
-			saveas(gcf, fullfile(outputpath, figname), 'png');
-		end
-	end
 %% end of loop
 end	% END n loop
 
