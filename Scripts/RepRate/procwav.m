@@ -1,7 +1,7 @@
 %% procwav
 
 %----------------------------------------------------------------------------
-% specify files, paths
+%% specify files, paths
 %----------------------------------------------------------------------------
 % wavfile path
 wavpath = '~/Work/Data/RepRate/WavFiles';
@@ -24,7 +24,7 @@ nfiles = length(filelist);
 load(callinfo);
 
 %------------------------------------------------------------------------
-% parse names to get repetition rate value
+%% parse names to get repetition rate value
 %
 % values with no _<value> portion are repetition rate = 1 Hz
 %------------------------------------------------------------------------
@@ -62,6 +62,13 @@ for f = 1:nfiles
 
 	% get duration for this file's signal
 	dur = calldurs(StimNumber(f)==callids)
+	
+	% compute putative on/offset
+	isi = 1/RateVals(f)
+	nstim = 4;
+	tmp = (0:(nstim-1)) * isi;
+	teston = tmp(tmp<1); 
+	testoff = teston + dur
 	
 	% plot signal
 	figure(1)
@@ -135,8 +142,10 @@ for f = 1:nfiles
 
 	end
 	
-	return
-	
+	L = ylim
+	text(teston, L(2)*ones(size(teston)), '.', 'Color', 'g', 'FontSize', 25);
+	text(testoff, L(2)*ones(size(testoff)), '.', 'Color', 'r', 'FontSize', 25);
+		
 	if length(onsets)~= length(offsets)
 		error
 	end	
