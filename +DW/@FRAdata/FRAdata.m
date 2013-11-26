@@ -111,16 +111,12 @@ classdef FRAdata < DW.Data
 		function plotFRA(obj, probenum, unitnum, frawin, varargin)
 		%------------------------------------------------------------------------
 		%	FRAdata.plotFRA(probenum, unitnum, frawin)
-		%	FRAdata.plotFRA(probenum, unitnum, frawin, 1)
-		%			will force recomputation of the spike counts
 		%------------------------------------------------------------------------
 			
 			%------------------------------------------------
-			% get the spikes if empty or user has provided force flag
+			% compute FRA for desired unit and window
 			%------------------------------------------------
-			if isempty(obj.SpikeTimes) || isempty(obj.SpikeCount) || ~isempty(varargin)
-				obj.computeFRA(probenum, unitnum, frawin);
-			end
+			obj.computeFRA(probenum, unitnum, frawin);
 			%------------------------------------------------
 			% plot as color patch
 			%------------------------------------------------
@@ -190,10 +186,15 @@ classdef FRAdata < DW.Data
 		%		'unit' selects unit to display
 		%	'window', [tstart tend]
 		%		species time window for spikes (re: start of sweep) in millisec
+		%	'sort' <no argument>
+		%		will sort by frequency (low to high) and attenuation (low to high)
 		%
 		%	out is a struct array (with # of elements in array == # freqs)
 		%		out(f).spikes = {# atten vals, 1} cell array of spike times (usec)
 		%		out(f).name = char string with spike name
+		%		out(f).freq = stimulus frequency (Hz)
+		%		out(f).atten = [# atten vals, 1] attenuation values
+		%
 		%------------------------------------------------------------------------
 			
 			%------------------------------------------------
@@ -202,6 +203,7 @@ classdef FRAdata < DW.Data
 			probenum = 1;
 			unitnum = 0;
 			spwin = [];
+			sortflag = 0;
 			if ~isempty(varargin)
 				a = 1;
 				while a <= length(varargin)
@@ -215,6 +217,9 @@ classdef FRAdata < DW.Data
 						case 'WINDOW'
 							spwin = varargin{a+1};
 							a = a + 2;
+						case 'SORT'
+							sortflag = 1;
+							a = a + 1;
 						otherwise
 							error('%s: unknown option %s', mfilename, varargin{a});
 					end
@@ -231,10 +236,66 @@ classdef FRAdata < DW.Data
 				% if not, find 'em
 				obj.findFreqAndAtten;
 			end
+			
+			%------------------------------------------------
+			% sort frequencies and atten
+			%------------------------------------------------
+			if sortflag == 1
+				% count number of different tone frequencies
+				obj.Nfreqs = length(obj.Frequencies);
+				% sort freqs from low to high, keeping indices
+				[obj.sortedFreqs, obj.sortFreqsX] = sort(obj.Frequencies);
+				% sort the atten levels - a little more complicated due to 
+				% there being a list of atten vals for each individual frequency
+				obj.sortedAtten = cell(obj.Nfreqs, 1);
+				obj.sortAttX = cell(obj.Nfreqs, 1);
+				obj.attcount = zeros(obj.Nfreqs, 1);
+				% loop through the frequencies
+				for f = 1:obj.Nfreqs
+					[obj.sortedAtten{f}, obj.sortAttX{f}] = sort(obj.AttenLevels{f});
+					obj.attcount(f) = length(obj.sortedAtten{f});
+				end
+				% find max # of atten levels
+				obj.Natten = max(obj.attcount);
+				
+				%------------------------------------------------
+				% get the spike times for each sorted freq and 
+				% level and count # of spikes
+				%------------------------------------------------
+				% allocate obj.SpikeTimes and FRAspikecount
+				obj.SpikeTimes = cell(obj.Natten, obj.Nfreqs);
+				obj.SpikeCount = cell(obj.Natten, obj.Nfreqs);
+				obj.MeanCount = zeros(obj.Natten, obj.Nfreqs);
+				obj.StdDevCount = zeros(obj.Natten, obj.Nfreqs);
+				% loop through frequencies (sorted)
+				for f = 1:obj.Nfreqs
+					fIndx = obj.sortFreqsX(f);
+					% loop through attenuation from low to high
+					for a = 1:obj.Natten
+						aIndx = obj.sortAttX{f}(a);
+						% store the spike times in the obj.SpikeTimes cell array
+						obj.SpikeTimes{a, f} = Spikes(fIndx).spikes{aIndx};
+						% add up number of spikes for this freq and atten combination
+						% and store each rep in obj.SpikeCount cell matrix
+						obj.SpikeCount{a, f} = zeros(length(obj.SpikeTimes{a, f}), 1);
+						for rep = 1:length(obj.SpikeTimes{a, f})
+							obj.SpikeCount{a, f}(rep) = length(obj.SpikeTimes{a, f}{rep});
+						end	% END rep LOOP
+						% compute mean and std dev spike count
+						obj.MeanCount(a, f) = mean(obj.SpikeCount{a, f});
+						obj.StdDevCount(a, f) = std(obj.SpikeCount{a, f});
+					end	% END a LOOP
+				end	% END f LOOP							
+
+					
+			end	% END if sortflag
+			
+			
 			%----------------------------------------------------------
-			% get the spikes struct for probe and unit, and return it
+			% get the spikes struct for probe and unit, and store it
 			%----------------------------------------------------------
 			S = obj.getSpikesForProbe(probenum, 'unit', unitnum);
+			
 			%----------------------------------------------------------
 			% get spikes within analysis window
 			%----------------------------------------------------------
@@ -243,7 +304,10 @@ classdef FRAdata < DW.Data
 				return
 			end
 			% otherwise, loop through S...
+			keyboard
 			for s = 1:length(S)
+				% assign attenuations and frequency
+				
 				% and loop through spikes cell array...
 				for c = 1:length(S(s).spikes)
 					% and loop through reps
@@ -256,7 +320,9 @@ classdef FRAdata < DW.Data
 						S(s).spikes{c}{r} = tmp{1};
 					end
 				end
-			end
+			end			
+			
+			
 			
 		end	% END getFRA
 		%------------------------------------------------------------------------
@@ -271,6 +337,9 @@ classdef FRAdata < DW.Data
 		%------------------------------------------------------------------------
 		%------------------------------------------------------------------------
 		function computeFRA(obj, probenum, unitnum, frawin)
+		%------------------------------------------------------------------------
+		%	FRAdata.computeFRA(probenum, unitnum, frawin)
+		%------------------------------------------------------------------------
 			fprintf('%s: computing FRA for probe %d, unit %d, [%d-%d] window\n', ...
 									mfilename, probenum, unitnum, frawin(1), frawin(2));
 			%------------------------------------------------
@@ -377,6 +446,7 @@ classdef FRAdata < DW.Data
 				obj.AttenLevels{g} = atts;
 			end
 		
+			% assign output
 			if nargout
 				varargout{1} = C;
 			end

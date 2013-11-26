@@ -4,10 +4,11 @@ close all; clear all; clear classes;
 %% file names
 %------------------------------------------------------------
 DLLName = 'C:\DataWave\DWShared\nsDWFile.dll';
-datapath = 'G:\';
-matpath = 'Z:\Marie\batmat';
+datapath = 'F:\Work\Data\BatRestrained\853\';
+datapath = 'F:\Work\Data\Bat\BatRestrainedData\FRAdata\';
+matpath = 'F:\Work\Data\Bat\BatRestrainedData\FRAdata';
 ddffilelist = dir(fullfile(datapath, '*.ddf'));
-save('ddflist.mat', 'ddffilelist');
+%save('ddflist.mat', 'ddffilelist');
 nDDFfiles = length(ddffilelist);
 fprintf('Found %d .DDF file in %s\n\n', nDDFfiles, datapath);
 
@@ -28,4 +29,5 @@ for n = 1:nDDFfiles
 	else
 		fprintf('File %s already converted....\n\n', ddffile);
 	end
+	pause
 end
