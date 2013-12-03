@@ -334,19 +334,14 @@ classdef FRAdata < DW.Data
 		%------------------------------------------------------------------------
 		%------------------------------------------------------------------------
 		
+		
 		%------------------------------------------------------------------------
 		%------------------------------------------------------------------------
-		function computeFRA(obj, probenum, unitnum, frawin)
+		function sortFrequenciesAndAtten(obj)
 		%------------------------------------------------------------------------
-		%	FRAdata.computeFRA(probenum, unitnum, frawin)
+		%	FRAdata.sortFrequenciesAndAtten()
 		%------------------------------------------------------------------------
-			fprintf('%s: computing FRA for probe %d, unit %d, [%d-%d] window\n', ...
-									mfilename, probenum, unitnum, frawin(1), frawin(2));
-			%------------------------------------------------
-			% get the spikes
-			%------------------------------------------------
-			Spikes = obj.getFRAspikes('probe', probenum, 'unit', unitnum, ...
-										'window', frawin);
+			fprintf('%s: sorting FRA freqs and atten...', mfilename);
 			%------------------------------------------------
 			% sort frequencies and atten
 			%------------------------------------------------
@@ -366,6 +361,30 @@ classdef FRAdata < DW.Data
 			end
 			% find max # of atten levels
 			obj.Natten = max(obj.attcount);	
+		
+		end	% END sorfFrequenciesAndAtten(obj)
+		%------------------------------------------------------------------------
+		%------------------------------------------------------------------------
+
+		%------------------------------------------------------------------------
+		%------------------------------------------------------------------------
+		function computeFRA(obj, probenum, unitnum, frawin)
+		%------------------------------------------------------------------------
+		%	FRAdata.computeFRA(probenum, unitnum, frawin)
+		%------------------------------------------------------------------------
+			fprintf('%s: computing FRA for probe %d, unit %d, [%d-%d] window\n', ...
+									mfilename, probenum, unitnum, frawin(1), frawin(2));
+			%------------------------------------------------
+			% get the spikes
+			%------------------------------------------------
+			Spikes = obj.getFRAspikes('probe', probenum, 'unit', unitnum, ...
+										'window', frawin);
+			%------------------------------------------------
+			% sort frequencies and atten
+			%------------------------------------------------
+			if isempty(obj.sortedFreqs)
+				obj.sortFrequenciesAndAtten;
+
 			%------------------------------------------------
 			% get the spike times for each sorted freq and 
 			% level and count # of spikes
@@ -413,7 +432,7 @@ classdef FRAdata < DW.Data
 		%------------------------------------------------------------------------
 		function varargout = findFreqAndAtten(obj)
 		%------------------------------------------------------------------------
-		% assumption: stimuli delivered from only 1 speaker
+		% ¡¡¡ assumption: stimuli delivered from only 1 speaker !!!
 		%------------------------------------------------------------------------
 		
 			if isempty(obj.Stimuli)
