@@ -41,6 +41,8 @@
 %	 -	major overhaul to use NeuroShare Matlab API and DataWave Neuroshare
 %		interface object (@NS)
 %	31 Jan 2013 (SJS): reworking to avoid segmentation faults 
+%	26 Mar 2014 (SJS): seg fault is endemic to Matlab Neuroshare API
+%		reworking to use output files from PyDDF project
 %-----------------------------------------------------------------------------
 % TO DO: lots....
 %-----------------------------------------------------------------------------
@@ -108,27 +110,33 @@ classdef DWdata < handle
 		%	Constructor method
 		%	opens file called fileName (char) or opens
 		%  a dialog box to get a filename if the fileName provided does not exist.
-		%---------------------------------------------------------------------	
-
-			
+		%---------------------------------------------------------------------
+			% set default input data mode (ddf file)
+			mode = 'DDF';
 			
 			% first, parse input and verify
 			if nargin > 1
-				% too many inputs
-				error('DWdata: too many inputs!');
+				% mode input was provided
+				fprintf('Using txt file input (from PyDDF)');
+				mode = 'TXT';
 				
 			elseif nargin == 1
 				% filename was given, make sure it exists, otherwise throw
 				% error
 				if exist(varargin{1}, 'file') == 2
 					[obj.fpath, obj.fname, obj.fext] = fileparts(varargin{1});
+					if strcmpi(obj.fext, 'TXT')
+						mode = 'TXT';
+					else
+						mode = 'DDF';
+					end
 				else
 					error('DWdata: %s does not exist!',varargin{1});
 				end
 				
 			elseif nargin == 0
 				% no filename given, open gui panel to get file
-				[fileName, obj.fpath] = uigetfile('*.ddf', ...
+				[fileName, obj.fpath] = uigetfile({'*.ddf'; '*.txt'; '*.*'}, ...
 																'Open .ddf file from DataWave');
 				if fileName == 0
 					% if user hit cancel (filename == 0), return
@@ -136,6 +144,11 @@ classdef DWdata < handle
 					return
 				end
 				[~, obj.fname, obj.fext] = fileparts(fileName);
+				if strcmpi(obj.fext, 'TXT')
+						mode = 'TXT';
+				else
+						mode = 'DDF';
+				end
 			end
 			
 			% store in obj.fullfname
@@ -143,7 +156,7 @@ classdef DWdata < handle
 			
 			fprintf('Initializing from file %s...\n\n', obj.fullfname);
 			% initialize NS object
-			obj.initNS;
+			obj.initNS(mode);
 		end	% END DWdata CONSTRUCTOR
 		%------------------------------------------------------------------------
 		%------------------------------------------------------------------------
@@ -156,15 +169,23 @@ classdef DWdata < handle
 
 		%------------------------------------------------------------------------
 		%------------------------------------------------------------------------
-		function obj = initNS(obj)
+		function obj = initNS(obj, varargin)
 		%------------------------------------------------------------------------
 		% initNS
 		%------------------------------------------------------------------------
 		% so long as DW.fullfname is set, initNS method will initialize the
 		% DataWave NeuroShare interface object DW.DDF
 		%------------------------------------------------------------------------
+			if length(varargin)
+				mode = varargin{1};
+			end
+			
 			if ~isempty(obj.fullfname) && exist(obj.fullfname, 'file')
-				obj.DDF = DW.NS(obj.fullfname);
+				if strcmpi(mode, 'DDF')
+					obj.DDF = DW.NS(obj.fullfname);
+				else
+					obj.DDF = DW.PyDDF(obj.fullfname);
+				end
 			else
 				fprintf('file not found\n')
 				return
