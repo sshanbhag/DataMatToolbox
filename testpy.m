@@ -1,5 +1,5 @@
-inpathname = '/Users/sshanbhag/Work/Code/Python/neuroshare-python/test'
-infilename = '07-25-2013-866_2348_BBN_2_Sorted.txt'
+inpathname = '/Users/sshanbhag/Work/Data/Bat/BatRestrainedData/878_Sorted_3-28-2014'
+infilename = '10-09-2013-878_2948_StringsBlock_Sorted.txt'
 infile = fullfile(inpathname, infilename);
 
 % load .txt file as D struct

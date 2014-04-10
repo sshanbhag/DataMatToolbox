@@ -274,7 +274,7 @@ classdef RateData < DW.Data
 			% check Var and Atten to make sure they exist!
 			[vcheck, vindx] = obj.isVar(Var);
 			if vcheck == 0
-				error('%s: var not found', mfilename)
+				error('%s: var %s not found', mfilename, Var)
 			elseif length(vindx) > 1
 				warning('more than 1 instance of Var %s found!', Var)
 				fprintf('...using first instance\n');
