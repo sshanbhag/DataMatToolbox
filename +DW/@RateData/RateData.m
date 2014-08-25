@@ -194,7 +194,7 @@ classdef RateData < DW.Data
 		%	'unit', unitnumber
 		%		'unit' selects unit to display
 		%	'window', [tstart tend]
-		%		species time window for spikes (re: start of sweep) in millisec
+		%		specifies time window for spikes (re: start of sweep) in millisec
 		%
 		%	out is a struct array (with # of elements in array == # vars)
 		%		out(f).spikes = {# atten vals, 1} cell array of spike times (usec)
@@ -239,7 +239,13 @@ classdef RateData < DW.Data
 			%----------------------------------------------------------
 			% get the spikes struct for probe and unit, and return it
 			%----------------------------------------------------------
-			S = obj.getSpikesForProbe(probenum, 'unit', unitnum);
+			if isempty(spwin)
+				S = obj.getSpikesForProbe(probenum, 'unit', unitnum);
+			else
+				S = obj.getSpikesForProbe(probenum, 'unit', unitnum, ...
+																'window', spwin);
+			end
+			return
 			%----------------------------------------------------------
 			% get spikes within analysis window
 			%----------------------------------------------------------
