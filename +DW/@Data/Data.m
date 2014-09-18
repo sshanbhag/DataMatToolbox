@@ -906,6 +906,14 @@ classdef Data < handle
 		% H = Data.plotUnitWaveforms('unit', unitnumber)
 		%	'unit' selects unit to display. unitnumber must match a unit ID
 		%	for the Probes
+		%
+		% H = Data.plotUnitWaveforms('figure', figure_handle)
+		%	'figure' will plot the data in figure window pointed to by 
+		%	figure_handle.  If figure_handle does not exist, it will be created
+		%
+		% H = Data.plotUnitWaveforms('axes', axes_handle)
+		%	'axes' will plot the data in axes pointed to by axes_handle.  
+		%	If axes_handle does not exist, it will be created
 		%------------------------------------------------------------------------
 		
 			%------------------------------------------------
@@ -914,10 +922,13 @@ classdef Data < handle
 			% defaults
 			probenum = [];
 			unitnum = [];
+			figH = [];
+			axH = [];
+			
 			if ~isempty(varargin)
 				a = 1;
 				while a <= length(varargin)
-					switch upper(varargin{a})	
+					switch upper(varargin{a})
 						case 'PROBE'
 							probenum = varargin{a+1};
 							if ~between(probenum, 1, length(obj.Probes))
@@ -925,20 +936,38 @@ classdef Data < handle
 													mfilename, length(obj.Probes));
 							end
 							a = a + 2;
+							
 						case 'UNIT'
 							unitnum = varargin{a+1};
 							a = a + 2;
+							
+						case 'FIGURE'
+							figH = varargin{a+1};
+							a = a + 2;
+
+						case 'AXES'
+							axH = varargin{a+1};
+							a = a + 2;
+
 						otherwise
 							error('%s: unknown option %s', mfilename, varargin{a});
 					end	% END switch
 				end	% END while
 			end	% END if ~isempty(varargin)
-	
+			
+			% check figH
+			if isempty(figH) || isempty(axH)
+				figH = figure;
+				axH = axes;
+			end
+			
 			% if probenum is empty, use all probes
 			if isempty(probenum)
 				probenum = 1:obj.Nprobes;
 			end
-
+			
+			% Plot data
+			
 			% loop through probes
 			fIndex = 1;
 			for pindx = 1:length(probenum)
@@ -951,11 +980,12 @@ classdef Data < handle
 					u = unitnum(uindx);
 					% check for matches
 					if any(u == obj.Probes(p).cluster)
-						H(fIndex) = figure; %#ok<AGROW>
+						H(fIndex) = figure(figH); %#ok<AGROW>
 						W = obj.Probes(p).getWaveformsForCluster(u);
 						if ~isempty(W)
 							[r, c] = size(W);
 							tvec = (1000/obj.Probes(p).samprate) * (0:(r-1));
+							axes(axH)
 							plot(tvec, W);
 							titlestr = { ...
 								obj.fname, ...
@@ -995,23 +1025,30 @@ classdef Data < handle
 		% H = Data.plotRasterAndPSTH('unit', unitnumber)
 		%	'unit' selects unit to display
 		%
-		% H = Data.plotRasterAndPSTH('offset', [pretime posttime])
+		% H = Data.plotRasterAndPSTH('window', [pretime posttime])
 		%	If spikes are desired from before the stim onset timestamp or after 
-		%	the next stim onset timestamp, an 'offset' option of form
+		%	the next stim onset timestamp, an 'window' option of form
 		%	[pretime posttime] may be included.  times must be in milliseconds
 		%------------------------------------------------------------------------
 			
 			%------------------------------------------------
 			% ensure that probenum is in bounds
 			%------------------------------------------------
-			probenum = 1;
-			unitnum = 0;
+			plotopts.raster_tickmarker = '.';
+			plotopts.raster_color = [0 0 0];
+			plotopts.psth_color = [0 0 0];
 			plotopts.binwidth = 5;
-			offset = [0 0];
 			% !!!! this really needs to be determined by the 
 			% timestamps, but there's not an easy way at the moment... use
 			% this for now......
 			plotopts.timelimits = [0 1000];
+			plotopts.stimulus_times = 0;
+			plotopts.stimulus_times_plot = 3;	% draw on all plots
+
+			probenum = 1;
+			unitnum = 0;
+			figH = [];
+			NETFIGURE = 0;
 			if ~isempty(varargin)
 				a = 1;
 				while a <= length(varargin)
@@ -1025,14 +1062,20 @@ classdef Data < handle
 						case 'UNIT'
 							unitnum = varargin{a+1};
 							a = a + 2;
-						case 'OFFSET'
-							offset = varargin{a+1};
+						case 'WINDOW'
+							twindow = varargin{a+1};
 							% make sure pretime is correct sign (should be
 							% positive)
-							offset(1) = abs(offset(1));
-							plotopts.timelimits(1) = plotopts.timelimits(1) - offset(1);
-							plotopts.timelimits(2) = plotopts.timelimits(2) + offset(2);
+							twindow(1) = abs(twindow(1));
+							plotopts.timelimits(1) = plotopts.timelimits(1) - twindow(1);
+							plotopts.timelimits(2) = twindow(2);
 							a = a + 2;
+						case 'FIGURE'
+							figH = varargin{a+1};
+							a = a + 2;
+						case 'NETFIGURE'
+							NETFIGURE = 1;
+							a = a + 1;
 						otherwise
 							error('%s: unknown option %s', mfilename, varargin{a});
 					end
@@ -1049,65 +1092,172 @@ classdef Data < handle
 			% get the spikes struct for probe and unit
 			%------------------------------------------------
 			S = obj.getSpikesForProbe(	probenum, 'unit', ...
-												unitnum, 'offset', ...
-												offset);
+												unitnum, 'window', ...
+												plotopts.timelimits);
+											
+			plotopts.filelabel = obj.fname;
 			
-			%------------------------------------------------
-			% set some plot options
-			%------------------------------------------------
-			plotopts.horizgap = 0.05;
-			plotopts.vertgap = 0.02;
-			plotopts.plotgap = 0.002;
-			plotopts.heightscale = 0.9
-			plotopts.raster_tickmarker = '.';
-			plotopts.raster_ticksize = 14;
-			plotopts.raster_color = [0 0 1];
-			plotopts.vertoffset = .025;
-			
-			%------------------------------------------------
-			% loop through groups
-			%------------------------------------------------
-			ngroups = length(S);
-			% initialize H to hold figures
-			H = cell(ngroups, 1);
-			P = cell(ngroups, 1);
-			for g = 1:ngroups
-				% get Stimulus List indices for this group
-				Sindx = obj.Stimuli.GroupList{g};
-				nlevels = length(Sindx);
-				allspikes = cell(nlevels, 1);
-				plotopts.rowlabels = cell(nlevels, 1);
-				% loop through stim indices
-				for n = 1:nlevels
-					% convert spiketimes to milliseconds
-					allspikes{n} = cell(length(S(g).spikes{n}), 1);
-					for t = 1:length(S(g).spikes{n})
-						allspikes{n}{t} = 0.001*S(g).spikes{n}{t};
+			%-------------------------------------------------------------------
+			% plot in separate figures per "group" (stimulus property)
+			%-------------------------------------------------------------------
+			if ~NETFIGURE
+				%------------------------------------------------
+				% set some plot options
+				%------------------------------------------------
+				plotopts.horizgap = 0.05;
+				plotopts.vertgap = 0.02;
+				plotopts.plotgap = 0.002;
+				plotopts.heightscale = 0.9
+				plotopts.vertoffset = .025;
+				plotopts.raster_ticksize = 14;
+
+
+				%------------------------------------------------
+				% loop through groups
+				%------------------------------------------------
+				ngroups = length(S);
+				% initialize H to hold figures
+				H = cell(ngroups, 1);
+				P = cell(ngroups, 1);
+				for g = 1:ngroups
+					% get Stimulus List indices for this group
+					Sindx = obj.Stimuli.GroupList{g};
+					nlevels = length(Sindx);
+					allspikes = cell(nlevels, 1);
+					plotopts.rowlabels = cell(nlevels, 1);
+					% loop through stim indices
+					for n = 1:nlevels
+						% convert spiketimes to milliseconds
+						allspikes{n} = cell(length(S(g).spikes{n}), 1);
+						for t = 1:length(S(g).spikes{n})
+							allspikes{n}{t} = 0.001*S(g).spikes{n}{t};
+						end
+						plotopts.rowlabels{n} = sprintf('%d', ...
+														obj.Stimuli.S{Sindx(n), 2}.Attenuation);
 					end
-					plotopts.rowlabels{n} = sprintf('%d', ...
-													obj.Stimuli.S{Sindx(n), 2}.Attenuation);
+					% get column labels from stimulus properties
+					switch class(obj.Stimuli.S{Sindx(n), 2})
+						case 'DW.Noise'
+							plotopts.columnlabels{1} = ...
+										sprintf('%s: BBN %.1f - %.1f Hz', ...
+											obj.fname, ...
+											obj.Stimuli.S{Sindx(n), 2}.LowerFreq, ...
+											obj.Stimuli.S{Sindx(n), 2}.UpperFreq	);
+						case 'DW.Wav'
+							plotopts.columnlabels{1} = sprintf('%s: %s', ...
+											obj.fname, obj.Stimuli.S{Sindx(n), 2}.Filename);
+						case 'DW.Tone'
+							plotopts.columnlabels{1} = sprintf('%s: Tone %.1f Hz', ...
+											obj.fname, obj.Stimuli.S{Sindx(n), 2}.Freq);
+						otherwise
+							plotopts.columnlabels{1} = sprintf('%s: %s', ...
+											obj.fname, class(obj.Stimuli.S{Sindx(n), 2}));
+					end
+					% plot it!
+					if isempty(figH)
+						figure;
+					else
+						figure(figH);
+					end
+					[H{g}, P{g}] = rasterpsthmatrix(allspikes, plotopts);
+				end	% END g
+			end
+			
+			%-------------------------------------------------------------------
+			% plots all on same figure
+			%-------------------------------------------------------------------
+			if NETFIGURE
+				%------------------------------------------------
+				% set some plot options
+				%------------------------------------------------
+				plotopts.horizgap = 0.025;
+				plotopts.vertgap = 0.02;
+				plotopts.plotgap = 0.002;
+				plotopts.heightscale = 0.8
+				plotopts.vertoffset = .05;
+				plotopts.raster_ticksize = 14;
+
+				%------------------------------------------------
+				% loop through groups
+				%------------------------------------------------
+				% # of groups
+				ngroups = length(S);
+				% find max # of levels
+				for g = 1:ngroups
+					% get Stimulus List indices for this group
+					Sindx = obj.Stimuli.GroupList{g};
+					levels(g) = length(Sindx);
 				end
-				% get column labels from stimulus properties
-				switch class(obj.Stimuli.S{Sindx(n), 2})
-					case 'DW.Noise'
-						plotopts.columnlabels{1} = ...
-									sprintf('%s: BBN %.1f - %.1f Hz', ...
-										obj.fname, ...
-										obj.Stimuli.S{Sindx(n), 2}.LowerFreq, ...
-										obj.Stimuli.S{Sindx(n), 2}.UpperFreq	);
-					case 'DW.Wav'
-						plotopts.columnlabels{1} = sprintf('%s: %s', ...
-										obj.fname, obj.Stimuli.S{Sindx(n), 2}.Filename);
-					case 'DW.Tone'
-						plotopts.columnlabels{1} = sprintf('%s: Tone %.1f Hz', ...
-										obj.fname, obj.Stimuli.S{Sindx(n), 2}.Freq);
-					otherwise
-						plotopts.columnlabels{1} = sprintf('%s: %s', ...
-										obj.fname, class(obj.Stimuli.S{Sindx(n), 2}));
+				maxlevels = max(levels);
+				allspikes = cell(maxlevels, ngroups);
+				
+				plotopts.rowlabels = cell(maxlevels, 1);
+				plotopts.columnlabels = cell(ngroups, 1);
+				% loop through groups
+				for g = 1:ngroups
+					% get Stimulus List indices for this group
+					Sindx = obj.Stimuli.GroupList{g};
+					nlevels = length(Sindx);
+
+					% loop through stim indices
+					for n = 1:nlevels
+						% convert spiketimes to milliseconds
+						allspikes{n, g} = cell(length(S(g).spikes{n}), 1);
+						for t = 1:length(S(g).spikes{n})
+							allspikes{n, g}{t} = 0.001*S(g).spikes{n}{t};
+						end
+						plotopts.rowlabels{n} = sprintf('%d', ...
+														obj.Stimuli.S{Sindx(n), 2}.Attenuation);
+					end
+					% get column labels from stimulus properties
+					switch class(obj.Stimuli.S{Sindx(n), 2})
+						case 'DW.Noise'
+							plotopts.columnlabels{g} = ...
+										sprintf('%s: BBN %.1f - %.1f Hz', ...
+											obj.fname, ...
+											obj.Stimuli.S{Sindx(n), 2}.LowerFreq, ...
+											obj.Stimuli.S{Sindx(n), 2}.UpperFreq	);
+						case 'DW.Wav'
+% 							plotopts.columnlabels{g} = sprintf('%s: %s', ...
+% 											obj.fname, obj.Stimuli.S{Sindx(n), 2}.Filename);
+										
+							if g == 1
+								plotopts.columnlabels{g} = ...
+									{sprintf('%s: ', obj.fname), ...
+									 sprintf('%s', ...
+											obj.Stimuli.S{Sindx(n), 2}.Filename) };
+								
+							else
+								plotopts.columnlabels{g} = ...
+									 sprintf('%s', ...
+											obj.Stimuli.S{Sindx(n), 2}.Filename);
+							end			
+										
+						case 'DW.Tone'
+							if g == 1
+								plotopts.columnlabels{g} = ...
+									{sprintf('%s: ', obj.fname), ...
+									 sprintf('Tone %.1f Hz', ...
+											obj.Stimuli.S{Sindx(n), 2}.Freq) };
+							else
+								plotopts.columnlabels{g} = ...
+									 sprintf('Tone %.1f Hz', ...
+													obj.Stimuli.S{Sindx(n), 2}.Freq);
+							end
+						otherwise
+							plotopts.columnlabels{g} = sprintf('%s: %s', ...
+											obj.fname, class(obj.Stimuli.S{Sindx(n), 2}));
+					end
+				end	% END g
+				% plot it!
+				if isempty(figH)
+					figure;
+				else
+					figure(figH);
 				end
-				figure
-				[H{g}, P{g}] = rasterpsthmatrix(allspikes, plotopts);
-			end	% END g
+				[H, P] = rasterpsthmatrix(allspikes, plotopts);
+			end
+			
 			
 			%------------------------------------------------
 			% assign outputs
@@ -1115,12 +1265,19 @@ classdef Data < handle
 			if nargout
 				varargout{1} = H;
 			end
-			if nargout == 2
+			if nargout > 1
 				varargout{2} = S;
 			end
-			if nargout == 3 
+			if nargout > 2 
 				varargout{3} = P;
 			end
+			if nargout > 3 
+				varargout{4} = plotopts;
+			end
+			if nargout > 4
+				varargout{5} = allspikes;
+			end
+
 		end	% END plotRastersAndPSTH
 		%------------------------------------------------------------------------
 		
@@ -1247,13 +1404,15 @@ classdef Data < handle
 			offset = [];
 			% check optional input args
 			argn = 1;
+			% spkwin is by default empty
+			spkwin = [];
 			while argn <= length(varargin)
 				switch upper(varargin{argn})
 					case 'UNIT'
 						unitnum = varargin{argn + 1};
 						argn = argn + 2;
 					case 'WINDOW'
-						window = varargin{argn + 1};
+						spkwin = varargin{argn + 1};
 						argn = argn + 2;
 					otherwise
 						warning('%s: Unknown option %s', mfilename, varargin{argn});
@@ -1268,7 +1427,7 @@ classdef Data < handle
 			% get spikes for unit
 			%--------------------------------------------------
 			S = repmat( struct('spikes', {}, 'name', []), ngroups, 1);
-			if isempty(window)
+			if isempty(spkwin)
 				% no offset provided
 				for g = 1:ngroups
 					S(g).spikes = obj.getSpikesForStim(g, probenum, unitnum);
@@ -1278,7 +1437,7 @@ classdef Data < handle
 				% use pre/post offset to sweep timestamps
 				for g = 1:ngroups
 					S(g).spikes = obj.getSpikesForStim(g, probenum, unitnum, ...
-																		'window', window);
+																		'window', spkwin);
 					S(g).name = obj.Probes(probenum).name;
 				end
 			end	% END if

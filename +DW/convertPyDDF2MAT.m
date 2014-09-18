@@ -266,96 +266,97 @@ Segment = repmat( struct('Info', [], 'SourceInfo', [], 'ItemCount', [], ...
 tag = fgetl(fp)
 % check to make sure it's 'SEGMENT'
 if ~strcmpi(tag, 'SEGMENT')
-	fclose(fp);
-	error('%s: SEGMENT not found after MARKER, file %s', mfilename, filename);
-end
-% get label and store it
-tmpl = fgetl(fp);
-[tmp1, label] = readTaggedField(tmpl);
-Segment(1).SourceInfo.ProbeInfo = label;
-
-% read max, min samples
-[tmp1, tmp2] = readTaggedField(fgetl(fp));
-Segment(1).Info.MaxSampleCount = str2num(tmp2);
-[tmp1, tmp2] = readTaggedField(fgetl(fp));
-Segment(1).Info.MinSampleCount = str2num(tmp2);
-% read sample rate
-[tmp1, tmp2] = readTaggedField(fgetl(fp));
-Segment(1).Info.SampleRate = str2num(tmp2);
-% read sample units
-[tmp1, tmp2] = readTaggedField(fgetl(fp));
-Segment(1).Info.Units = tmp2;
-
-% store # of segments for this block
-tmpl = fgetl(fp);
-[tmp1, tmp2] = readTaggedField(tmpl);
-Nsegments = str2num(tmp2)
-% allocate things
-Segment(1).ItemCount = Nsegments;
-Segment(1).TimeStamp = zeros(Nsegments, 1);
-Segment(1).WaveForm = cell(Nsegments, 1);
-Segment(1).Nsamples = zeros(Nsegments, 1);
-Segment(1).UnitID = zeros(Nsegments, 1);
-% loop and read in data
-for n = 1:Nsegments
+	warning('%s: SEGMENT not found after MARKER, file %s', mfilename, filename);
+else
+	% get label and store it
 	tmpl = fgetl(fp);
-	T = sscanf(tmpl, '%f,');
-	Segment(1).TimeStamp(n) = T(1);
-	Segment(1).UnitID(n) = cast(T(2), 'int32');
-	Segment(1).Nsamples(n) = cast(T(3), 'int32');
-	Segment(1).WaveForm{n} = T(4:end)';
+	[tmp1, label] = readTaggedField(tmpl);
+	Segment(1).SourceInfo.ProbeInfo = label;
+
+	% read max, min samples
+	[tmp1, tmp2] = readTaggedField(fgetl(fp));
+	Segment(1).Info.MaxSampleCount = str2num(tmp2);
+	[tmp1, tmp2] = readTaggedField(fgetl(fp));
+	Segment(1).Info.MinSampleCount = str2num(tmp2);
+	% read sample rate
+	[tmp1, tmp2] = readTaggedField(fgetl(fp));
+	Segment(1).Info.SampleRate = str2num(tmp2);
+	% read sample units
+	[tmp1, tmp2] = readTaggedField(fgetl(fp));
+	Segment(1).Info.Units = tmp2;
+
+	% store # of segments for this block
+	tmpl = fgetl(fp);
+	[tmp1, tmp2] = readTaggedField(tmpl);
+	Nsegments = str2num(tmp2)
+	% allocate things
+	Segment(1).ItemCount = Nsegments;
+	Segment(1).TimeStamp = zeros(Nsegments, 1);
+	Segment(1).WaveForm = cell(Nsegments, 1);
+	Segment(1).Nsamples = zeros(Nsegments, 1);
+	Segment(1).UnitID = zeros(Nsegments, 1);
+	% loop and read in data
+	for n = 1:Nsegments
+		tmpl = fgetl(fp);
+		T = sscanf(tmpl, '%f,');
+		Segment(1).TimeStamp(n) = T(1);
+		Segment(1).UnitID(n) = cast(T(2), 'int32');
+		Segment(1).Nsamples(n) = cast(T(3), 'int32');
+		Segment(1).WaveForm{n} = T(4:end)';
+	end
 end
 
 % check if we're done
 if feof(fp) || (nSegment == 1)
-	fclose(fp);
 	if nSegment > 1
 		warning('Only read 1 segment of data');
 	end
-	return
-end
+	
+else	
+	% continue with another segment
+	tag = fgetl(fp)
+	% check to make sure it's 'SEGMENT'
+	if ~strcmpi(tag, 'SEGMENT')
+		fclose(fp);
+		warning('%s: SEGMENT not found after 1st SEGMENT, file %s', mfilename, filename);
 
-% continue with another segment
-tag = fgetl(fp)
-% check to make sure it's 'SEGMENT'
-if ~strcmpi(tag, 'SEGMENT')
-	fclose(fp);
-	error('%s: SEGMENT not found after 1st SEGMENT, file %s', mfilename, filename);
-end
+	else
+		% get label and store it
+		tmpl = fgetl(fp);
+		[tmp1, label] = readTaggedField(tmpl);
+		Segment(2).SourceInfo.ProbeInfo = label;
+		% read max, min samples
+		[tmp1, tmp2] = readTaggedField(fgetl(fp));
+		Segment(2).Info.MaxSampleCount = str2num(tmp2);
+		[tmp1, tmp2] = readTaggedField(fgetl(fp));
+		Segment(2).Info.MinSampleCount = str2num(tmp2);
+		% read sample rate
+		[tmp1, tmp2] = readTaggedField(fgetl(fp));
+		Segment(2).Info.SampleRate = str2num(tmp2);
+		% read sample units
+		[tmp1, tmp2] = readTaggedField(fgetl(fp));
+		Segment(2).Info.Units = tmp2;
+		% store # of segments for this block
+		tmpl = fgetl(fp);
+		[tmp1, tmp2] = readTaggedField(tmpl);
+		Nsegments = str2num(tmp2)
+		% allocate things
+		Segment(2).ItemCount = Nsegments;
+		Segment(2).TimeStamp = zeros(Nsegments, 1);
+		Segment(2).WaveForm = cell(Nsegments, 1);
+		Segment(2).Nsamples = zeros(Nsegments, 1);
+		Segment(2).UnitID = zeros(Nsegments, 1);
+		% loop and read in data
+		for n = 1:Nsegments
+			tmpl = fgetl(fp);
+			T = sscanf(tmpl, '%f,');
+			Segment(2).TimeStamp(n) = T(1);
+			Segment(2).UnitID(n) = cast(T(2), 'int32');
+			Segment(2).Nsamples(n) = cast(T(3), 'int32');
+			Segment(2).WaveForm{n} = T(4:end)';
+		end
 
-% get label and store it
-tmpl = fgetl(fp);
-[tmp1, label] = readTaggedField(tmpl);
-Segment(2).SourceInfo.ProbeInfo = label;
-% read max, min samples
-[tmp1, tmp2] = readTaggedField(fgetl(fp));
-Segment(2).Info.MaxSampleCount = str2num(tmp2);
-[tmp1, tmp2] = readTaggedField(fgetl(fp));
-Segment(2).Info.MinSampleCount = str2num(tmp2);
-% read sample rate
-[tmp1, tmp2] = readTaggedField(fgetl(fp));
-Segment(2).Info.SampleRate = str2num(tmp2);
-% read sample units
-[tmp1, tmp2] = readTaggedField(fgetl(fp));
-Segment(2).Info.Units = tmp2;
-% store # of segments for this block
-tmpl = fgetl(fp);
-[tmp1, tmp2] = readTaggedField(tmpl);
-Nsegments = str2num(tmp2)
-% allocate things
-Segment(2).ItemCount = Nsegments;
-Segment(2).TimeStamp = zeros(Nsegments, 1);
-Segment(2).WaveForm = cell(Nsegments, 1);
-Segment(2).Nsamples = zeros(Nsegments, 1);
-Segment(2).UnitID = zeros(Nsegments, 1);
-% loop and read in data
-for n = 1:Nsegments
-	tmpl = fgetl(fp);
-	T = sscanf(tmpl, '%f,');
-	Segment(2).TimeStamp(n) = T(1);
-	Segment(2).UnitID(n) = cast(T(2), 'int32');
-	Segment(2).Nsamples(n) = cast(T(3), 'int32');
-	Segment(2).WaveForm{n} = T(4:end)';
+	end	
 end
 
 fclose(fp);
