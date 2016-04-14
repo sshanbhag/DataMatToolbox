@@ -62,9 +62,16 @@ end
 % make sure there are some timestamps to check!
 if isempty(timestamps)
 % 	fprintf('Warning %s: no timestamps in %s\n', mfilename, inputname(1))
-	varargout{1} = {[]};
-	if nargout == 2
-		varargout{2} = {[]};
+	if nwin == 1
+		varargout{1} = [];
+		if nargout == 2
+			varargout{2} = [];
+		end
+	else
+		varargout{1} = {[]};
+		if nargout == 2
+			varargout{2} = {[]};
+		end
 	end
 	return
 end
@@ -84,22 +91,34 @@ end
 %------------------------------------------------------------------------
 % get values
 %------------------------------------------------------------------------
-% allocate spikes vector
-validtimes = cell(nwin, 1);
-validindices = validtimes;
-% loop through the groups
-for w = 1:nwin
+if nwin == 1
 	% find spikes that are within the current window
-	validSpikes = (winstart(w) < timestamps) & (timestamps < winend(w));
-	validindices{w} = validSpikes;
+	validSpikes = (winstart < timestamps) & (timestamps < winend);
+	validindices = validSpikes;
 	% store spiketimes (relative to sweep start)
 	if ~isempty(validSpikes)
-		validtimes{w} = timestamps(validSpikes) - winref(w);
+		validtimes = timestamps(validindices) - winref;
 	else
-		validtimes{w} = [];
+		validtimes = [];
+	end	
+	
+else
+	% allocate spikes vector
+	validtimes = cell(nwin, 1);
+	validindices = validtimes;
+	% loop through the groups
+	for w = 1:nwin
+		% find spikes that are within the current window
+		validSpikes = (winstart(w) < timestamps) & (timestamps < winend(w));
+		validindices{w} = validSpikes;
+		% store spiketimes (relative to sweep start)
+		if ~isempty(validSpikes)
+			validtimes{w} = timestamps(validSpikes) - winref(w);
+		else
+			validtimes{w} = [];
+		end
 	end
 end
-
 %------------------------------------------------------------------------
 % assign outputs
 %------------------------------------------------------------------------

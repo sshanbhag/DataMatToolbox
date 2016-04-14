@@ -16,6 +16,8 @@ function cols = finddatacolumn(searchfields, fieldnames)
 % 							
 %	fieldnames			names of columns in D (usually header.fields from
 % 							FullData6.mat file)
+% 										- OR -
+% 							can simply pass in the header data struct
 % 
 % Output Arguments:
 %	cols						list of column numbers
@@ -31,6 +33,8 @@ function cols = finddatacolumn(searchfields, fieldnames)
 % Created: 20 March, 2013 (SJS)
 %
 % Revisions:
+%	12 Mar 2015 (SJS): ability to use struct as fieldnames input added
+%							to help info
 %------------------------------------------------------------------------
 % TO DO:
 %------------------------------------------------------------------------
@@ -47,13 +51,15 @@ else
 	searchfields = {searchfields};
 end
 
+%------------------------------------------------------------------------
+% check if fieldnames is struct - if so, extract fieldnames
+%------------------------------------------------------------------------
 if isstruct(fieldnames)
 	tmpf = fieldnames.fields;
 	clear fieldnames;
 	fieldnames = tmpf;
 	clear tmpf;
 end
-
 
 %------------------------------------------------------------------------
 % First, find which column of D contains each searchfield

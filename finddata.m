@@ -38,6 +38,8 @@ function varargout = finddata(searchfields, searchstr, ...
 %	Optional Input:
 % 		'CombineMode'		'OR'		uses OR to combine searches
 % 								'AND'		(default) uses AND to combine searches
+%		'IgnoreCase'		'yes'		will ignore case in string comparisons
+%								'no'		(defauls) uses case
 % 
 % Output Arguments:
 % 	matchdata			N x (# columns in D) array of data from D that match
@@ -55,6 +57,7 @@ function varargout = finddata(searchfields, searchstr, ...
 % Created: 20 March, 2013 (SJS)
 %
 % Revisions:
+%	6 Jan 2014 (SJS): added IgnoreCase option
 %------------------------------------------------------------------------
 % TO DO:
 %------------------------------------------------------------------------
@@ -75,12 +78,32 @@ end
 %------------------------------------------------------------------------
 % Check input varargs
 %------------------------------------------------------------------------
-if isempty(varargin)
-	CombineMode = 'AND';
-else
-	CombineMode = upper(varargin{1});
+CombineMode = 'AND';
+IgnoreCase = 'NO';
+if ~isempty(varargin)
+	n = 1;
+	while n <= length(varargin)
+		if strcmpi(varargin{n}, 'CombineMode')
+			if ~any(strcmpi(varargin{n+1}, {'AND', 'OR'}))
+				error('%s: invalid option %s for CombineMode', ...
+								mfilename, varargin{n+1});
+			else
+				CombineMode = upper(varargin{n+1});
+				n = n + 2;
+			end
+		elseif strcmpi(varargin{n}, 'IgnoreCase')
+			if ~any(strcmpi(varargin{n+1}, {'YES', 'NO', 'Y', 'N'}))
+				error('%s: invalid option %s for IgnoreCase', ...
+								mfilename, varargin{n+1});
+			else
+				IgnoreCase = upper(varargin{n+1});
+				n = n + 2;
+			end
+		else
+			error('%s: invalid option %s', mfilename, varargin{n});
+		end
+	end
 end
-
 
 %------------------------------------------------------------------------
 % First, find which column of D contains each searchfield
@@ -90,18 +113,24 @@ col = finddatacolumn(searchfields, fieldnames);
 %------------------------------------------------------------------------
 % pre-allocate tmpmatch matrix (logical)
 %------------------------------------------------------------------------
-[drows, dcols] = size(D);
+[drows, tmp] = size(D); %#ok<ASGLU>
+clear tmp
 tmpmatch = false(drows, Nsearches);
-
 %------------------------------------------------------------------------
 %------------------------------------------------------------------------
+if strncmpi(IgnoreCase, 'Y', 1)
+	compfcn = @strcmpi;
+else
+	compfcn = @strcmp;
+end
+	
 for c = 1:Nsearches
 	% look for each string
 	% syntax note: by using normal parenthes (instead of
 	% {} typically used for cell arrays), matlab returns a cell vector of
 	% values.  If {} were used, matlab would return multiple, individual 
 	% values and an error would occur using strcmpi
-	tmpmatch(:, c) = strcmpi(searchstr{c}, D(:, col(c)));
+	tmpmatch(:, c) = compfcn(searchstr{c}, D(:, col(c)));
 end
 
 %------------------------------------------------------------------------
